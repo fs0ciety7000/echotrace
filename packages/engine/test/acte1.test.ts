@@ -55,3 +55,73 @@ describe('acte 1 — 01 vallon', () => {
     expect(e.mission?.progress.wrongAnswers).toBe(1);
   });
 });
+
+describe('acte 1 — 02 confinement', () => {
+  const SOLUTION = [
+    'cat dossiers/ch-vallon/rapport-dsi.txt',
+    'cat dossiers/ch-vallon/acces-ch.txt',
+    'ssh echo@bastion.ch-vallon.internal',
+    'Vallon-Bastion-31',
+    'ssh audit@fs-01.ch-vallon.internal',
+    'lecture-seule-0316',
+    'ps aux',
+    'netstat -tunap',
+    'report processus sysupd',
+    'report destination 203.0.113.200',
+    'report rythme 300',
+    'ls /etc/cron.d',
+    'cat /etc/cron.d/sysupd',
+    'report relance /etc/cron.d/sysupd',
+    'cat /srv/partages/direction/organigramme.txt',
+  ];
+
+  it('is solvable end to end', () => {
+    const { e, outputs } = play('02-confinement.yaml', SOLUTION);
+    expect(outputs[6]).toContain('/var/tmp/.cache/sysupd -i 300');
+    expect(outputs[7]).toContain('203.0.113.200:8443');
+    expect(e.mission?.pendingChoice()?.id).toBe('chant');
+    expect(e.choose('chant', 'encadrer')).toBe(true);
+    expect(e.mission?.progress.status).toBe('completed');
+    expect(e.mission?.objectives().every((o) => o.state === 'done')).toBe(true);
+    expect(e.campaign).toMatchObject({ integrity: 55, initiative: 55 });
+  });
+});
+
+describe('acte 1 — 03 resonance', () => {
+  const SOLUTION = [
+    'cert edge-sync.example:8443',
+    'cat dossiers/acces-intel.txt',
+    'ssh veille@echo-intel',
+    'archives-lanterne',
+    'grep 5B:A9:BC /srv/archives/certificats.csv',
+    'report empreinte sso-legacy.corvane.example',
+    'exit',
+    'whois edge-sync.example',
+    'whois corvane.example',
+    'report dns dns-relais.example',
+    'report organisation Corvane Holdings',
+    'report confiance élevé',
+    'report confiance modéré',
+    'cert sso-legacy.corvane.example',
+  ];
+
+  it('is solvable end to end and reacts to the previous decision', () => {
+    const campaign = {
+      completed: ['prologue', 'vallon', 'confinement'],
+      integrity: 55,
+      initiative: 55,
+      decisions: { 'confinement/chant': 'observer' },
+    };
+    const e = Engine.fromMission(loadMission('03-resonance.yaml'), concepts, {}, campaign);
+    expect(e.mission?.inbox().map((m) => m.id)).toEqual(['sable-start-observer']);
+    const { outputs } = play('03-resonance.yaml', SOLUTION, e);
+    expect(outputs[0]).toContain('5B:A9:BC');
+    expect(outputs[4]).toContain('sso-legacy.corvane.example');
+    expect(outputs[11]).toContain('pas cohérent');
+    expect(e.choose('dossier', 'ancs')).toBe(true);
+    expect(e.mission?.progress.status).toBe('completed');
+    expect(e.mission?.objectives().every((o) => o.state === 'done')).toBe(true);
+    expect(e.campaign.completed).toContain('resonance');
+    expect(e.mission?.inbox().some((m) => m.from === 'inconnu')).toBe(true);
+  });
+});

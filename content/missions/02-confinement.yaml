@@ -1,0 +1,365 @@
+# Acte I — Mission 02 « Confinement »
+# Réponse à incident côté défense : lire un rapport, accéder en lecture seule, repérer un
+# programme qui « chante » vers l'extérieur, comprendre comment il survit, décider.
+# Question : comment savoir si l'incident est vraiment terminé ?
+
+id: confinement
+title: Confinement
+act: acte-1
+order: 2
+from: Dr Noor Haddad
+summary: Le rançongiciel est maîtrisé. Vérifier qu'il ne reste rien d'autre.
+question: Comment savoir si un incident est vraiment terminé ?
+concepts:
+  - forensique.chronologie
+  - defense.mfa
+  - forensique.persistance
+  - reseau.beacon
+  - forensique.ioc
+  - ethique.proportionnalite
+
+briefing: |
+  La DSI du CH a bien travaillé cette nuit : le compte VPN détourné est
+  désactivé, les serveurs chiffrés sont isolés, les sauvegardes hors ligne
+  sont intactes. Leur rapport est dans `~/dossiers/ch-vallon/`.
+
+  Ils veulent rouvrir demain. Moi, je veux une chose avant : être sûre
+  qu'il ne reste **rien** dans leur réseau. Un rançongiciel fait du bruit ;
+  ce qui m'inquiète, c'est ce qui n'en fait pas.
+
+  La DSI nous ouvre un accès **en lecture seule** à leur serveur de fichiers,
+  `fs-01`, le seul serveur critique que le rançongiciel n'a pas touché.
+  Bizarre, non ? Les accès sont dans le dossier.
+
+  — Noor
+
+debrief: |
+  **Un incident n'est terminé que lorsqu'on a cherché ce qui ne se voit pas.**
+  Le rançongiciel était la partie bruyante. Sur `fs-01`, épargné « par
+  hasard », un programme au nom anodin se réveillait toutes les cinq minutes
+  pour contacter un serveur extérieur — un **chant**, dans notre jargon.
+  Une tâche planifiée le relançait à chaque redémarrage.
+
+  Tu l'as trouvé avec trois réflexes de défenseur : **qu'est-ce qui tourne**
+  (`ps`), **à qui ça parle** (`netstat`), **qu'est-ce qui le relance** (les
+  tâches planifiées). Et tu en as tiré des **indicateurs** — un nom de fichier,
+  une adresse, un rythme — que d'autres pourront chercher chez eux.
+
+  Reste une question qui n'est plus technique : qui a posé ce chant, et
+  pourquoi sur un serveur que le rançongiciel a soigneusement évité ?
+
+scenario:
+  clock: '2031-03-16T08:30:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws, ch-bastion]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: liaison-ch, cidr: 10.40.0.0/24, label: liaison chiffrée ECHO ↔ CH }
+    - { id: ch-serveurs, cidr: 10.40.1.0/24, label: serveurs du CH }
+    - { id: internet, cidr: 203.0.113.0/24, label: Internet (simulé) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan, liaison-ch, internet]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/dossiers/ch-vallon/rapport-dsi.txt: |
+          CH VALLON-SUR-AIRE — RAPPORT D'INCIDENT (DSI) — 16/03/2031 07:50
+          =================================================================
+          Synthèse (validée par la DSI) :
+          - Accès initial : portail VPN non corrigé (cf. analyse ECHO) ;
+            compte d'un agent administratif utilisé depuis une adresse
+            étrangère, de nuit. Pas d'authentification multifacteur.
+          - 15/03 04:00 : chiffrement de 14 serveurs. Demande de rançon.
+          - 15/03 09:40 : compte VPN désactivé, portail coupé.
+          - 15/03 11:00 : serveurs chiffrés isolés. Sauvegardes hors ligne
+            intactes, restauration en cours.
+
+          Point ouvert : fs-01 (serveur de fichiers, 10.40.1.10) n'a PAS été
+          chiffré. Raison inconnue.
+
+          Mesures prévues : MFA obligatoire sur le VPN, correctif 6.2.4,
+          réouverture des services le 17/03.
+        /home/operateur-7/dossiers/ch-vallon/acces-ch.txt: |
+          Accès ECHO au CH — lecture seule, valable jusqu'au 20/03/2031
+          ---------------------------------------------------------------
+          1. Bastion  : ssh echo@bastion.ch-vallon.internal
+                        mot de passe : Vallon-Bastion-31
+          2. Depuis le bastion : ssh audit@fs-01.ch-vallon.internal
+                        mot de passe : lecture-seule-0316
+
+          Règle : on observe, on ne modifie rien. Toute action corrective
+          passe par la DSI.
+        /home/operateur-7/procedures/reponse-incident.txt: |
+          PROCÉDURE ECHO — RÉPONSE À INCIDENT (résumé)
+          1. Contenir      : empêcher l'extension (isoler, couper les accès).
+          2. Préserver     : copier les preuves avant toute modification.
+          3. Chercher      : persistance, accès secondaires, autres victimes.
+          4. Éradiquer     : supprimer TOUT ce qui a été trouvé à l'étape 3.
+          5. Restaurer     : remettre en service, surveiller.
+          6. Retour d'exp. : comprendre, corriger, partager les indicateurs.
+
+          Trois questions pour l'étape 3, sur chaque machine :
+            - qu'est-ce qui tourne ?        (processus)
+            - à qui ça parle ?              (connexions réseau)
+            - qu'est-ce qui le relance ?    (tâches planifiées, services)
+
+    - id: ch-bastion
+      hostname: bastion.ch-vallon.internal
+      ip: 10.40.0.5
+      os: Debian 12
+      networks: [liaison-ch, ch-serveurs]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 }
+      accounts:
+        - { user: echo, password: Vallon-Bastion-31 }
+      files:
+        /etc/motd: |
+          CH Vallon-sur-Aire — bastion d'administration
+          Accès tracé. Session ECHO : lecture seule.
+
+    - id: ch-fs01
+      hostname: fs-01.ch-vallon.internal
+      ip: 10.40.1.10
+      os: Debian 11
+      networks: [ch-serveurs]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 8.4p1 }
+        - { port: 445, name: microsoft-ds, product: Samba, version: 4.13.13 }
+      accounts:
+        - { user: audit, password: lecture-seule-0316 }
+      processes:
+        - { pid: 1, user: root, cmd: /sbin/init }
+        - { pid: 402, user: root, cmd: /usr/sbin/cron -f }
+        - { pid: 455, user: root, cmd: /usr/sbin/sshd -D }
+        - { pid: 610, user: root, cmd: /usr/sbin/smbd --foreground --no-process-group }
+        - { pid: 1442, user: root, cmd: /var/tmp/.cache/sysupd -i 300 }
+        - { pid: 2210, user: audit, cmd: -bash }
+      connections:
+        - { proto: tcp, local: '0.0.0.0:22', state: LISTEN, pid: 455 }
+        - { proto: tcp, local: '0.0.0.0:445', state: LISTEN, pid: 610 }
+        - { proto: tcp, local: '10.40.1.10:22', remote: '10.40.0.5:51422', pid: 455 }
+        - { proto: tcp, local: '10.40.1.10:43918', remote: '203.0.113.200:8443', pid: 1442 }
+      files:
+        /etc/motd: |
+          fs-01 — serveur de fichiers — CH Vallon-sur-Aire
+        /etc/cron.d/sauvegarde: |
+          # Sauvegarde nocturne vers le stockage hors ligne
+          30 1 * * * root /opt/sauvegarde/export.sh
+        /etc/cron.d/sysupd: |
+          # system update helper
+          @reboot root /var/tmp/.cache/sysupd -i 300
+        /home/audit/LISEZMOI.txt: |
+          Compte d'audit en lecture seule, créé pour ECHO le 16/03.
+        /srv/partages/direction/organigramme.txt: |
+          Direction — Planification énergétique : M. Ferrand
+          (projet « Résilience 2032 », partenaire : Corvane Holdings)
+
+    - id: c2-relay
+      hostname: edge-sync.example
+      ip: 203.0.113.200
+      os: inconnu
+      networks: [internet]
+      icmp: false
+      services:
+        - port: 8443
+          name: https-alt
+          tls:
+            subject: CN=edge-sync.example
+            issuer: CN=edge-sync.example
+            notBefore: '2030-10-28'
+            notAfter: '2032-10-27'
+            san: [edge-sync.example]
+            sha256: '5B:A9:BC:8D:EB:E2:64:71:F5:91:CD:22:55:63:D2:1C:8B:65:BD:14:D6:DC:76:DB:8F:3D:AD:6E:AD:55:BC:BC'
+
+objectives:
+  - id: read-report
+    label: Lire le rapport de la DSI
+    on: file.read
+    where: { path: /home/operateur-7/dossiers/ch-vallon/rapport-dsi.txt }
+    hint: Il est dans ~/dossiers/ch-vallon/. Note le point ouvert.
+    concepts: [forensique.chronologie, defense.mfa]
+
+  - id: bastion
+    label: Te connecter au bastion du CH
+    requires: [read-report]
+    on: session.opened
+    where: { hostId: ch-bastion }
+    hint: Les accès sont dans ~/dossiers/ch-vallon/acces-ch.txt. Un bastion est le point de passage obligé vers les serveurs.
+
+  - id: fs01
+    label: Rejoindre fs-01 depuis le bastion
+    requires: [bastion]
+    on: session.opened
+    where: { hostId: ch-fs01 }
+    hint: Depuis le bastion, une seconde connexion SSH, avec le compte d'audit.
+
+  - id: processes
+    label: Lister ce qui tourne sur fs-01
+    requires: [fs01]
+    on: process.listed
+    where: { hostId: ch-fs01 }
+    hint: Première question de la procédure — « qu'est-ce qui tourne ? ». `man ps`.
+    concepts: [forensique.persistance]
+
+  - id: connections
+    label: Voir à qui fs-01 parle
+    requires: [fs01]
+    on: connections.listed
+    where: { hostId: ch-fs01 }
+    hint: Deuxième question — « à qui ça parle ? ». `man netstat`.
+    concepts: [reseau.beacon]
+
+  - id: report-processus
+    label: 'Rapport : le programme suspect'
+    requires: [processes, connections]
+    on: finding.confirmed
+    where: { questionId: processus }
+    hint: Un programme lancé par root depuis un dossier caché de /var/tmp, ça ne ressemble à aucun service connu.
+
+  - id: report-relance
+    label: 'Rapport : ce qui le relance'
+    requires: [report-processus]
+    on: finding.confirmed
+    where: { questionId: relance }
+    hint: Troisième question de la procédure. Les tâches planifiées système vivent dans /etc/cron.d/.
+    concepts: [forensique.persistance]
+
+  - id: report-indicateurs
+    label: 'Rapport : destination et rythme du chant'
+    requires: [report-processus]
+    on: finding.confirmed
+    where: { questionId: rythme }
+    hint: L'adresse est dans netstat ; le rythme est dans les arguments de la commande.
+    concepts: [forensique.ioc]
+
+  - id: decision
+    label: Décider de la suite avec Noor
+    requires: [report-relance, report-indicateurs]
+    on: choice.made
+    where: { choiceId: chant }
+    hint: Noor attend ta recommandation. Ouvre la décision dans le panneau, ou relis la fiche Proportionnalité.
+    concepts: [ethique.proportionnalite]
+
+  - id: why-spared
+    label: Comprendre pourquoi fs-01 a été épargné
+    optional: true
+    requires: [fs01]
+    on: file.read
+    where: { hostId: ch-fs01, path: /srv/partages/direction/organigramme.txt }
+    hint: Qu'est-ce que fs-01 contient que les autres serveurs n'ont pas ? Regarde dans les partages.
+
+questions:
+  - id: processus
+    prompt: Quel programme n'a rien à faire sur fs-01 ?
+    accept: [sysupd, /var/tmp/.cache/sysupd, '1442']
+    hint: Compare chaque processus à ce qu'un serveur de fichiers est censé faire tourner.
+    explain: Un nom qui imite une mise à jour système, un dossier caché, root — trois signaux faibles qui, ensemble, crient.
+  - id: destination
+    prompt: Avec quelle adresse extérieure communique-t-il ?
+    requires: [processus]
+    accept: [203.0.113.200, '203.0.113.200:8443', edge-sync.example]
+    hint: netstat associe chaque connexion à un numéro de processus.
+    explain: Une connexion établie vers Internet depuis un serveur de fichiers interne mérite toujours une explication.
+  - id: rythme
+    prompt: À quel intervalle se réveille-t-il (en secondes) ?
+    requires: [destination]
+    accept: ['300', 300s, 300 s, 300 secondes, 5 min, 5 minutes]
+    hint: Regarde les arguments de la ligne de commande du processus.
+    explain: Un rythme régulier est la signature d'un « chant » — et un indicateur que d'autres peuvent chercher.
+  - id: relance
+    prompt: Quel fichier relance le programme au démarrage ?
+    requires: [processus]
+    accept: [/etc/cron.d/sysupd]
+    hint: Liste /etc/cron.d/ et lis chaque fichier.
+    explain: Supprimer le programme sans supprimer sa relance, c'est le voir revenir au prochain redémarrage.
+
+choices:
+  - id: chant
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-indicateurs }
+    prompt: |
+      On sait ce qu'il est, où il parle, comment il survit. Maintenant, on fait quoi ?
+
+      Sable voudrait le laisser chanter 48 heures pour voir qui lui répond.
+      Moi, je pense à l'hôpital qui rouvre demain. Mara me laisse trancher —
+      et je te demande ton avis. **C'est ta recommandation qui partira.**
+    options:
+      - id: couper
+        label: Prévenir la DSI et couper maintenant
+        description: Isoler fs-01, transmettre les indicateurs, éradiquer avant la réouverture.
+        effects: { integrity: 15, initiative: -5 }
+        consequence: |
+          Le chant s'est tu à 11 h. La DSI a éradiqué, réinstallé, rouvert à
+          l'heure. On a perdu la chance de voir qui écoutait — mais l'hôpital
+          n'a pas été un terrain d'observation à son insu.
+      - id: encadrer
+        label: Observer 48 h avec l'accord écrit de la DSI
+        description: Expliquer le risque à la DSI ; observer seulement si elle accepte, flux réseau sous surveillance.
+        effects: { integrity: 5, initiative: 5 }
+        consequence: |
+          La DSI a accepté, par écrit, après une longue discussion : 48 heures
+          d'observation, fs-01 coupé du reste du réseau. Le chant a reçu deux
+          consignes muettes. Peu d'informations — mais obtenues dans les règles.
+      - id: observer
+        label: Laisser chanter 48 h sans rien dire
+        description: Plus d'informations sur l'adversaire, mais l'hôpital rouvre avec un intrus dedans.
+        effects: { integrity: -15, initiative: 15 }
+        consequence: |
+          Pendant 48 heures, le chant a continué — et l'hôpital a rouvert sans
+          le savoir. Vous avez vu le serveur distant changer de consigne. Vous
+          avez aussi vu 2 Go de documents de planification énergétique partir.
+          Personne ne sait encore que vous saviez.
+
+messages:
+  - id: noor-bastion
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: fs01 }
+    body: |
+      Tu es sur fs-01. Rappelle-toi : lecture seule. On regarde, on note,
+      on ne touche à rien. La procédure est dans `~/procedures/`.
+
+  - id: noor-chant
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-indicateurs }
+    body: |
+      Toutes les cinq minutes, vers l'extérieur… C'est un chant. Le même genre
+      que ce qu'on a vu sur le poste d'Iris, ce soir-là. Je n'aime pas ça.
+
+  - id: sable-chant
+    from: Ilya « Sable » Varga
+    on: objective.completed
+    where: { objectiveId: report-processus }
+    body: |
+      Joli. Avant que Noor ne débranche tout : un implant qui chante, c'est
+      une ligne directe vers celui qui l'a posé. Le couper, c'est raccrocher.
+
+  - id: mara-observer
+    from: Mara Okonkwo-Lind
+    on: choice.made
+    where: { choiceId: chant, optionId: observer }
+    body: |
+      J'ai lu la recommandation. Je la suis — mais si ça sort un jour, c'est
+      mon nom qui sera dessus, pas le tien. Ne l'oublie pas.
+
+  - id: dsi-merci
+    from: M. Benali (DSI CH Vallon)
+    on: choice.made
+    where: { choiceId: chant, optionId: couper }
+    body: |
+      Merci pour votre franchise. Programme supprimé, tâche supprimée,
+      serveur réinstallé. Nous rouvrons demain à 8 h.
+
+  - id: noor-organigramme
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: why-spared }
+    body: |
+      « Planification énergétique »… « Corvane Holdings ». fs-01 n'a pas été
+      épargné par hasard : quelqu'un voulait qu'il continue à servir.

@@ -1,0 +1,376 @@
+# Acte I — Mission 03 « Résonance »
+# Recoupement d'indicateurs (pivot) : empreinte de certificat, archives, whois, DNS.
+# Attribution prudente et choix de destinataire du dossier.
+# Question : peut-on dire qui est derrière une attaque ?
+
+id: resonance
+title: Résonance
+act: acte-1
+order: 3
+from: Mara Okonkwo-Lind
+summary: Remonter du serveur distant à son opérateur — sans conclure trop vite.
+question: Peut-on dire qui est derrière une attaque ?
+concepts:
+  - reseau.certificat-tls
+  - reconnaissance.pivot
+  - reconnaissance.whois
+  - reseau.dns
+  - forensique.ioc
+  - ethique.attribution
+
+briefing: |
+  Le chant de fs-01 parlait à `edge-sync.example`, `203.0.113.200`. Une
+  adresse, un nom : ça se loue, ça se jette. Ce n'est pas ça qui nous dira
+  qui est derrière.
+
+  Ce qui ne se jette pas si facilement, ce sont les **habitudes**. Le même
+  certificat réutilisé, les mêmes serveurs de noms, le même registrar…
+  Chaque détail est un **écho** possible avec quelque chose qu'on a déjà vu.
+
+  Nos archives de veille sont sur `echo-intel`. Les accès sont dans
+  `~/dossiers/acces-intel.txt`. Tu ne touches **qu'à ce qui est public** :
+  regarder le certificat qu'un serveur présente à n'importe quel navigateur,
+  oui ; scanner l'infrastructure de quelqu'un, non.
+
+  Et souviens-toi : on cherche des preuves, pas un coupable.
+
+  — Mara
+
+debrief: |
+  **Peut-on dire qui est derrière une attaque ?** Rarement avec certitude.
+  Tu as relié trois échos indépendants :
+
+  - le certificat du serveur de commande, **déjà vu en novembre 2030** sur
+    un serveur de Corvane ;
+  - les **mêmes serveurs de noms** pour `edge-sync.example` et `corvane.example` ;
+  - un serveur épargné qui contenait justement un projet mené **avec Corvane**.
+
+  C'est beaucoup. Ce n'est pas une preuve. Un serveur de Corvane a pu être
+  compromis et réutilisé ; un fournisseur DNS est partagé par des milliers de
+  clients ; un indice trop beau peut être posé là pour être trouvé. D'où un
+  niveau de confiance **modéré** — et la discipline de l'écrire noir sur blanc.
+
+  Fin de l'Acte I. Ce que nous avons entendu n'était pas un bruit isolé :
+  c'était une **résonance**.
+
+scenario:
+  clock: '2031-03-17T14:05:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws, echo-intel]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: internet-a, cidr: 203.0.113.0/24, label: Internet (simulé) }
+    - { id: internet-b, cidr: 198.51.100.0/24, label: Internet (simulé) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan, internet-a, internet-b]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/dossiers/acces-intel.txt: |
+          echo-intel — archives de veille de la cellule
+          compte : veille   mot de passe : archives-lanterne
+          Contenu : /srv/archives/ (certificats observés, notes d'enquête)
+        /home/operateur-7/dossiers/ch-vallon/indicateurs.txt: |
+          INDICATEURS — incident CH Vallon (fs-01)
+          ----------------------------------------
+          fichier     /var/tmp/.cache/sysupd
+          relance     /etc/cron.d/sysupd
+          serveur     edge-sync.example (203.0.113.200), port 8443
+          rythme      300 s
+          certificat  à relever (empreinte SHA-256)
+
+    - id: echo-intel
+      hostname: echo-intel
+      ip: 10.7.0.30
+      os: Debian 12
+      networks: [echo-lan]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 }
+      accounts:
+        - { user: veille, password: archives-lanterne }
+      files:
+        /etc/motd: |
+          echo-intel — archives de veille. Données sensibles : ne rien copier hors cellule.
+        /srv/archives/LISEZMOI.txt: |
+          certificats.csv : certificats TLS relevés lors d'enquêtes passées
+                            (date;nom;adresse;empreinte_sha256;source)
+          notes/          : notes d'enquête par dossier
+          Astuce : une empreinte est longue — cherche un fragment.
+        /srv/archives/certificats.csv: |
+          date;nom;adresse;empreinte_sha256;source
+          2029-02-11;webmail.mairie-orsay.example;198.51.100.21;0E:44:91:7A:3C:B2:18:F5:62:D9:0A:47:CE:13:88:B6:21:5F:A0:7D:94:3B:C6:12:E8:5A:07:F1:39:DC:64:2B;dossier Orsay
+          2029-08-30;vpn.cooperative-lin.example;198.51.100.33;A7:12:5E:C0:93:4D:B8:27:6F:E1:05:9A:D4:3C:71:28:BF:60:1E:A9:57:C2:84:0D:36:F7:B1:4A:E9:52:08:CD;dossier Coop Lin
+          2030-01-19;portail.agglo-sud.example;198.51.100.47;C5:76:04:2D:08:44:7A:C1:00:77:15:15:9C:9D:99:71:89:67:6C:F1:F7:29:BA:1C:77:47:61:D6:6A:39:7B:26;dossier Agglo Sud
+          2030-06-02;mail.transports-ouest.example;198.51.100.58;3D:E8:20:B4:69:1F:C7:5A:92:0E:F3:48:A6:D1:7C:35:08:BB:62:E4:1D:97:4F:C0:2A:85:F9:13:6E:B7:50:D2;dossier Transports Ouest
+          2030-11-08;sso-legacy.corvane.example;198.51.100.140;5B:A9:BC:8D:EB:E2:64:71:F5:91:CD:22:55:63:D2:1C:8B:65:BD:14:D6:DC:76:DB:8F:3D:AD:6E:AD:55:BC:BC;relevé Lanterne (Théo)
+          2030-11-08;www.corvane.example;198.51.100.141;30:AD:D7:B5:35:BF:2F:FE:4A:0F:63:11:7D:0D:6D:30:E8:D2:78:83:DD:B9:29:19:C0:02:32:4E:B4:C9:C0:AC;relevé Lanterne (Théo)
+          2031-01-25;intranet.clinique-bel-air.example;198.51.100.72;91:6C:0B:E3:47:D8:25:AF:13:5E:C9:70:B2:4F:8A:06:DD:31:E7:9C:58:02:A6:4B:F0:1D:87:63:C4:39:EA:15;dossier Bel-Air
+        /srv/archives/notes/corvane-2030.txt: |
+          Note Théo (Lanterne), novembre 2030 — Corvane Holdings
+          Relevé des services publics de Corvane pour l'enquête « Pannes de
+          Novembre ». Rien d'anormal à l'époque, sauf un ancien portail
+          d'authentification (sso-legacy) avec un certificat auto-signé.
+          Curieux pour une société de « résilience ». À suivre.
+
+    - id: c2-relay
+      hostname: edge-sync.example
+      ip: 203.0.113.200
+      os: inconnu
+      networks: [internet-a]
+      icmp: false
+      services:
+        - port: 8443
+          name: https-alt
+          tls:
+            subject: CN=edge-sync.example
+            issuer: CN=edge-sync.example
+            notBefore: '2030-10-28'
+            notAfter: '2032-10-27'
+            san: [edge-sync.example]
+            sha256: '5B:A9:BC:8D:EB:E2:64:71:F5:91:CD:22:55:63:D2:1C:8B:65:BD:14:D6:DC:76:DB:8F:3D:AD:6E:AD:55:BC:BC'
+
+    - id: corvane-sso
+      hostname: sso-legacy.corvane.example
+      ip: 198.51.100.140
+      os: inconnu
+      networks: [internet-b]
+      services:
+        - port: 443
+          name: https
+          tls:
+            subject: CN=edge-sync.example
+            issuer: CN=edge-sync.example
+            notBefore: '2030-10-28'
+            notAfter: '2032-10-27'
+            san: [edge-sync.example]
+            sha256: '5B:A9:BC:8D:EB:E2:64:71:F5:91:CD:22:55:63:D2:1C:8B:65:BD:14:D6:DC:76:DB:8F:3D:AD:6E:AD:55:BC:BC'
+
+    - id: corvane-www
+      hostname: www.corvane.example
+      ip: 198.51.100.141
+      os: inconnu
+      networks: [internet-b]
+      services:
+        - port: 443
+          name: https
+          http:
+            status: 200
+            headers: { Server: corvane-edge }
+            body: |
+              <h1>Corvane Holdings — Résilience des infrastructures critiques</h1>
+              <p>Partenaire de confiance de l'énergie, du transport et de la santé.</p>
+          tls:
+            subject: CN=www.corvane.example, O=Corvane Holdings AG
+            issuer: CN=Autorité Publique de Test R3, O=Exemple Trust
+            notBefore: '2031-01-04'
+            notAfter: '2032-01-04'
+            san: [www.corvane.example, corvane.example]
+            sha256: '30:AD:D7:B5:35:BF:2F:FE:4A:0F:63:11:7D:0D:6D:30:E8:D2:78:83:DD:B9:29:19:C0:02:32:4E:B4:C9:C0:AC'
+
+  domains:
+    - name: edge-sync.example
+      registrar: Nordhavn Domains ApS
+      registrant: REDACTED FOR PRIVACY
+      created: '2030-10-27'
+      expires: '2031-10-27'
+      nameservers: [ns1.dns-relais.example, ns2.dns-relais.example]
+      abuse: abuse@nordhavn-domains.example
+      records:
+        - { name: '@', type: A, value: 203.0.113.200 }
+    - name: corvane.example
+      registrar: Registre Hexagone SAS
+      registrant: Corvane Holdings AG
+      created: '2016-03-09'
+      expires: '2033-03-09'
+      nameservers: [ns1.dns-relais.example, ns2.dns-relais.example]
+      abuse: abuse@registre-hexagone.example
+      records:
+        - { name: '@', type: A, value: 198.51.100.141 }
+        - { name: www, type: A, value: 198.51.100.141 }
+        - { name: sso-legacy, type: A, value: 198.51.100.140 }
+        - { name: '@', type: MX, value: 10 mx.corvane.example }
+
+objectives:
+  - id: cert-c2
+    label: Relever l'empreinte du certificat du serveur distant
+    on: tls.inspected
+    where: { hostId: c2-relay }
+    hint: Les indicateurs sont dans ~/dossiers/ch-vallon/indicateurs.txt. Le service écoute sur 8443, pas 443. `man cert`.
+    concepts: [reseau.certificat-tls]
+
+  - id: archives
+    label: Consulter les archives de veille
+    requires: [cert-c2]
+    on: session.opened
+    where: { hostId: echo-intel }
+    hint: Les accès sont dans ~/dossiers/acces-intel.txt.
+
+  - id: report-empreinte
+    label: 'Rapport : où ce certificat a déjà été vu'
+    requires: [archives]
+    on: finding.confirmed
+    where: { questionId: empreinte }
+    hint: Cherche un fragment de l'empreinte dans /srv/archives/certificats.csv avec grep.
+    concepts: [reconnaissance.pivot, forensique.ioc]
+
+  - id: whois-both
+    label: Comparer les fiches d'enregistrement des deux domaines
+    requires: [report-empreinte]
+    on: whois.queried
+    where: { domain: corvane.example, found: true }
+    hint: Compare le whois de edge-sync.example avec celui du domaine de l'archive.
+    concepts: [reconnaissance.whois]
+
+  - id: report-dns
+    label: 'Rapport : l''infrastructure partagée'
+    requires: [whois-both]
+    on: finding.confirmed
+    where: { questionId: dns }
+    hint: Deux domaines, deux fiches. Une ligne est identique.
+
+  - id: report-confiance
+    label: 'Rapport : niveau de confiance de l''attribution'
+    requires: [report-dns]
+    on: finding.confirmed
+    where: { questionId: confiance }
+    hint: Relis la fiche Attribution. Qu'est-ce que ces indices prouvent — et qu'est-ce qu'ils ne prouvent pas ?
+    concepts: [ethique.attribution]
+
+  - id: decision
+    label: Décider à qui transmettre le dossier
+    requires: [report-confiance]
+    on: choice.made
+    where: { choiceId: dossier }
+    hint: La décision t'attend dans le panneau de décision.
+
+  - id: still-live
+    label: Vérifier si le certificat est encore en service chez Corvane
+    optional: true
+    requires: [report-empreinte]
+    on: tls.inspected
+    where: { hostId: corvane-sso }
+    hint: Regarder le certificat qu'un serveur public présente, c'est ce que fait n'importe quel navigateur. Pas besoin de scan.
+
+questions:
+  - id: empreinte
+    prompt: Sur quel serveur ce certificat a-t-il déjà été observé ?
+    accept: [sso-legacy.corvane.example, 198.51.100.140, sso-legacy]
+    hint: L'empreinte est unique. Un fragment suffit pour la retrouver dans l'archive.
+    explain: Le même certificat auto-signé, relevé en novembre 2030 sur un serveur de Corvane. Un écho.
+  - id: dns
+    prompt: Quel fournisseur de serveurs de noms les deux domaines partagent-ils ?
+    requires: [empreinte]
+    accept: [dns-relais.example, ns1.dns-relais.example, ns2.dns-relais.example]
+    hint: Compare les lignes « Serveurs de noms » des deux whois.
+    explain: Un second écho, plus faible — un fournisseur DNS peut avoir des milliers de clients.
+  - id: organisation
+    prompt: À quelle organisation ces indices renvoient-ils ?
+    requires: [empreinte]
+    accept: [Corvane, Corvane Holdings, Corvane Holdings AG]
+    hint: Qui est titulaire de corvane.example ?
+    explain: Les indices pointent vers Corvane. Pointer n'est pas prouver.
+  - id: confiance
+    prompt: Quel niveau de confiance donner à l'attribution (faible, modéré ou élevé) ?
+    requires: [dns]
+    accept: [modéré, modere, modérée, moderee, moyen, moyenne]
+    hint: Trois indices convergent, mais chacun a une explication alternative. Ni rien, ni certitude.
+    explain: "Modéré : des indices convergents, aucun décisif. Un serveur compromis, un fournisseur partagé, un faux indice restent possibles."
+
+choices:
+  - id: dossier
+    from: Mara Okonkwo-Lind
+    on: objective.completed
+    where: { objectiveId: report-confiance }
+    prompt: |
+      Le dossier est prêt. Trois personnes m'appellent en même temps.
+
+      L'**ANCS** veut tout, maintenant, « par la voie officielle ». **Théo**
+      dit que Lanterne peut publier demain et que c'est le seul moyen que ça
+      ne soit pas enterré. **Sable** dit qu'on n'a qu'un fil et qu'il faut
+      tirer dessus avant de montrer notre jeu.
+
+      Je veux ta recommandation.
+    options:
+      - id: ancs
+        label: Transmettre à l'ANCS
+        description: La voie légale. Lente, peut-être enterrée — mais la preuve reste recevable.
+        effects: { integrity: 15, initiative: -5 }
+        consequence: |
+          Le dossier est parti à l'ANCS avec le niveau de confiance écrit en
+          gras. Accusé de réception poli. Rien depuis. Mais si un jour il y a
+          un procès, rien de ce que tu as fait ne pourra être retourné contre lui.
+      - id: lanterne
+        label: Donner le dossier à Lanterne
+        description: Publier, alerter les autres hôpitaux — au risque d'accuser trop tôt.
+        effects: { integrity: -5, initiative: 15 }
+        consequence: |
+          Lanterne a publié « Un écho de Corvane dans l'hôpital de Vallon ».
+          Trois autres établissements ont trouvé le même chant chez eux. Corvane
+          a annoncé une plainte en diffamation, et a changé tous ses certificats
+          dans l'heure.
+      - id: creuser
+        label: Garder le dossier et continuer à creuser
+        description: Ne rien montrer tant qu'on n'a pas plus solide.
+        effects: { integrity: 0, initiative: 5 }
+        consequence: |
+          Le dossier est resté dans le coffre d'ECHO. Personne n'a été alerté —
+          ni l'ANCS, ni les autres hôpitaux. Vous avez gagné du temps. Eux aussi.
+
+messages:
+  - id: noor-start-couper
+    from: Dr Noor Haddad
+    on: mission.started
+    when: { confinement/chant: couper }
+    body: |
+      Le CH a rouvert à l'heure, propre. On n'a plus de chant à écouter, mais
+      on a ses indicateurs. C'est souvent suffisant.
+
+  - id: noor-start-encadrer
+    from: Dr Noor Haddad
+    on: mission.started
+    when: { confinement/chant: encadrer }
+    body: |
+      Les 48 heures d'observation encadrée sont finies. Deux consignes reçues,
+      rien d'exploitable — mais la DSI nous fait confiance. Ça vaut de l'or.
+
+  - id: sable-start-observer
+    from: Ilya « Sable » Varga
+    on: mission.started
+    when: { confinement/chant: observer }
+    body: |
+      48 heures d'écoute. Le serveur distant a changé deux fois de consigne,
+      et 2 Go de documents sont partis. On sait au moins ce qu'ils cherchent.
+      Mara ne dort plus. Moi, ça va.
+
+  - id: theo-corvane
+    from: Théo Marchetti
+    on: objective.completed
+    where: { objectiveId: report-empreinte }
+    body: |
+      Corvane ?! Je l'avais noté en novembre, ce portail bizarre. Je savais
+      qu'il y avait quelque chose. On publie quand ?
+
+  - id: noor-prudence
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-dns }
+    body: |
+      Attention à l'effet tunnel. Ce que tu as, ce sont des échos. Avant
+      d'écrire « Corvane », demande-toi ce qui expliquerait les mêmes indices
+      si Corvane était innocente.
+
+  - id: inconnu-fin
+    from: inconnu
+    subject: '◇'
+    on: choice.made
+    where: { choiceId: dossier }
+    body: |
+      tu as trouvé le premier écho.
+
+      il y en a d'autres. cherche novembre.
+
+      — 0
