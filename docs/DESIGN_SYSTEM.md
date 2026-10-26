@@ -88,7 +88,7 @@ Polices auto-hébergées via `@fontsource-variable/*` (pas de requête Google Fo
 | `text-lg` | 18 / 28 | 500 | Titres de panneaux. |
 | `text-xl` | 22 / 30 | 600 | Titres d'écran. |
 | `text-2xl` | 28 / 36 | 600, `-0.01em` | Titres de mission. |
-| `text-display` | 48–72 / 1.0 | 600, `-0.03em` | Écran titre, chapitres. |
+| `text-display` | 36–76 / 1.0 (fluide, `clamp(36px, 7vw, 76px)`) | 600, `-0.03em` | Écran titre, chapitres. |
 
 Règles :
 - Chiffres tabulaires (`font-variant-numeric: tabular-nums`) pour IP, ports, timestamps, compteurs.

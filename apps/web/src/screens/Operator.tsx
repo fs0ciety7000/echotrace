@@ -1,6 +1,9 @@
 import { mastery } from '@echotrace/engine';
 import { BookOpen, LogOut, Mail, Network, Radar, Settings, SquareTerminal } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
+
+type MobileTab = 'terminal' | 'mission' | 'contexte';
+
 import { CATEGORY_TITLES, conceptById } from '../content/index.ts';
 import { JournalView } from '../features/journal/JournalView.tsx';
 import { MasteryMeter } from '../features/journal/MasteryMeter.tsx';
@@ -268,10 +271,11 @@ function StatusBar() {
     <footer className="col-start-2 flex h-7 items-center gap-5 border-t border-line bg-void px-4 font-mono text-[11px] text-fg-subtle">
       <span className="flex items-center gap-2">
         <StatusDot tone={session.stack.length ? 'echo' : 'trace'} pulse />
-        <span className="text-fg-muted">{session.stack.length ? 'SESSION DISTANTE' : 'CONNECTÉ'}</span> {host.hostname}
+        <span className="hidden text-fg-muted sm:inline">{session.stack.length ? 'SESSION DISTANTE' : 'CONNECTÉ'}</span>{' '}
+        {host.hostname}
       </span>
       <span className="flex items-center gap-2">
-        EXPOSITION <Meter value={exposure} tone={expTone} />{' '}
+        <span className="hidden sm:inline">EXPOSITION</span> <Meter value={exposure} tone={expTone} />{' '}
         <span className={cx(expTone === 'danger' ? 'text-danger' : expTone === 'warn' ? 'text-warn' : 'text-trace')}>
           {expLabel}
         </span>
@@ -279,7 +283,10 @@ function StatusBar() {
       <span className="ml-auto hidden md:inline">
         {lastSavedAt ? `sauvegardé ${new Date(lastSavedAt).toLocaleTimeString('fr-FR')}` : 'non sauvegardé'}
       </span>
-      <span className="tabular text-fg-muted">{new Date(clock).toISOString().slice(0, 19).replace('T', ' ')} UTC</span>
+      <span className="ml-auto tabular text-fg-muted md:ml-0">
+        <span className="hidden sm:inline">{new Date(clock).toISOString().slice(0, 10)} </span>
+        {new Date(clock).toISOString().slice(11, 19)} UTC
+      </span>
     </footer>
   );
 }
@@ -287,6 +294,7 @@ function StatusBar() {
 export function Operator() {
   const engine = useGame((s) => s.engine);
   const view = useGame((s) => s.view);
+  const [tab, setTab] = useState<MobileTab>('terminal');
   useGame((s) => s.rev);
   if (!engine) return null;
   const { user } = engine.state.session;
@@ -303,26 +311,68 @@ export function Operator() {
     );
   }
 
+  const objectivesLeft = engine.mission?.objectives().filter((o) => o.state === 'active').length ?? 0;
+  const unread = engine.mission?.unreadCount() ?? 0;
+  // Below lg the three columns become tabs; from lg up they sit side by side and the tab bar disappears.
+  const shown = (t: MobileTab) => (tab === t ? 'flex' : 'hidden lg:flex');
+
   return (
     <div className="grid h-full grid-cols-[56px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_28px] bg-void">
       <Rail />
-      <main className="grid min-h-0 grid-cols-1 gap-3 p-3 lg:grid-cols-[260px_minmax(0,1fr)_320px] xl:grid-cols-[280px_minmax(0,1fr)_340px]">
-        <div className="hidden min-h-0 lg:flex lg:flex-col">
+      <main className="flex min-h-0 flex-col gap-3 p-3 lg:grid lg:grid-cols-[260px_minmax(0,1fr)_320px] xl:grid-cols-[280px_minmax(0,1fr)_340px]">
+        <div
+          role="tablist"
+          aria-label="Zones du poste"
+          className="flex shrink-0 gap-1 rounded-md border border-line bg-surface p-1 lg:hidden"
+        >
+          {(
+            [
+              ['terminal', 'Terminal', 0],
+              ['mission', 'Objectifs', objectivesLeft],
+              ['contexte', 'Comms', unread],
+            ] as const
+          ).map(([id, label, count]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={cx(
+                'flex h-8 flex-1 items-center justify-center gap-1.5 rounded-sm text-xs',
+                tab === id ? 'bg-raised text-fg' : 'text-fg-subtle hover:text-fg',
+              )}
+            >
+              {label}
+              {id === 'contexte' && <span className="hidden sm:inline">& réseau</span>}
+              {count > 0 && (
+                <span className="rounded-full bg-signal-soft px-1.5 font-mono text-[10px] text-signal-strong">
+                  {count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <div className={cx('min-h-0 flex-1 flex-col lg:flex-none', shown('contexte'))}>
           <LeftColumn />
         </div>
-        <Panel
-          eyebrow="Terminal"
-          title={
-            <span className="font-mono text-xs font-normal text-fg-muted">
-              {user}@{engine.host().hostname}
-            </span>
-          }
-          actions={<span className="font-mono text-[11px] text-fg-faint">Tab · ↑↓ · Ctrl+C · Ctrl+L</span>}
-          className="min-h-0"
-        >
-          <EchoTerm />
-        </Panel>
-        <div className="hidden min-h-0 lg:flex lg:flex-col">
+        <div className={cx('min-h-0 flex-1 flex-col lg:flex-none', shown('terminal'))}>
+          <Panel
+            eyebrow="Terminal"
+            title={
+              <span className="font-mono text-xs font-normal text-fg-muted">
+                {user}@{engine.host().hostname}
+              </span>
+            }
+            actions={
+              <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">Tab · ↑↓ · Ctrl+C · Ctrl+L</span>
+            }
+            className="min-h-0 flex-1"
+          >
+            <EchoTerm />
+          </Panel>
+        </div>
+        <div className={cx('min-h-0 flex-1 flex-col lg:flex-none', shown('mission'))}>
           <RightColumn />
         </div>
       </main>

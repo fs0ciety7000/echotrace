@@ -27,7 +27,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ⬜ Paramètres : taille du terminal, son, réinitialiser la sauvegarde
 - ✅ PWA : manifest, icônes, service worker Workbox (jouable hors ligne, installable Chrome/Edge)
 - ⬜ Premier déploiement Coolify (Dockerfile + CI prêts, à brancher)
-- ⬜ Layout responsive < 1024 px (colonnes latérales masquées pour l'instant)
+- ✅ Responsive : onglets Terminal / Objectifs / Comms sous 1024 px, journal liste ↔ fiche sous 768 px, testé à 390 px
 
 ## Phase 2 — Acte I « Résonance » ⬜
 - Vue réseau (xyflow) synchronisée avec la découverte

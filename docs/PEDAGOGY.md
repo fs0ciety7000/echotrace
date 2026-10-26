@@ -22,7 +22,8 @@ Le journal **survit aux nouvelles parties** : la connaissance appartient au joue
 ## Mesures de progression (actuelles et prévues)
 - Fiches par niveau de maîtrise et par catégorie (`journal`).
 - Par opération : temps simulé, exposition (bruit généré), indices demandés, objectifs bonus.
-- Prévu : quiz par fiche, modules d'académie (Le Banc) avec parcours, export du journal.
+- Quiz par fiche (maîtrise 3) et maîtrise globale en % dans le journal.
+- Prévu : modules d'académie (Le Banc) avec parcours, export du journal.
 
 ## Échelle de guidage
 1. Briefing (contexte + question), notes dans le monde.

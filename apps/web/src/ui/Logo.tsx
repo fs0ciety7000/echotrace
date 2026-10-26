@@ -4,7 +4,7 @@ export function Logo({ size = 'md', className }: { size?: 'sm' | 'md' | 'display
   if (size === 'display') {
     return (
       <h1
-        className={cx('flex items-baseline font-mono font-semibold text-display text-fg', className)}
+        className={cx('flex flex-wrap items-baseline font-mono font-semibold text-display text-fg', className)}
         aria-label="Echo Trace"
       >
         <span className="tracking-[0.18em]">ECHO</span>

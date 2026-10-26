@@ -78,7 +78,7 @@ export function MainMenu() {
         </button>
       </header>
 
-      <section className="relative z-10 flex flex-1 flex-col justify-center px-8 md:px-24">
+      <section className="relative z-10 flex flex-1 flex-col justify-center px-6 md:px-24">
         <p className="eyebrow mb-6 flex items-center gap-2">
           <StatusDot tone="signal" pulse /> {'ECHO-NET // nœud 07 · connexion chiffrée'}
         </p>
@@ -135,9 +135,9 @@ export function MainMenu() {
         <span className="flex items-center gap-2">
           <StatusDot tone="trace" pulse /> ECHO-NET en ligne
         </span>
-        <span>⟶ {concepts.length} fiches au journal</span>
+        <span className="hidden sm:inline">⟶ {concepts.length} fiches au journal</span>
         {lastSavedAt && (
-          <span>
+          <span className="hidden md:inline">
             Dernière session :{' '}
             {new Date(lastSavedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
           </span>

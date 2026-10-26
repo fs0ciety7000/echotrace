@@ -67,7 +67,7 @@
   --text-xl--line-height: 30px;
   --text-2xl: 28px;
   --text-2xl--line-height: 36px;
-  --text-display: clamp(44px, 7vw, 76px);
+  --text-display: clamp(36px, 7vw, 76px);
   --text-display--line-height: 1;
   --text-display--letter-spacing: -0.03em;
 

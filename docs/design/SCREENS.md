@@ -58,6 +58,7 @@ Captures de la v0 : [menu](screenshots/menu.png) · [briefing](screenshots/brief
 - Colonne gauche (280 px) : contexte de mission, contacts, hôtes connus (cliquer un hôte → `ssh`/`nmap` pré-rempli).
 - Centre : EchoTerm (onglets multiples plus tard).
 - Droite (340 px) : objectifs + fiches récemment découvertes.
+- **Sous 1024 px** : les trois colonnes deviennent des onglets (Terminal · Objectifs · Comms & réseau) avec compteurs (objectifs actifs, messages non lus). Barre d'état compactée sous 640 px.
 - Barre d'état : connexion, jauge d'exposition (sparkline), jauges Intégrité/Initiative, horloge du monde.
 
 ## 3. Briefing de mission ✅ (v0)
