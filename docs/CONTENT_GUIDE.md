@@ -109,6 +109,65 @@ objectives:
 | `objective.completed` *(messages)* | `missionId`, `objectiveId` |
 | `mission.started` / `mission.completed` *(messages)* | `missionId` |
 
+### Données de scénario avancées
+```yaml
+hosts:
+  - id: fs-01
+    # …
+    processes:                      # ps
+      - { pid: 1442, user: root, cmd: /var/tmp/.cache/sysupd -i 300 }
+    connections:                    # netstat
+      - { local: '10.40.1.10:43918', remote: '203.0.113.200:8443', pid: 1442 }
+    services:
+      - port: 443
+        name: https
+        http: { status: 200, headers: { Server: Exemple/1.0 }, body: '…' }   # curl
+        tls:                                                                   # cert
+          subject: CN=www.exemple.example
+          issuer: CN=Autorité de Test
+          notBefore: '2030-11-02'
+          notAfter: '2031-11-02'
+          san: [www.exemple.example]
+          sha256: 'AA:BB:…'          # 32 octets hexadécimaux séparés par « : »
+domains:                            # whois et dns
+  - name: exemple.example
+    registrar: …
+    nameservers: [ns1.exemple.example]
+    axfr: false                     # true = « dns audit » signale une zone divulguée
+    records:
+      - { name: '@', type: A, value: 203.0.113.10 }
+      - { name: www, type: CNAME, value: exemple.example }
+```
+
+### Questions de rapport (`report`)
+```yaml
+questions:
+  - id: source                       # le joueur tape : report source <réponse>
+    prompt: Avec quelle adresse extérieure communique-t-il ?
+    accept: [203.0.113.200, edge-sync.example]   # comparaison sans casse ni ponctuation finale
+    requires: [processus]            # se débloque après une autre conclusion
+    hint: Pointe vers la preuve, jamais vers la réponse.
+    explain: Pourquoi c'est la bonne réponse (affiché à la confirmation).
+```
+Un objectif s'y accroche avec `on: finding.confirmed` / `where: { questionId: source }`.
+
+### Choix moraux
+```yaml
+choices:
+  - id: chant
+    from: Dr Noor Haddad
+    on: objective.completed           # même déclencheurs que les messages
+    where: { objectiveId: report-indicateurs }
+    prompt: Markdown — la situation, sans orienter.
+    options:                          # 2 ou 3
+      - id: couper
+        label: Prévenir la DSI et couper maintenant
+        description: Une ligne, honnête sur le coût.
+        effects: { integrity: 15, initiative: -5 }   # jamais affichés avant le choix
+        consequence: Markdown affiché au débrief.
+```
+Règles : **aucune option n'est la « bonne »** ; chaque option a un coût visible au débrief. Les décisions sont mémorisées pour toute la campagne (`missionId/choiceId`).
+
 ### Messages
 Messages diégétiques (Noor, Mara, inconnu…) livrés dans le panneau Comms et lisibles au terminal avec `mail`.
 
@@ -122,6 +181,8 @@ messages:
     body: |
       Markdown court (3–6 lignes). Tapé en machine à écrire à la première lecture.
 ```
+Un message peut dépendre d'une décision antérieure : `when: { confinement/chant: observer }`.
+
 Règles : un message **réagit** à ce que le joueur vient de faire (jamais une consigne déguisée qui double l'objectif) ; il apporte du lore, une nuance technique, ou une tension.
 
 La mission est accomplie quand tous les objectifs **non optionnels** sont faits ; les optionnels restent accomplissables jusqu'au retour au menu.

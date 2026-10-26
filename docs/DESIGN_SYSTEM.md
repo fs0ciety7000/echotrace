@@ -191,6 +191,12 @@ Verre, en bas à droite, 360 px, icône + titre + texte, liseré gauche 2 px de 
 Expéditeur en `fg`, adresse en mono `fg-subtle`, horodatage tabulaire. Les messages narratifs d'ECHO portent un liseré `echo` ; un expéditeur `inconnu` passe en mono + liseré `danger`.
 Non lus : indicateur « en train d'écrire » (3 points pulsés) puis machine à écrire **séquentielle** (18 ms/caractère, 500 ms entre deux messages) ; clic ou touche pour passer ; instantané en mouvement réduit.
 
+### 9.13 Décision (modale de choix)
+Modale niveau 4, accent `echo`. Expéditeur (pastille initiales), situation en Markdown, options en cartes radio (bordure `echo-line` + fond `echo-soft` quand sélectionnée). **Les effets sur les jauges ne sont jamais affichés avant le choix** ; un toast `echo` les révèle après. « Plus tard » ferme sans décider ; un bandeau « Décision en attente » (point pulsé `echo`) reste dans le panneau Objectifs.
+
+### 9.14 Jauges de campagne
+Barre d'état : `INTÉGRITÉ` (trace) et `INITIATIVE` (warn), mètres 64 px + valeur tabulaire. Masquées sous 1024 px.
+
 ### 9.12 Drawer (panneau latéral)
 Niveau 3 (verre), ancré à droite, 460 px max, liseré supérieur de la couleur du contexte (`echo` fiche, `signal` comms). Échap ferme ; à la fermeture le focus revient au terminal (`[data-terminal-input]`).
 

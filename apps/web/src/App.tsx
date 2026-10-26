@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { CommsDrawer } from './features/comms/CommsDrawer.tsx';
 import { ConceptDrawer } from './features/journal/ConceptDrawer.tsx';
 import { BriefingModal } from './features/missions/BriefingModal.tsx';
+import { ChoiceModal } from './features/missions/ChoiceModal.tsx';
 import { DebriefModal } from './features/missions/DebriefModal.tsx';
 import { SettingsModal } from './features/SettingsModal.tsx';
 import { MainMenu } from './screens/MainMenu.tsx';
@@ -27,6 +28,7 @@ export function App() {
       {screen === 'menu' ? <MainMenu /> : <Operator />}
       <BriefingModal />
       <DebriefModal />
+      <ChoiceModal />
       <SettingsModal />
       <ConceptDrawer />
       <CommsDrawer />

@@ -7,6 +7,8 @@ export function DebriefModal() {
   const modal = useGame((s) => s.modal);
   const setModal = useGame((s) => s.setModal);
   const toMenu = useGame((s) => s.toMenu);
+  const nextOperation = useGame((s) => s.nextOperation);
+  const upcoming = useGame((s) => s.upcoming);
   const engine = useGame((s) => s.engine);
   useGame((s) => s.rev);
   const mission = engine?.mission;
@@ -21,7 +23,11 @@ export function DebriefModal() {
     { label: 'Exposition', value: `${engine.state.exposure}/100` },
     { label: 'Indices', value: String(progress.hintsUsed.length) },
     { label: 'Bonus', value: `${optionalDone}/${optional.length}` },
+    ...(spec.questions.length ? [{ label: 'Conclusions erronées', value: String(progress.wrongAnswers ?? 0) }] : []),
   ];
+  const decisions = mission.decisions();
+  const next = upcoming();
+  const actOver = !next || next.act !== spec.act;
 
   return (
     <Modal
@@ -35,13 +41,19 @@ export function DebriefModal() {
           <Button variant="ghost" onClick={() => setModal(null)}>
             Rester sur le poste
           </Button>
-          <Button variant="primary" onClick={toMenu} data-autofocus>
-            Retour au menu
-          </Button>
+          {next ? (
+            <Button variant="primary" onClick={nextOperation} data-autofocus>
+              {actOver ? 'Acte suivant' : 'Opération suivante'} : {next.title}
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={toMenu} data-autofocus>
+              Retour au menu
+            </Button>
+          )}
         </>
       }
     >
-      <dl className="mb-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-4">
+      <dl className="mb-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-5">
         {stats.map((s) => (
           <div key={s.label} className="bg-surface px-4 py-3">
             <dt className="eyebrow">{s.label}</dt>
@@ -52,6 +64,26 @@ export function DebriefModal() {
       <div className="mb-3 eyebrow">Question de l'opération</div>
       <p className="mb-5 text-base text-fg">{spec.question}</p>
       <Markdown source={spec.debrief} />
+      {decisions.length > 0 && (
+        <section className="mt-8 border-t border-line pt-5">
+          <div className="eyebrow mb-3">Tes décisions et leurs conséquences</div>
+          {decisions.map(({ choice, option }) => (
+            <div key={choice.id} className="mb-4 border-l-2 border-echo-line pl-4">
+              <p className="text-sm font-medium text-fg">{option.label}</p>
+              <Markdown source={option.consequence} className="text-sm [&_p]:text-sm" />
+            </div>
+          ))}
+          <p className="font-mono text-xs text-fg-subtle tabular">
+            Intégrité {engine.campaign.integrity} · Initiative {engine.campaign.initiative}
+          </p>
+        </section>
+      )}
+      {!next && (
+        <p className="mt-6 rounded-md border border-echo-line bg-echo-soft px-4 py-3 text-sm text-fg">
+          Fin de la campagne disponible. L'Acte II arrive dans une prochaine version — ton journal et tes décisions sont
+          conservés.
+        </p>
+      )}
       {optionalDone < optional.length && (
         <p className="mt-6 text-sm text-fg-subtle">
           Il reste un objectif optionnel. Tu peux rester sur le poste pour le chercher.

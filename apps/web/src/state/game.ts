@@ -1,4 +1,14 @@
-import { Engine, type GameEvent, type JournalState, type Line } from '@echotrace/engine';
+import {
+  type CampaignState,
+  campaignOrder,
+  Engine,
+  type GameEvent,
+  type JournalState,
+  type Line,
+  type MissionSpec,
+  newCampaign,
+  nextMission,
+} from '@echotrace/engine';
 import { create } from 'zustand';
 import { concepts, getMission, missions } from '../content/index.ts';
 import { deleteSave, loadSave, type SaveFile, writeSave } from './persistence.ts';
@@ -23,7 +33,7 @@ export interface Toast {
   action?: 'comms';
 }
 
-type Modal = 'briefing' | 'debrief' | 'settings' | null;
+type Modal = 'briefing' | 'debrief' | 'settings' | 'choice' | null;
 
 interface GameStore {
   screen: Screen;
@@ -45,6 +55,11 @@ interface GameStore {
 
   init: () => Promise<void>;
   newGame: () => void;
+  /** Starts the next campaign mission, carrying journal and campaign over. */
+  nextOperation: () => void;
+  /** The mission that follows the current one, if any. */
+  upcoming: () => MissionSpec | undefined;
+  choose: (choiceId: string, optionId: string) => void;
   continueGame: () => Promise<void>;
   toMenu: () => void;
   run: (input: string) => void;
@@ -128,7 +143,16 @@ export const useGame = create<GameStore>()((set, get) => {
           break;
         }
         case 'mission.completed':
-          setTimeout(() => set({ modal: 'debrief' }), 900);
+          // A decision may still be open on screen; the debrief waits for it.
+          setTimeout(() => {
+            if (get().modal !== 'choice') set({ modal: 'debrief' });
+          }, 900);
+          break;
+        case 'choice.offered':
+          setTimeout(() => {
+            if (get().modal === null) set({ modal: 'choice' });
+          }, 1200);
+          toast({ tone: 'warn', title: 'Décision attendue', body: 'Ta recommandation est demandée.' });
           break;
         case 'concept.encountered':
           // Only announce first encounters (uses === 1 after the journal handler ran).
@@ -150,6 +174,22 @@ export const useGame = create<GameStore>()((set, get) => {
         }
       }
     });
+  };
+
+  const start = (mission: MissionSpec, journal: JournalState, campaign: CampaignState) => {
+    const engine = Engine.fromMission(mission, concepts, journal, campaign);
+    attach(engine);
+    set((s) => ({
+      engine,
+      screen: 'operator',
+      view: 'terminal',
+      scrollback: [banner(engine)],
+      modal: 'briefing',
+      openConcept: null,
+      commsOpen: false,
+      rev: s.rev + 1,
+    }));
+    scheduleSave();
   };
 
   return {
@@ -184,13 +224,37 @@ export const useGame = create<GameStore>()((set, get) => {
     },
 
     newGame() {
-      const first = missions[0];
+      const first = campaignOrder(missions)[0];
       if (!first) throw new Error('aucune mission dans /content/missions');
-      // The learning journal survives a new game: knowledge is the player's, not the save's.
+      // The learning journal survives a new game (knowledge is the player's); the campaign restarts.
       const journal = get().engine?.journal ?? carriedJournal;
-      const engine = Engine.fromMission(first, concepts, structuredClone(journal));
-      attach(engine);
-      set({ engine, screen: 'operator', scrollback: [banner(engine)], modal: 'briefing', rev: get().rev + 1 });
+      start(first, structuredClone(journal), newCampaign());
+    },
+
+    upcoming() {
+      const engine = get().engine;
+      return engine ? nextMission(missions, engine.campaign) : undefined;
+    },
+
+    nextOperation() {
+      const engine = get().engine;
+      const next = get().upcoming();
+      if (!engine || !next) return;
+      start(next, structuredClone(engine.journal), structuredClone(engine.campaign));
+    },
+
+    choose(choiceId, optionId) {
+      const engine = get().engine;
+      const choice = engine?.mission?.pendingChoice();
+      const option = choice?.options.find((o) => o.id === optionId);
+      if (!engine || !option || !engine.choose(choiceId, optionId)) return;
+      const fmt = (label: string, v: number) => (v ? `${label} ${v > 0 ? '+' : ''}${v}` : '');
+      const effects = [fmt('Intégrité', option.effects.integrity), fmt('Initiative', option.effects.initiative)]
+        .filter(Boolean)
+        .join(' · ');
+      toast({ tone: 'echo', title: `Décision : ${option.label}`, body: effects || undefined });
+      const done = engine.mission?.progress.status === 'completed';
+      set((s) => ({ modal: done ? 'debrief' : null, rev: s.rev + 1 }));
       scheduleSave();
     },
 

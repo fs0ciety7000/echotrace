@@ -41,3 +41,57 @@ export function ObjectivesList() {
     </ol>
   );
 }
+
+/** Pending decision banner + the report questions of the mission. */
+export function CaseFile() {
+  const engine = useGame((s) => s.engine);
+  const setModal = useGame((s) => s.setModal);
+  const setDraft = useGame((s) => s.setDraft);
+  useGame((s) => s.rev);
+  const mission = engine?.mission;
+  if (!mission) return null;
+  const pending = mission.pendingChoice();
+  const questions = mission.questions();
+  if (!pending && questions.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2 border-t border-line px-2 py-2">
+      {pending && (
+        <button
+          type="button"
+          onClick={() => setModal('choice')}
+          className="flex animate-rise items-center gap-2 rounded-sm border border-echo-line bg-echo-soft px-3 py-2 text-left text-sm text-echo-strong hover:bg-echo/20"
+        >
+          <span aria-hidden className="size-1.5 animate-pulse-signal rounded-full bg-echo" />
+          Décision en attente — {pending.from}
+        </button>
+      )}
+      {questions.length > 0 && (
+        <div>
+          <div className="eyebrow px-2 py-1">Rapport</div>
+          <ul>
+            {questions.map((q) => (
+              <li key={q.id}>
+                <button
+                  type="button"
+                  disabled={q.state !== 'open'}
+                  onClick={() => setDraft(`report ${q.id} `)}
+                  title={q.state === 'open' ? `Préparer : report ${q.id} <réponse>` : undefined}
+                  className={cx(
+                    'flex w-full items-start gap-2 rounded-sm px-2 py-1 text-left text-xs',
+                    q.state === 'open' ? 'text-fg hover:bg-raised' : 'text-fg-subtle',
+                  )}
+                >
+                  <span aria-hidden className={cx('font-mono', q.state === 'confirmed' ? 'text-trace' : 'text-signal')}>
+                    {q.state === 'confirmed' ? '✓' : q.state === 'open' ? '?' : '·'}
+                  </span>
+                  <span className="flex-1">{q.state === 'locked' ? 'Question verrouillée' : q.prompt}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}

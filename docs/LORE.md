@@ -103,10 +103,13 @@ Premier jour à ECHO. Noor fait passer les exercices de base sur le **Banc** (le
 - Concepts : terminal, système de fichiers, adresses IP, ping, ports, logs.
 
 ### Acte I — *Résonance*
-L'hôpital régional de **Vallon-sur-Aire** subit un rançongiciel « opportuniste ». En analysant l'incident, le joueur découvre que l'attaque a servi de diversion : un second implant, discret, exfiltre des données de planification énergétique.
-- Missions : reconnaissance passive (whois, DNS), cartographie réseau, fingerprinting de services, analyse de logs d'authentification, chronologie d'incident.
-- Choix clé : prévenir l'hôpital immédiatement (Intégrité) ou laisser l'implant actif pour l'observer (Initiative).
-- Révélation : l'infrastructure de commande réutilise un certificat déjà vu… sur un serveur de Corvane.
+L'hôpital régional de **Vallon-sur-Aire** subit un rançongiciel. ECHO intervient **aux côtés de la DSI**, sous convention.
+- **01 Vallon** — cartographier ce que le CH expose (whois, DNS, audit de zone, scan autorisé) : un portail VPN non corrigé, un serveur oublié. Sable propose de sortir du périmètre.
+- **02 Confinement** — le rançongiciel est maîtrisé, mais `fs-01` a été épargné. Le joueur y trouve un **chant** (programme qui contacte l'extérieur toutes les 5 min) et sa relance planifiée. Choix : couper / observer avec l'accord de la DSI / observer sans le dire.
+- **03 Résonance** — l'empreinte du certificat du serveur distant a déjà été vue sur un serveur de **Corvane** ; mêmes serveurs de noms. Attribution au niveau de confiance *modéré*. Choix : ANCS, Lanterne, ou garder le dossier.
+- Fil rouge : « 0 » écrit au joueur — *cherche novembre* (les Pannes de Novembre, Acte II).
+
+Choix narratif assumé : l'Acte I enseigne la **réponse à incident** et le **recoupement d'indices** du point de vue du défenseur ; la reconstitution détaillée de l'intrusion reste hors champ.
 
 ### Acte II — *Interférences*
 ECHO remonte la chaîne de sous-traitance. Kestrel entre en contact. HOLLOW CHOIR riposte : campagne de phishing ciblant la cellule, fuite de l'identité de Théo.

@@ -7,7 +7,7 @@ type MobileTab = 'terminal' | 'mission' | 'contexte';
 import { CATEGORY_TITLES, conceptById } from '../content/index.ts';
 import { JournalView } from '../features/journal/JournalView.tsx';
 import { MasteryMeter } from '../features/journal/MasteryMeter.tsx';
-import { ObjectivesList } from '../features/missions/ObjectivesPanel.tsx';
+import { CaseFile, ObjectivesList } from '../features/missions/ObjectivesPanel.tsx';
 import { EchoTerm } from '../features/terminal/EchoTerm.tsx';
 import { useGame } from '../state/game.ts';
 import { StatusDot, type Tone } from '../ui/Badge.tsx';
@@ -197,6 +197,8 @@ function RightColumn() {
     <div className="flex min-h-0 flex-col gap-3">
       <Panel
         eyebrow="Objectifs"
+        className="max-h-[60%] min-h-0 shrink-0"
+        bodyClassName="overflow-y-auto"
         actions={
           completed && (
             <Button size="sm" variant="ghost" onClick={() => setModal('debrief')}>
@@ -206,6 +208,7 @@ function RightColumn() {
         }
       >
         <ObjectivesList />
+        <CaseFile />
       </Panel>
       <Panel eyebrow="Fiches récentes" className="min-h-0 flex-1" bodyClassName="overflow-y-auto">
         {recent.length === 0 ? (
@@ -279,6 +282,12 @@ function StatusBar() {
         <span className={cx(expTone === 'danger' ? 'text-danger' : expTone === 'warn' ? 'text-warn' : 'text-trace')}>
           {expLabel}
         </span>
+      </span>
+      <span className="hidden items-center gap-2 lg:flex" title="Jauges de campagne : tes décisions les font évoluer">
+        INTÉGRITÉ <Meter value={engine.campaign.integrity} tone="trace" />
+        <span className="tabular text-fg-muted">{engine.campaign.integrity}</span>
+        <span className="ml-2">INITIATIVE</span> <Meter value={engine.campaign.initiative} tone="warn" />
+        <span className="tabular text-fg-muted">{engine.campaign.initiative}</span>
       </span>
       <span className="ml-auto hidden md:inline">
         {lastSavedAt ? `sauvegardé ${new Date(lastSavedAt).toLocaleTimeString('fr-FR')}` : 'non sauvegardé'}
