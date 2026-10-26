@@ -49,8 +49,11 @@ docker run --rm -p 8080:8080 echotrace
 # → http://localhost:8080  et  http://localhost:8080/healthz
 ```
 
-## 5. Rollback
+## 5. PWA & mises à jour
+Le service worker (Workbox, `registerType: autoUpdate`) précache tout le jeu. `sw.js`, `registerSW.js`, `manifest.webmanifest` et `index.html` sont servis en `no-cache` : un nouveau déploiement est récupéré au prochain chargement, puis activé automatiquement. Ne jamais mettre ces fichiers en cache côté Cloudflare.
+
+## 6. Rollback
 Coolify conserve les images précédentes : *Deployments → choisir un déploiement → Redeploy*. Le jeu étant 100 % client avec sauvegardes versionnées (`saveVersion`), un rollback ne corrompt pas les sauvegardes (les migrations sont ascendantes ; une sauvegarde plus récente que le client est ignorée avec un avertissement).
 
-## 6. Phase 4 (backend)
+## 7. Phase 4 (backend)
 Ajout prévu d'un service `apps/server` (Hono + SQLite) : deuxième ressource Coolify, volume persistant `/data`, domaine `api.echo.fs0ciety.org` ou chemin `/api` routé par Caddy. Ce document sera mis à jour à ce moment.

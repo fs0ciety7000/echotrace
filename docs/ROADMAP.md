@@ -25,7 +25,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ⬜ Journal d'apprentissage : écran complet + mini-quiz (maîtrise 3)
 - ✅ Paramètres : Haute lisibilité, Mouvement réduit
 - ⬜ Paramètres : taille du terminal, son, réinitialiser la sauvegarde
-- ⬜ PWA : manifest + icônes + service worker (hors-ligne)
+- ✅ PWA : manifest, icônes, service worker Workbox (jouable hors ligne, installable Chrome/Edge)
 - ⬜ Premier déploiement Coolify (Dockerfile + CI prêts, à brancher)
 - ⬜ Layout responsive < 1024 px (colonnes latérales masquées pour l'instant)
 
