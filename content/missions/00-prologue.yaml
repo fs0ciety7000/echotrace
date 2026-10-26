@@ -1,0 +1,247 @@
+# Prologue — « Bruit de fond »
+# Premier jour à ECHO. Tutoriel intégré : terminal, fichiers, IP, ping, ports, SSH, logs.
+# Voir docs/CONTENT_GUIDE.md pour le format.
+
+id: prologue
+title: Bruit de fond
+act: prologue
+order: 0
+from: Dr Noor Haddad
+summary: Premier jour sur le Banc, le cyber range d'ECHO.
+question: Comment sait-on ce qui tourne sur une machine sans y avoir accès ?
+concepts:
+  - systeme.shell
+  - systeme.fichiers
+  - reseau.adresse-ip
+  - reseau.ping-icmp
+  - reseau.port
+  - reconnaissance.scan-de-ports
+  - reconnaissance.empreinte-service
+  - systeme.ssh
+  - forensique.logs
+  - ethique.autorisation
+  - defense.surface-attaque
+
+briefing: |
+  Bienvenue chez ECHO, Opérateur 7.
+
+  Iris devait t'accueillir ce matin. Elle n'est pas venue — ça lui arrive, elle
+  suit parfois une piste toute la nuit. C'est donc moi qui m'y colle.
+
+  Avant de toucher au moindre dossier réel, tout le monde passe par **le Banc** :
+  notre réseau d'entraînement. Rien de ce que tu y fais ne sort d'ici, et tu es
+  **autorisé·e** à y tout examiner. Retiens bien ce mot : *autorisé*. C'est la
+  différence entre un analyste et un délinquant.
+
+  Ton poste s'appelle `echo-ws`. Commence par regarder ce qu'il contient.
+  J'ai laissé une note dans ton répertoire personnel.
+
+  — Noor
+
+debrief: |
+  **La réponse à la question du jour :** une machine qui offre un service
+  *écoute* sur un **port**. En lui envoyant des paquets (un scan), on voit
+  quels ports répondent ; en dialoguant poliment avec chacun (`nmap -sV`), le
+  service se présente souvent lui-même — nom, logiciel, version. C'est
+  exactement ce qu'un attaquant fait en premier… et ce qu'un défenseur doit
+  faire avant lui, pour savoir ce qu'il expose.
+
+  Tu as aussi vu l'autre face : chaque connexion laisse une **trace** dans les
+  journaux. Les tiennes comprises.
+
+  Et cette connexion de 03:12, depuis `iris-ws`… Iris n'a aucune raison de se
+  connecter au Banc en pleine nuit avec un compte de stagiaire. Garde ça pour toi
+  pour l'instant. On en reparle demain.
+
+scenario:
+  clock: '2031-03-14T08:47:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: banc, cidr: 10.7.1.0/24, label: le Banc (cyber range) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan, banc]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /etc/hostname: |
+          echo-ws
+        /home/operateur-7/bienvenue.txt: |
+          ─────────────────────────────────────────────
+           ECHO · NOTE INTERNE · de : Noor  pour : OP-7
+          ─────────────────────────────────────────────
+
+          Bienvenue. Quelques réflexes avant de commencer :
+
+          1. Où suis-je ? Tape `ifconfig` pour connaître l'adresse IP de ton
+             poste et les réseaux auxquels il est relié.
+          2. Le Banc est le réseau 10.7.1.0/24. Notre machine d'exercice,
+             banc-01, est en 10.7.1.10. Vérifie qu'elle te répond : `ping banc-01`.
+          3. Ensuite, découvre ce qu'elle expose : `nmap -sV banc-01`.
+             (Regarde bien la colonne VERSION.)
+          4. Les identifiants du compte d'exercice sont dans notes/banc.txt.
+
+          Si tu bloques : `hint`. Si tu ne connais pas une commande : `man <commande>`.
+          Les mots soulignés en violet ouvrent une fiche de ton journal.
+
+          — N.
+        /home/operateur-7/notes/banc.txt: |
+          Banc — compte d'exercice
+          ------------------------
+          hôte     : banc-01 (10.7.1.10)
+          compte   : stagiaire
+          mot de passe : echo-banc-2031
+
+          (Oui, un mot de passe dans un fichier texte, c'est mal. C'est justement
+          le genre de chose que tu apprendras à repérer chez les autres.)
+        /home/operateur-7/notes/doctrine.txt: |
+          DOCTRINE ECHO
+          1. Observer avant d'agir.
+          2. Ne jamais nuire à un tiers innocent.
+          3. Une preuve obtenue illégalement est une preuve perdue.
+          4. Documenter tout.
+        /home/operateur-7/outils/: ''
+        /home/operateur-7/.historique-iris: |
+          # fichier oublié lors de la réinstallation du poste
+          ssh stagiaire@banc-01
+          cat /var/log/auth.log
+          nmap -Pn 10.7.0.66
+
+    - id: banc-01
+      hostname: banc-01
+      ip: 10.7.1.10
+      os: Debian GNU/Linux 12
+      networks: [banc]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 Debian 2+deb12u3, banner: SSH-2.0-OpenSSH_9.2p1 Debian-2+deb12u3 }
+        - { port: 80, name: http, product: nginx, version: 1.22.1 }
+        - { port: 3306, name: mysql, state: filtered }
+      accounts:
+        - { user: stagiaire, password: echo-banc-2031 }
+        - { user: root, password: null }
+      files:
+        /etc/motd: |
+          ┌──────────────────────────────────────────┐
+          │  LE BANC · banc-01 · environnement ECHO  │
+          │  Machine d'exercice. Tout est journalisé │
+          └──────────────────────────────────────────┘
+        /etc/hostname: |
+          banc-01
+        /home/stagiaire/LISEZMOI.txt: |
+          Exercice n°1 — Les journaux d'authentification.
+
+          Sur un serveur Linux, chaque tentative de connexion SSH est consignée
+          dans /var/log/auth.log. Lis-le et cherche les connexions réussies :
+            grep Accepted /var/log/auth.log
+          puis les échecs :
+            grep Failed /var/log/auth.log
+
+          Question : qui s'est connecté à cette machine, et d'où ?
+        /var/www/html/index.html: |
+          <h1>banc-01</h1><p>It works.</p>
+        /var/log/auth.log: |
+          Mar 13 18:02:11 banc-01 sshd[1022]: Server listening on 0.0.0.0 port 22.
+          Mar 13 18:40:57 banc-01 sshd[1311]: Accepted password for stagiaire from 10.7.0.12 port 51122 ssh2
+          Mar 13 18:41:02 banc-01 sshd[1311]: pam_unix(sshd:session): session opened for user stagiaire by (uid=0)
+          Mar 13 19:15:40 banc-01 sshd[1311]: pam_unix(sshd:session): session closed for user stagiaire
+          Mar 14 03:11:48 banc-01 sshd[2087]: Failed password for root from 10.7.0.66 port 40218 ssh2
+          Mar 14 03:11:53 banc-01 sshd[2087]: Failed password for root from 10.7.0.66 port 40218 ssh2
+          Mar 14 03:12:09 banc-01 sshd[2091]: Accepted password for stagiaire from 10.7.0.66 port 40226 ssh2
+          Mar 14 03:12:09 banc-01 sshd[2091]: pam_unix(sshd:session): session opened for user stagiaire by (uid=0)
+          Mar 14 03:14:31 banc-01 sshd[2091]: pam_unix(sshd:session): session closed for user stagiaire
+          Mar 14 07:30:00 banc-01 CRON[2210]: pam_unix(cron:session): session opened for user root by (uid=0)
+
+    - id: banc-02
+      hostname: banc-02
+      ip: 10.7.1.20
+      os: Ubuntu 14.04 LTS
+      networks: [banc]
+      services:
+        - { port: 21, name: ftp, product: vsftpd, version: 2.3.4 }
+        - { port: 23, name: telnet, product: Linux telnetd }
+        - { port: 80, name: http, product: Apache httpd, version: 2.4.7 }
+      accounts:
+        - { user: admin, password: null }
+
+    - id: iris-ws
+      hostname: iris-ws
+      ip: 10.7.0.66
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan]
+      icmp: false
+      services:
+        - { port: 22, name: ssh, state: filtered }
+        - { port: 9001, name: tor-orport, product: inconnu, banner: '« chant » 4 octets toutes les 300 s' }
+      accounts:
+        - { user: iris, password: null }
+
+objectives:
+  - id: list-home
+    label: Explorer ton répertoire personnel
+    on: dir.listed
+    where: { hostId: echo-ws, path: /home/operateur-7 }
+    hint: La commande `ls` liste le contenu du répertoire où tu te trouves.
+    concepts: [systeme.fichiers]
+
+  - id: read-welcome
+    label: Lire la note de Noor
+    requires: [list-home]
+    on: file.read
+    where: { hostId: echo-ws, path: /home/operateur-7/bienvenue.txt }
+    hint: '`cat bienvenue.txt` affiche le contenu du fichier. Essaie Tab pour compléter le nom.'
+
+  - id: find-ip
+    label: Identifier l'adresse IP de ton poste
+    requires: [read-welcome]
+    on: command.run
+    where: { name: ifconfig }
+    hint: '`ifconfig` affiche tes interfaces réseau. Repère la ligne « inet ».'
+    concepts: [reseau.adresse-ip]
+
+  - id: ping-banc
+    label: Vérifier que banc-01 répond
+    requires: [find-ip]
+    on: host.pinged
+    where: { hostId: banc-01, reachable: true }
+    hint: '`ping banc-01` — tu peux aussi utiliser son adresse : `ping 10.7.1.10`.'
+    concepts: [reseau.ping-icmp]
+
+  - id: scan-banc
+    label: Identifier les services et versions de banc-01
+    requires: [ping-banc]
+    on: host.scanned
+    where: { hostId: banc-01, versions: true }
+    hint: 'Un simple `nmap banc-01` montre les ports. Ajoute `-sV` pour interroger les services sur leur version.'
+    concepts: [reseau.port, reconnaissance.empreinte-service, defense.surface-attaque]
+
+  - id: login-banc
+    label: Te connecter à banc-01 avec le compte d'exercice
+    requires: [scan-banc]
+    on: session.opened
+    where: { hostId: banc-01, user: stagiaire }
+    hint: 'Les identifiants sont dans ~/notes/banc.txt. Puis : `ssh stagiaire@banc-01`.'
+    concepts: [systeme.ssh]
+
+  - id: read-authlog
+    label: Lire le journal d'authentification de banc-01
+    requires: [login-banc]
+    on: file.read
+    where: { hostId: banc-01, path: /var/log/auth.log }
+    hint: 'Le fichier est /var/log/auth.log. `grep Accepted /var/log/auth.log` ne garde que les connexions réussies.'
+    concepts: [forensique.logs]
+
+  - id: find-iris
+    label: Identifier la machine 10.7.0.66
+    optional: true
+    requires: [read-authlog]
+    on: host.scanned
+    where: { hostId: iris-ws }
+    hint: >-
+      Reviens sur ton poste (`exit`). 10.7.0.66 ne répond pas au ping…
+      ce qui ne veut pas dire qu'elle n'existe pas. Relis `man nmap`, option -Pn.
+    concepts: [reseau.ping-icmp]

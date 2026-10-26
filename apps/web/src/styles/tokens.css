@@ -1,0 +1,180 @@
+/*
+ * Design system « Signal » — source de vérité des tokens.
+ * Documentation : docs/DESIGN_SYSTEM.md. Toute modification se fait dans les deux.
+ * Les tokens déclarés dans @theme génèrent les utilitaires Tailwind (bg-surface, text-fg-muted…).
+ */
+
+@theme {
+  /* Neutres — Abysse */
+  --color-void: #05070a;
+  --color-deep: #0a0d12;
+  --color-surface: #0f131a;
+  --color-raised: #151a23;
+  --color-overlay: #1b2130;
+  --color-line: rgb(255 255 255 / 0.07);
+  --color-line-strong: rgb(255 255 255 / 0.12);
+  --color-line-focus: rgb(86 212 224 / 0.55);
+
+  /* Texte */
+  --color-fg: #e6eaf0;
+  --color-fg-muted: #a1aab8;
+  --color-fg-subtle: #6c7686;
+  --color-fg-faint: #3f4757;
+
+  /* Accents — Signal (cyan), Trace (émeraude), Echo (violet) */
+  --color-signal: #56d4e0;
+  --color-signal-strong: #8ae6ee;
+  --color-signal-soft: rgb(86 212 224 / 0.12);
+  --color-signal-line: rgb(86 212 224 / 0.35);
+
+  --color-trace: #3dd68c;
+  --color-trace-strong: #74e6ae;
+  --color-trace-soft: rgb(61 214 140 / 0.12);
+  --color-trace-line: rgb(61 214 140 / 0.35);
+
+  --color-echo: #9d8cff;
+  --color-echo-strong: #c0b5ff;
+  --color-echo-soft: rgb(157 140 255 / 0.12);
+  --color-echo-line: rgb(157 140 255 / 0.35);
+
+  /* États */
+  --color-warn: #f2b544;
+  --color-warn-strong: #f7cd7a;
+  --color-warn-soft: rgb(242 181 68 / 0.12);
+  --color-warn-line: rgb(242 181 68 / 0.35);
+
+  --color-danger: #f0616d;
+  --color-danger-strong: #f68f98;
+  --color-danger-soft: rgb(240 97 109 / 0.12);
+  --color-danger-line: rgb(240 97 109 / 0.35);
+
+  /* Typographie */
+  --font-sans: "Geist Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --text-micro: 11px;
+  --text-micro--line-height: 16px;
+  --text-micro--letter-spacing: 0.08em;
+  --text-xs: 12px;
+  --text-xs--line-height: 18px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 15px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 22px;
+  --text-xl--line-height: 30px;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 36px;
+  --text-display: clamp(44px, 7vw, 76px);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.03em;
+
+  /* Rayons */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Mouvement */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 320ms;
+
+  /* Ombres (élévation) */
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --shadow-float: 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --shadow-modal: 0 24px 64px -16px rgb(0 0 0 / 0.7);
+
+  /* Animations */
+  --animate-pulse-signal: pulse-signal 2s var(--ease-in-out) infinite;
+  --animate-blink: blink 1s steps(1) infinite;
+  --animate-rise: rise var(--duration-slow) var(--ease-out) both;
+  --animate-scan: scan 600ms var(--ease-out) 1;
+
+  @keyframes pulse-signal {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes scan {
+    from {
+      transform: translateY(-100%);
+      opacity: 0.9;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+}
+
+/* Gradients & matières (hors utilitaires) */
+:root {
+  --gradient-horizon: radial-gradient(120% 80% at 50% -10%, rgb(86 212 224 / 0.1), transparent 60%);
+  --gradient-echo: linear-gradient(135deg, var(--color-signal) 0%, var(--color-echo) 100%);
+  --glass-bg: rgb(21 26 35 / 0.82);
+  --glass-filter: blur(16px) saturate(140%);
+  --term-size: 13px;
+  --term-leading: 20px;
+  --grain-opacity: 0.03;
+}
+
+/* Mode Haute lisibilité */
+:root[data-theme="legible"] {
+  --color-fg: #f2f4f8;
+  --color-fg-muted: #b8c0cc;
+  --color-fg-subtle: #8c96a6;
+  --color-line: rgb(255 255 255 / 0.12);
+  --color-line-strong: rgb(255 255 255 / 0.2);
+  --text-xs: 14px;
+  --text-sm: 15px;
+  --text-sm--line-height: 24px;
+  --text-base: 17px;
+  --text-base--line-height: 28px;
+  --glass-bg: var(--color-overlay);
+  --glass-filter: none;
+  --term-size: 15px;
+  --term-leading: 24px;
+  --grain-opacity: 0;
+}
+
+/* Mouvement réduit (réglage ou préférence système) */
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
+}

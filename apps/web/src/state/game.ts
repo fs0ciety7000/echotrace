@@ -1,0 +1,260 @@
+import { Engine, type GameEvent, type JournalState, type Line } from '@echotrace/engine';
+import { create } from 'zustand';
+import { concepts, getMission, missions } from '../content/index.ts';
+import { deleteSave, loadSave, type SaveFile, writeSave } from './persistence.ts';
+
+export type Screen = 'menu' | 'operator';
+
+export interface TermEntry {
+  id: number;
+  /** Prompt + typed command, or null for pure output. */
+  prompt: Line | null;
+  input?: string;
+  lines: Line[];
+}
+
+export interface Toast {
+  id: number;
+  tone: 'signal' | 'trace' | 'echo' | 'warn';
+  title: string;
+  body?: string;
+}
+
+type Modal = 'briefing' | 'debrief' | 'settings' | null;
+
+interface GameStore {
+  screen: Screen;
+  engine: Engine | null;
+  /** Bumped after every engine mutation so selectors re-run (engine state is mutable). */
+  rev: number;
+  scrollback: TermEntry[];
+  draft: string;
+  toasts: Toast[];
+  modal: Modal;
+  openConcept: string | null;
+  hasSave: boolean;
+  saveSummary: string | null;
+  lastSavedAt: number | null;
+
+  init: () => Promise<void>;
+  newGame: () => void;
+  continueGame: () => Promise<void>;
+  toMenu: () => void;
+  run: (input: string) => void;
+  interrupt: () => void;
+  setDraft: (draft: string) => void;
+  setModal: (modal: Modal) => void;
+  showConcept: (id: string | null) => void;
+  dismissToast: (id: number) => void;
+  save: () => Promise<void>;
+}
+
+let nextId = 1;
+/** Journal from the last save, carried into a new game (knowledge belongs to the player). */
+let carriedJournal: JournalState = {};
+const MAX_SCROLLBACK = 1000;
+
+function banner(engine: Engine): TermEntry {
+  const mission = engine.mission?.spec;
+  return {
+    id: nextId++,
+    prompt: null,
+    lines: [
+      [
+        { t: 'ECHO-NET', s: 'accent' },
+        { t: ' · poste opérateur v4.2 · liaison chiffrée', s: 'subtle' },
+      ],
+      [{ t: mission ? `Opération en cours : ${mission.title}` : 'Aucune opération en cours.', s: 'muted' }],
+      [
+        { t: 'Tape ', s: 'subtle' },
+        { t: 'help', s: 'command', ref: 'help' },
+        { t: ' pour la liste des commandes, ', s: 'subtle' },
+        { t: 'objectives', s: 'command', ref: 'objectives' },
+        { t: ' pour tes objectifs.', s: 'subtle' },
+      ],
+      [],
+    ],
+  };
+}
+
+export const useGame = create<GameStore>()((set, get) => {
+  let unsubscribe: (() => void) | null = null;
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const toast = (t: Omit<Toast, 'id'>) => {
+    const id = nextId++;
+    set((s) => ({ toasts: [...s.toasts.slice(-3), { ...t, id }] }));
+    setTimeout(() => get().dismissToast(id), 5000);
+  };
+
+  // New fiches are announced once per command, not one toast each.
+  const freshConcepts: string[] = [];
+  const flushConcepts = () => {
+    if (freshConcepts.length === 0) return;
+    const titles = freshConcepts.splice(0);
+    toast({
+      tone: 'echo',
+      title: titles.length === 1 ? 'Nouvelle fiche au journal' : `${titles.length} nouvelles fiches au journal`,
+      body: titles.join(' · '),
+    });
+  };
+
+  const scheduleSave = () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => void get().save(), 600);
+  };
+
+  const attach = (engine: Engine) => {
+    unsubscribe?.();
+    unsubscribe = engine.bus.on((event: GameEvent) => {
+      switch (event.type) {
+        case 'objective.completed': {
+          const o = engine.mission?.spec.objectives.find((x) => x.id === event.payload.objectiveId);
+          toast({ tone: 'trace', title: 'Objectif accompli', body: o?.label ?? '' });
+          break;
+        }
+        case 'mission.completed':
+          setTimeout(() => set({ modal: 'debrief' }), 900);
+          break;
+        case 'concept.encountered':
+          // Only announce first encounters (uses === 1 after the journal handler ran).
+          if (engine.journal[event.payload.id]?.uses === 1) {
+            const c = engine.concepts.get(event.payload.id);
+            if (c) freshConcepts.push(c.title);
+          }
+          break;
+        case 'host.discovered': {
+          const h = engine.state.world.hosts[event.payload.hostId];
+          toast({ tone: 'signal', title: 'Hôte découvert', body: `${h?.hostname ?? '?'} · ${event.payload.ip}` });
+          break;
+        }
+      }
+    });
+  };
+
+  return {
+    screen: 'menu',
+    engine: null,
+    rev: 0,
+    scrollback: [],
+    draft: '',
+    toasts: [],
+    modal: null,
+    openConcept: null,
+    hasSave: false,
+    saveSummary: null,
+    lastSavedAt: null,
+
+    async init() {
+      const file = await loadSave();
+      if (!file) return;
+      carriedJournal = file.save.journal;
+      const mission = getMission(file.missionId);
+      const done = file.save.mission?.completed.length ?? 0;
+      const total = mission?.objectives.filter((o) => !o.optional).length ?? 0;
+      set({
+        hasSave: true,
+        saveSummary: mission
+          ? `${mission.title} · ${Math.min(100, Math.round((done / Math.max(total, 1)) * 100))} %`
+          : null,
+      });
+    },
+
+    newGame() {
+      const first = missions[0];
+      if (!first) throw new Error('aucune mission dans /content/missions');
+      // The learning journal survives a new game: knowledge is the player's, not the save's.
+      const journal = get().engine?.journal ?? carriedJournal;
+      const engine = Engine.fromMission(first, concepts, structuredClone(journal));
+      attach(engine);
+      set({ engine, screen: 'operator', scrollback: [banner(engine)], modal: 'briefing', rev: get().rev + 1 });
+      scheduleSave();
+    },
+
+    async continueGame() {
+      const file = await loadSave();
+      if (!file) return get().newGame();
+      try {
+        const engine = Engine.restore(file.save, getMission(file.missionId), concepts);
+        attach(engine);
+        nextId = Math.max(nextId, ...file.scrollback.map((e) => e.id + 1));
+        set({
+          engine,
+          screen: 'operator',
+          scrollback: [...file.scrollback, banner(engine)],
+          modal: null,
+          lastSavedAt: file.savedAt,
+          rev: get().rev + 1,
+        });
+      } catch (e) {
+        console.error(e);
+        await deleteSave();
+        toast({ tone: 'warn', title: 'Sauvegarde illisible', body: 'Une nouvelle opération commence.' });
+        get().newGame();
+      }
+    },
+
+    toMenu() {
+      void get().save();
+      set({ screen: 'menu', modal: null, openConcept: null });
+      void get().init();
+    },
+
+    run(input) {
+      const engine = get().engine;
+      if (!engine) return;
+      const pending = engine.pendingPrompt();
+      const prompt: Line = pending ? [{ t: pending.label, s: 'muted' }] : engine.prompt();
+      const shownInput = pending?.secret ? '' : input;
+      const result = engine.execute(input);
+      const entry: TermEntry = { id: nextId++, prompt, input: shownInput, lines: result.lines };
+      set((s) => ({
+        scrollback: result.clear ? [] : [...s.scrollback, entry].slice(-MAX_SCROLLBACK),
+        draft: '',
+        rev: s.rev + 1,
+      }));
+      flushConcepts();
+      scheduleSave();
+    },
+
+    interrupt() {
+      const engine = get().engine;
+      if (!engine) return;
+      const pending = engine.pendingPrompt();
+      engine.cancelPending();
+      const prompt: Line = pending ? [{ t: pending.label, s: 'muted' }] : engine.prompt();
+      set((s) => ({
+        scrollback: [
+          ...s.scrollback,
+          { id: nextId++, prompt, input: `${pending?.secret ? '' : s.draft}^C`, lines: [] },
+        ],
+        draft: '',
+        rev: s.rev + 1,
+      }));
+    },
+
+    setDraft: (draft) => set({ draft }),
+    setModal: (modal) => set({ modal }),
+
+    showConcept(id) {
+      const engine = get().engine;
+      if (id && engine) engine.study(id);
+      set((s) => ({ openConcept: id, rev: s.rev + 1 }));
+      if (id) scheduleSave();
+    },
+
+    dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+
+    async save() {
+      const { engine, scrollback } = get();
+      if (!engine?.mission) return;
+      const file: SaveFile = {
+        missionId: engine.mission.spec.id,
+        save: engine.snapshot(),
+        scrollback,
+        savedAt: Date.now(),
+      };
+      if (await writeSave(file)) set({ lastSavedAt: file.savedAt, hasSave: true });
+    },
+  };
+});

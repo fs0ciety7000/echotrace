@@ -1,0 +1,32 @@
+{
+  "name": "@echotrace/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "echo 'web: no unit tests yet'"
+  },
+  "dependencies": {
+    "@echotrace/engine": "workspace:*",
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "idb-keyval": "6.3.0",
+    "lucide-react": "1.61.0",
+    "marked": "18.1.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zustand": "5.0.16"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.5"
+  }
+}

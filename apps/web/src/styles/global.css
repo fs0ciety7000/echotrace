@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  html {
+    color-scheme: dark;
+    background: var(--color-void);
+  }
+  body {
+    @apply bg-void font-sans text-sm text-fg antialiased;
+    font-feature-settings: "ss01", "cv11";
+    overflow: hidden;
+  }
+  ::selection {
+    background: var(--color-signal-soft);
+    color: var(--color-fg);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono text-micro uppercase text-fg-subtle;
+  }
+  .glass {
+    background: var(--glass-bg);
+    /* Single declaration: Lightning CSS adds the -webkit- prefix itself (two declarations got deduplicated). */
+    backdrop-filter: var(--glass-filter);
+    @apply border border-line-strong;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Bruit SVG très léger sur le fond pour éviter le banding des dégradés. */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    z-index: 50;
+  }
+  .dot-grid {
+    background-image: radial-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+}
+
+/* Typographie des contenus Markdown (briefings, fiches) */
+@layer components {
+  .prose-echo > * + * {
+    margin-top: 0.85em;
+  }
+  .prose-echo h2 {
+    @apply mt-6 font-mono text-micro uppercase text-echo-strong;
+  }
+  .prose-echo h3 {
+    @apply mt-5 text-base font-medium text-fg;
+  }
+  .prose-echo strong {
+    @apply font-medium text-fg;
+  }
+  .prose-echo em {
+    @apply text-fg;
+  }
+  .prose-echo ul {
+    @apply list-none space-y-1.5 pl-0;
+  }
+  .prose-echo ul > li {
+    @apply relative pl-5;
+  }
+  .prose-echo ul > li::before {
+    content: "›";
+    @apply absolute left-1 text-signal;
+  }
+  .prose-echo code {
+    @apply rounded-xs border border-line bg-raised px-1 py-px font-mono text-[0.86em] text-signal-strong;
+  }
+  .prose-echo pre {
+    @apply overflow-x-auto rounded-sm border border-line bg-deep p-3 font-mono text-sm text-fg;
+  }
+  .prose-echo pre code {
+    @apply border-0 bg-transparent p-0 text-fg;
+  }
+  .prose-echo blockquote {
+    @apply border-l-2 border-echo-line pl-4 text-fg italic;
+  }
+}
