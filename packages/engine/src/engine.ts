@@ -1,3 +1,4 @@
+import { type CampaignState, clampGauge, newCampaign } from './campaign.ts';
 import { registerDefaultCommands } from './commands/index.ts';
 import type { Concept, MissionSpec } from './content/schema.ts';
 import { EventBus, type EventMap, type EventName } from './events.ts';
@@ -10,13 +11,15 @@ import type { EngineState, Host, HostKnowledge, Line } from './types.ts';
 import { getNode, listDir, resolvePath } from './vfs.ts';
 import { buildState, homeOf } from './world.ts';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export interface SaveData {
   version: number;
   state: EngineState;
   journal: JournalState;
   mission: MissionProgress | null;
+  /** Added in v2. */
+  campaign?: CampaignState;
 }
 
 export interface ExecResult {
@@ -51,6 +54,7 @@ export interface EngineOptions {
   mission?: MissionSpec;
   missionProgress?: MissionProgress | null;
   journal?: JournalState;
+  campaign?: CampaignState;
 }
 
 export class Engine {
@@ -59,12 +63,14 @@ export class Engine {
   readonly concepts: Map<string, Concept>;
   readonly state: EngineState;
   readonly journal: JournalState;
+  readonly campaign: CampaignState;
   readonly mission: MissionRunner | null;
   private pending: Pending | null = null;
 
   constructor(opts: EngineOptions) {
     this.state = opts.state;
     this.journal = opts.journal ?? {};
+    this.campaign = opts.campaign ?? newCampaign();
     this.concepts = new Map((opts.concepts ?? []).map((c) => [c.id, c]));
     this.mission = opts.mission
       ? new MissionRunner(
@@ -95,23 +101,43 @@ export class Engine {
         case 'auth.failed':
           this.addExposure(5);
           break;
+        case 'dns.axfr':
+          this.addExposure(2);
+          break;
+        case 'choice.made':
+          this.applyDecision(event.payload.missionId, event.payload.choiceId, event.payload.optionId);
+          break;
+        case 'mission.completed':
+          if (!this.campaign.completed.includes(event.payload.missionId)) {
+            this.campaign.completed.push(event.payload.missionId);
+          }
+          break;
       }
       this.mission?.handle(event);
     });
   }
 
-  /** Starts a mission from scratch. */
-  static fromMission(mission: MissionSpec, concepts: Concept[], journal: JournalState = {}): Engine {
-    return new Engine({ state: buildState(mission.scenario), mission, concepts, journal });
+  /** Starts a mission from scratch; journal and campaign carry over from previous missions. */
+  static fromMission(
+    mission: MissionSpec,
+    concepts: Concept[],
+    journal: JournalState = {},
+    campaign: CampaignState = newCampaign(),
+  ): Engine {
+    return new Engine({ state: buildState(mission.scenario), mission, concepts, journal, campaign });
   }
 
   /** Restores a save. Throws when the save is newer than this engine. */
   static restore(save: SaveData, mission: MissionSpec | undefined, concepts: Concept[]): Engine {
     if (save.version > SAVE_VERSION) throw new Error(`sauvegarde v${save.version} plus récente que le moteur`);
+    // v1 → v2: no campaign yet; a finished mission counts as completed.
+    const campaign = save.campaign ?? newCampaign();
+    if (!save.campaign && save.mission?.status === 'completed') campaign.completed.push(save.mission.missionId);
     return new Engine({
       state: save.state,
       concepts,
       journal: save.journal,
+      campaign,
       ...(mission ? { mission, missionProgress: save.mission } : {}),
     });
   }
@@ -122,6 +148,7 @@ export class Engine {
       state: this.state,
       journal: this.journal,
       mission: this.mission?.progress ?? null,
+      campaign: this.campaign,
     });
   }
 
@@ -181,6 +208,19 @@ export class Engine {
   /** Records a passed quiz (the UI grades it; the journal only keeps the result). */
   passQuiz(conceptId: string): void {
     if (this.concepts.get(conceptId)?.quiz.length) this.emit('concept.mastered', { id: conceptId });
+  }
+
+  /** Picks an option of the pending choice. Returns false when it isn't pending. */
+  choose(choiceId: string, optionId: string): boolean {
+    return this.mission?.choose(choiceId, optionId) != null;
+  }
+
+  private applyDecision(missionId: string, choiceId: string, optionId: string): void {
+    const option = this.mission?.spec.choices.find((c) => c.id === choiceId)?.options.find((o) => o.id === optionId);
+    if (!option) return;
+    this.campaign.integrity = clampGauge(this.campaign.integrity + option.effects.integrity);
+    this.campaign.initiative = clampGauge(this.campaign.initiative + option.effects.initiative);
+    this.campaign.decisions[`${missionId}/${choiceId}`] = optionId;
   }
 
   /** Asks the player for a line of input (password…). The next execute() goes to `resolve`. */

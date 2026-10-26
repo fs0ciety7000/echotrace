@@ -83,9 +83,19 @@ export function parseArgs(argv: string[], valued: string[] = [], words: string[]
         out.flags[body] = valued.includes(body) && i + 1 < argv.length ? (argv[++i] as string) : true;
         continue;
       }
-      for (const ch of body) out.flags[ch] = true;
-      const lastCh = body[body.length - 1] as string;
-      if (valued.includes(lastCh) && i + 1 < argv.length) out.flags[lastCh] = argv[++i] as string;
+      // getopt: a valued letter takes the rest of the group (`-d,` `-n5`) or the next argument.
+      for (let k = 0; k < body.length; k++) {
+        const ch = body[k] as string;
+        if (!valued.includes(ch)) {
+          out.flags[ch] = true;
+          continue;
+        }
+        const rest = body.slice(k + 1);
+        if (rest) out.flags[ch] = rest;
+        else if (i + 1 < argv.length) out.flags[ch] = argv[++i] as string;
+        else out.flags[ch] = true;
+        break;
+      }
     } else {
       out._.push(arg);
     }

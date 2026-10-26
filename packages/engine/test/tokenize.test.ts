@@ -27,3 +27,11 @@ describe('parseArgs', () => {
     });
   });
 });
+
+describe('parseArgs getopt values', () => {
+  it('accepts attached values', () => {
+    expect(parseArgs(['-d,', '-f2'], ['d', 'f']).flags).toEqual({ d: ',', f: '2' });
+    expect(parseArgs(['-rn'], ['n']).flags).toEqual({ r: true, n: true });
+    expect(parseArgs(['-n', '5'], ['n']).flags).toEqual({ n: '5' });
+  });
+});

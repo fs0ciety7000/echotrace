@@ -1,4 +1,4 @@
-import type { MessageSpec, MissionSpec, ObjectiveSpec } from '../content/schema.ts';
+import type { ChoiceSpec, MessageSpec, MissionSpec, ObjectiveSpec, QuestionSpec } from '../content/schema.ts';
 import type { EventBus, GameEvent } from '../events.ts';
 
 export interface MissionProgress {
@@ -10,6 +10,32 @@ export interface MissionProgress {
   completedAt?: number;
   /** Delivered messages, in arrival order. Optional for saves made before messages existed. */
   inbox?: InboxEntry[];
+  /** Confirmed `report` answers (question ids). */
+  findings?: string[];
+  /** Wrong `report` submissions, for the debrief. */
+  wrongAnswers?: number;
+  /** Choices offered so far, and the option picked for each. */
+  offered?: string[];
+  decisions?: Record<string, string>;
+}
+
+export interface QuestionView {
+  id: string;
+  prompt: string;
+  state: 'locked' | 'open' | 'confirmed';
+}
+
+export type SubmitResult =
+  | { ok: true; explain?: string }
+  | { ok: false; reason: 'unknown' | 'locked' | 'already' | 'wrong'; hint?: string };
+
+/** Lenient comparison: case, surrounding quotes/spaces and trailing punctuation don't matter. */
+export function normalizeAnswer(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/^["'«\s]+|["'»\s.!?]+$/g, '')
+    .replace(/\s+/g, ' ');
 }
 
 export interface InboxEntry {
@@ -67,7 +93,71 @@ export class MissionRunner {
     // Messages addressed to the very start arrive silently with a fresh mission.
     if (progress.completed.length === 0) {
       for (const m of spec.messages) if (m.on === 'mission.started') this.deliver(m, false);
+      for (const c of spec.choices) if (c.on === 'mission.started') this.offer(c);
     }
+  }
+
+  // --- Questions (report) ---------------------------------------------------
+
+  private questionState(q: QuestionSpec): QuestionView['state'] {
+    const findings = this.progress.findings ?? [];
+    if (findings.includes(q.id)) return 'confirmed';
+    return q.requires.every((r) => findings.includes(r)) ? 'open' : 'locked';
+  }
+
+  questions(): QuestionView[] {
+    return this.spec.questions.map((q) => ({ id: q.id, prompt: q.prompt, state: this.questionState(q) }));
+  }
+
+  submit(questionId: string, answer: string): SubmitResult {
+    const q = this.spec.questions.find((x) => x.id === questionId);
+    if (!q) return { ok: false, reason: 'unknown' };
+    const state = this.questionState(q);
+    if (state === 'locked') return { ok: false, reason: 'locked' };
+    if (state === 'confirmed') return { ok: false, reason: 'already' };
+    const given = normalizeAnswer(answer);
+    if (!q.accept.some((a) => normalizeAnswer(a) === given)) {
+      this.progress.wrongAnswers = (this.progress.wrongAnswers ?? 0) + 1;
+      this.bus.emit('finding.rejected', { missionId: this.spec.id, questionId });
+      return { ok: false, reason: 'wrong', ...(q.hint ? { hint: q.hint } : {}) };
+    }
+    this.progress.findings = [...(this.progress.findings ?? []), q.id];
+    this.bus.emit('finding.confirmed', { missionId: this.spec.id, questionId });
+    return { ok: true, ...(q.explain ? { explain: q.explain } : {}) };
+  }
+
+  // --- Choices -----------------------------------------------------------------
+
+  private offer(c: ChoiceSpec): void {
+    const offered = this.progress.offered ?? [];
+    if (offered.includes(c.id)) return;
+    this.progress.offered = [...offered, c.id];
+    this.bus.emit('choice.offered', { missionId: this.spec.id, choiceId: c.id });
+  }
+
+  /** The first offered choice still waiting for a decision. */
+  pendingChoice(): ChoiceSpec | undefined {
+    const decided = this.progress.decisions ?? {};
+    return this.spec.choices.find((c) => (this.progress.offered ?? []).includes(c.id) && !decided[c.id]);
+  }
+
+  decisions(): { choice: ChoiceSpec; option: ChoiceSpec['options'][number] }[] {
+    return Object.entries(this.progress.decisions ?? {}).flatMap(([cid, oid]) => {
+      const choice = this.spec.choices.find((c) => c.id === cid);
+      const option = choice?.options.find((o) => o.id === oid);
+      return choice && option ? [{ choice, option }] : [];
+    });
+  }
+
+  /** Records a decision. Returns the option, or null when the choice is not pending. */
+  choose(choiceId: string, optionId: string): ChoiceSpec['options'][number] | null {
+    const pending = this.pendingChoice();
+    if (!pending || pending.id !== choiceId) return null;
+    const option = pending.options.find((o) => o.id === optionId);
+    if (!option) return null;
+    this.progress.decisions = { ...(this.progress.decisions ?? {}), [choiceId]: optionId };
+    this.bus.emit('choice.made', { missionId: this.spec.id, choiceId, optionId });
+    return option;
   }
 
   private deliver(m: MessageSpec, notify = true): void {
@@ -119,10 +209,12 @@ export class MissionRunner {
 
   /** Optional objectives stay completable after the mission itself is done (until debrief). */
   handle(event: GameEvent): void {
+    const payload = event.payload as unknown as Record<string, unknown>;
     for (const m of this.spec.messages) {
-      if (m.on === event.type && matchesWhere(event.payload as unknown as Record<string, unknown>, m.where)) {
-        this.deliver(m);
-      }
+      if (m.on === event.type && matchesWhere(payload, m.where)) this.deliver(m);
+    }
+    for (const c of this.spec.choices) {
+      if (c.on === event.type && matchesWhere(payload, c.where)) this.offer(c);
     }
     for (const o of this.spec.objectives) {
       if (o.on !== event.type || this.stateOf(o) !== 'active') continue;

@@ -1,6 +1,6 @@
 import type { ScenarioSpec } from './content/schema.ts';
 import { ipToInt } from './content/schema.ts';
-import type { EngineState, Host, HostKnowledge, World } from './types.ts';
+import type { Domain, EngineState, Host, HostKnowledge, World } from './types.ts';
 import { buildFs, ensureDir } from './vfs.ts';
 
 export function homeOf(user: string): string {
@@ -9,7 +9,8 @@ export function homeOf(user: string): string {
 
 /** Turns a validated scenario into a fresh, serialisable engine state. */
 export function buildState(spec: ScenarioSpec): EngineState {
-  const world: World = { hosts: {}, networks: {} };
+  const world: World = { hosts: {}, networks: {}, domains: {} };
+  for (const d of spec.domains) (world.domains as Record<string, Domain>)[d.name] = structuredClone(d);
   for (const n of spec.networks) world.networks[n.id] = { ...n };
   for (const h of spec.hosts) {
     const fs = buildFs(h.files);
@@ -26,9 +27,11 @@ export function buildState(spec: ScenarioSpec): EngineState {
       os: h.os,
       networks: [...h.networks],
       icmp: h.icmp,
-      services: h.services.map((s) => ({ ...s })),
+      services: structuredClone(h.services),
       accounts,
       fs,
+      processes: structuredClone(h.processes),
+      connections: structuredClone(h.connections),
     };
   }
 

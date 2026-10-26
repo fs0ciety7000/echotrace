@@ -37,6 +37,57 @@ export interface Service {
   version?: string;
   banner?: string;
   state: 'open' | 'filtered';
+  tls?: TlsCert;
+  http?: HttpResponse;
+}
+
+export interface TlsCert {
+  subject: string;
+  issuer: string;
+  notBefore: string;
+  notAfter: string;
+  san: string[];
+  sha256: string;
+}
+
+export interface HttpResponse {
+  status: number;
+  headers: Record<string, string>;
+  body: string;
+}
+
+export interface Process {
+  pid: number;
+  user: string;
+  cmd: string;
+}
+
+export interface Connection {
+  proto: Proto;
+  local: string;
+  remote: string;
+  state: 'LISTEN' | 'ESTABLISHED' | 'SYN_SENT' | 'TIME_WAIT' | 'CLOSE_WAIT';
+  pid?: number;
+  program?: string;
+}
+
+export interface DnsRecord {
+  name: string;
+  type: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'NS' | 'TXT';
+  value: string;
+  ttl: number;
+}
+
+export interface Domain {
+  name: string;
+  registrar: string;
+  registrant: string;
+  created: string;
+  expires: string;
+  nameservers: string[];
+  abuse?: string;
+  records: DnsRecord[];
+  axfr: boolean;
 }
 
 export interface Account {
@@ -69,6 +120,8 @@ export interface Host {
   services: Service[];
   accounts: Account[];
   fs: VfsDir;
+  processes: Process[];
+  connections: Connection[];
 }
 
 export interface Network {
@@ -80,6 +133,8 @@ export interface Network {
 export interface World {
   hosts: Record<string, Host>;
   networks: Record<string, Network>;
+  /** Optional for saves made before DNS existed. */
+  domains?: Record<string, Domain>;
 }
 
 export interface SessionFrame {

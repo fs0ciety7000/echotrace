@@ -107,3 +107,17 @@ describe('save / restore', () => {
     expect(Object.keys(restored.journal)).toContain('systeme.fichiers');
   });
 });
+
+describe('text pipelines', () => {
+  it('counts and ranks values with sort | uniq -c | sort -rn', () => {
+    const e = newPrologue();
+    e.execute('ssh stagiaire@banc-01');
+    e.execute('echo-banc-2031');
+    expect(text(e.execute('grep Failed /var/log/auth.log | wc -l'))).toBe('2');
+    const ranked = text(
+      e.execute('grep sshd /var/log/auth.log | cut -d " " -f 3 | sort | uniq -c | sort -rn | head -n 1'),
+    );
+    expect(ranked.trim()).toMatch(/^\d+ \S+/);
+    expect(text(e.execute('tail -n 1 /var/log/auth.log'))).toContain('CRON');
+  });
+});

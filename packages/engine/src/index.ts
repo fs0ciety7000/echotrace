@@ -1,3 +1,4 @@
+export * from './campaign.ts';
 export * from './content/parse.ts';
 export * from './content/schema.ts';
 export * from './engine.ts';

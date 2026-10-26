@@ -22,6 +22,17 @@ export interface EventMap {
   'objective.completed': { missionId: string; objectiveId: string };
   'mission.completed': { missionId: string };
   'message.received': { missionId: string; messageId: string; from: string };
+  'dns.queried': { name: string; type: string; found: boolean };
+  'dns.axfr': { domain: string; success: boolean };
+  'whois.queried': { domain: string; found: boolean };
+  'http.requested': { hostId: string; port: number; path: string; status: number };
+  'tls.inspected': { hostId: string; port: number; sha256: string };
+  'process.listed': { hostId: string };
+  'connections.listed': { hostId: string };
+  'finding.confirmed': { missionId: string; questionId: string };
+  'finding.rejected': { missionId: string; questionId: string };
+  'choice.offered': { missionId: string; choiceId: string };
+  'choice.made': { missionId: string; choiceId: string; optionId: string };
 }
 
 export type EventName = keyof EventMap;
