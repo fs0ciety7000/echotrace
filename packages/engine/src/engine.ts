@@ -78,6 +78,7 @@ export class Engine {
           opts.missionProgress ?? newProgress(opts.mission.id, this.state.clock),
           this.bus,
           () => this.state.clock,
+          () => this.campaign.decisions,
         )
       : null;
 

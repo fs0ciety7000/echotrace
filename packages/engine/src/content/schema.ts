@@ -254,6 +254,8 @@ export const MessageSchema = z.object({
   body: z.string(),
   on: z.enum(['mission.started', 'objective.completed', 'mission.completed', ...TriggerSchema.shape.on.options]),
   where: TriggerSchema.shape.where,
+  /** Only delivered if earlier decisions match: `missionId/choiceId: optionId`. */
+  when: z.record(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/), z.string()).default({}),
 });
 
 /** Deductions the player submits with `report <id> <answer>`. */

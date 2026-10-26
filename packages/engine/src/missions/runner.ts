@@ -83,12 +83,20 @@ export class MissionRunner {
   readonly progress: MissionProgress;
   private readonly bus: EventBus;
   private readonly now: () => number;
+  private readonly decisionsSoFar: () => Record<string, string>;
 
-  constructor(spec: MissionSpec, progress: MissionProgress, bus: EventBus, now: () => number) {
+  constructor(
+    spec: MissionSpec,
+    progress: MissionProgress,
+    bus: EventBus,
+    now: () => number,
+    decisionsSoFar: () => Record<string, string> = () => ({}),
+  ) {
     this.spec = spec;
     this.progress = progress;
     this.bus = bus;
     this.now = now;
+    this.decisionsSoFar = decisionsSoFar;
     this.progress.inbox ??= [];
     // Messages addressed to the very start arrive silently with a fresh mission.
     if (progress.completed.length === 0) {
@@ -163,6 +171,8 @@ export class MissionRunner {
   private deliver(m: MessageSpec, notify = true): void {
     const inbox = this.progress.inbox as InboxEntry[];
     if (inbox.some((e) => e.id === m.id)) return;
+    const decided = this.decisionsSoFar();
+    if (!Object.entries(m.when).every(([key, option]) => decided[key] === option)) return;
     inbox.push({ id: m.id, at: this.now(), read: false });
     if (notify) this.bus.emit('message.received', { missionId: this.spec.id, messageId: m.id, from: m.from });
   }

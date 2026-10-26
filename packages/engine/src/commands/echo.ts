@@ -1,6 +1,19 @@
 import { CONCEPT_CATEGORIES } from '../content/schema.ts';
 import { mastery } from '../journal.ts';
-import { blank, command, concept, echo, heading, line, muted, plain, subtle, success, table } from '../output.ts';
+import {
+  blank,
+  command,
+  concept,
+  echo,
+  heading,
+  line,
+  muted,
+  plain,
+  subtle,
+  success,
+  table,
+  warning,
+} from '../output.ts';
 import type { Command } from '../shell/command.ts';
 import type { Line } from '../types.ts';
 
@@ -183,4 +196,54 @@ function firstLine(body: string): string {
   return l.length > 60 ? `${l.slice(0, 57)}…` : l;
 }
 
-export const echoCommands = [objectives, hint, mail, journal, learn];
+export const report: Command = {
+  name: 'report',
+  aliases: ['rapport'],
+  category: 'echo',
+  summary: "soumet une conclusion d'enquête",
+  usage: 'report [id réponse…]',
+  description:
+    "Sans argument, liste les questions de l'opération et leur état.\n`report entree 198.51.100.77` soumet une réponse : elle doit découler des preuves, pas d'une supposition.",
+  run({ argv, engine }) {
+    const m = engine.mission;
+    const questions = m?.questions() ?? [];
+    if (!m || questions.length === 0) return [line(muted('Pas de rapport attendu pour cette opération.'))];
+    const [id, ...rest] = argv;
+    if (!id) {
+      return [
+        line(
+          heading("RAPPORT D'ENQUÊTE"),
+          subtle(`  ${questions.filter((q) => q.state === 'confirmed').length}/${questions.length} conclusions`),
+        ),
+        blank(),
+        ...questions.map((q) =>
+          q.state === 'confirmed'
+            ? line(success('✓ '), subtle(`${q.id.padEnd(12)} `), muted(q.prompt))
+            : q.state === 'open'
+              ? line({ t: '◆ ', s: 'accent' }, plain(`${q.id.padEnd(12)} `), plain(q.prompt))
+              : line(subtle(`· ${q.id.padEnd(12)} (verrouillée)`)),
+        ),
+        blank(),
+        line(subtle('Soumettre : '), command('report <id> <réponse>')),
+      ];
+    }
+    if (rest.length === 0) return [line(muted(`Il manque la réponse : report ${id} <réponse>`))];
+    const r = m.submit(id, rest.join(' '));
+    if (r.ok) return [line(success('✓ Conclusion confirmée. ')), ...(r.explain ? [line(muted(r.explain))] : [])];
+    switch (r.reason) {
+      case 'unknown':
+        return [line(muted(`Pas de question « ${id} ». Tape `), command('report'), muted('.'))];
+      case 'locked':
+        return [line(muted('Cette question dépend d’une autre conclusion. Avance dans l’ordre.'))];
+      case 'already':
+        return [line(muted('Déjà établi.'))];
+      default:
+        return [
+          line(warning('✗ Ce n’est pas cohérent avec les preuves.')),
+          ...(r.hint ? [line(echo('Noor › '), plain(r.hint))] : []),
+        ];
+    }
+  },
+};
+
+export const echoCommands = [objectives, hint, report, mail, journal, learn];
