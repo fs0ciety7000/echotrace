@@ -9,6 +9,26 @@ Une image Docker unique (`Dockerfile` à la racine) :
 
 Aucune variable d'environnement n'est requise en phase 0–3. Aucun volume.
 
+## 1 bis. Configuration en place (2026-10-26)
+| Élément | Valeur |
+|---|---|
+| Projet Coolify | **Echo Trace** (`j1flbohmxcfaavvzaivjiphj`), environnement `production` |
+| Application | **echotrace-web** (`lkgfnldrcs6rjjoqfjyfig3o`) sur le serveur `localhost` (152.53.176.13) |
+| Source | GitHub App privée de l'instance, dépôt `fs0ciety7000/echotrace`, branche **`ccr-f172661a-vgslu8`** (à basculer sur `main` une fois la branche fusionnée) |
+| Build | Dockerfile `/Dockerfile`, port exposé `8080`, healthcheck `/healthz` |
+| Auto-deploy | activé (push sur la branche → redéploiement) ; HTTPS forcé |
+| DNS Cloudflare | `CNAME echo → fs0ciety.org`, proxifié (même convention que les autres sous-domaines), SSL **Full (strict)** sur la zone |
+
+Pilotage par API (depuis l'environnement cloud : variables `COOLIFY_API_URL`, `COOLIFY_API_TOKEN`, `CLOUDFLARE_API_TOKEN`) :
+```bash
+# redéployer
+curl -X POST -H "Authorization: Bearer $COOLIFY_API_TOKEN" -H "Content-Type: application/json" \
+  "$COOLIFY_API_URL/api/v1/deploy" -d '{"uuid":"lkgfnldrcs6rjjoqfjyfig3o"}'
+# changer de branche (après fusion dans main)
+curl -X PATCH -H "Authorization: Bearer $COOLIFY_API_TOKEN" -H "Content-Type: application/json" \
+  "$COOLIFY_API_URL/api/v1/applications/lkgfnldrcs6rjjoqfjyfig3o" -d '{"git_branch":"main"}'
+```
+
 ## 2. Configuration Coolify
 
 1. **Projects → + New → Resource → Public/Private Repository (GitHub App)**, dépôt `fs0ciety7000/echotrace`, branche `main`.
