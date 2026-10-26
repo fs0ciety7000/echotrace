@@ -86,7 +86,7 @@ Captures de la v0 : [menu](screenshots/menu.png) · [briefing](screenshots/brief
 - Modale niveau 4 sur le poste opérateur. Texte du briefing en typewriter (sautable).
 - La **question de l'opération** est l'ancre pédagogique : le débrief y répond.
 
-## 4. Vue réseau (v1)
+## 4. Vue réseau ✅ (v0)
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐

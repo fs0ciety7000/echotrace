@@ -14,7 +14,7 @@ import { concepts, getMission, missions } from '../content/index.ts';
 import { deleteSave, loadSave, type SaveFile, writeSave } from './persistence.ts';
 
 export type Screen = 'menu' | 'operator';
-export type View = 'terminal' | 'journal';
+export type View = 'terminal' | 'journal' | 'network';
 
 export interface TermEntry {
   id: number;

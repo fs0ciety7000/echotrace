@@ -1,6 +1,9 @@
 import { mastery } from '@echotrace/engine';
 import { BookOpen, LogOut, Mail, Network, Radar, Settings, SquareTerminal } from 'lucide-react';
-import { type ReactNode, useState } from 'react';
+import { lazy, type ReactNode, Suspense, useState } from 'react';
+
+// The graph library is only needed when the player opens the network view.
+const NetworkView = lazy(() => import('../features/network/NetworkView.tsx').then((m) => ({ default: m.NetworkView })));
 
 type MobileTab = 'terminal' | 'mission' | 'contexte';
 
@@ -75,7 +78,12 @@ function Rail() {
         active={view === 'terminal'}
         onClick={() => setView('terminal')}
       />
-      <RailButton icon={<Network size={18} />} label="Vue réseau" disabled />
+      <RailButton
+        icon={<Network size={18} />}
+        label="Vue réseau"
+        active={view === 'network'}
+        onClick={() => setView('network')}
+      />
       <RailButton
         icon={<BookOpen size={18} />}
         label="Journal"
@@ -308,12 +316,18 @@ export function Operator() {
   if (!engine) return null;
   const { user } = engine.state.session;
 
-  if (view === 'journal') {
+  if (view === 'journal' || view === 'network') {
     return (
       <div className="grid h-full grid-cols-[56px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_28px] bg-void">
         <Rail />
         <main className="min-h-0 p-3">
-          <JournalView />
+          {view === 'journal' ? (
+            <JournalView />
+          ) : (
+            <Suspense fallback={<p className="p-4 text-sm text-fg-subtle">Chargement de la vue réseau…</p>}>
+              <NetworkView />
+            </Suspense>
+          )}
         </main>
         <StatusBar />
       </div>

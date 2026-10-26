@@ -40,7 +40,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
   - ✅ 02 « Confinement » — chercher ce qui ne se voit pas (processus, connexions, tâches planifiées) ; choix : couper / observer encadré / observer sans le dire
   - ✅ 03 « Résonance » — pivot sur empreinte de certificat, archives, whois ; attribution prudente ; choix : ANCS / Lanterne / creuser
 - ✅ 27 fiches (16 nouvelles) avec quiz
-- ⬜ Vue réseau (xyflow) synchronisée avec la découverte
+- ✅ Vue réseau (xyflow, chargée à la demande) : hôtes révélés par la découverte, inspecteur, actions qui préparent la commande dans le terminal
 - ⬜ Aligner les exemples « Dans le jeu » des nouvelles fiches sur les missions réelles
 - ⬜ Le Banc : 3 modules d'académie (Réseau, Recon, Logs)
 

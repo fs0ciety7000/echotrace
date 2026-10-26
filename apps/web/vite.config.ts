@@ -40,5 +40,5 @@ export default defineConfig({
     }),
   ],
   server: { port: 5173, fs: { allow: ['../..'] } },
-  build: { target: 'es2022', sourcemap: true, chunkSizeWarningLimit: 700 },
+  build: { target: 'es2022', sourcemap: true, chunkSizeWarningLimit: 900 },
 });

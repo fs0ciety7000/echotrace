@@ -108,7 +108,7 @@ src/
   ui/                        composants génériques du design system
   features/terminal/         EchoTerm (rendu, saisie, historique, complétion)
   features/missions/         panneau d'objectifs, briefing, débrief
-  features/network/          vue réseau (xyflow) — Phase 2
+  features/network/          vue réseau (xyflow), chargée en différé (React.lazy) — chunk séparé
   features/journal/          fiches et progression
   screens/                   MainMenu, Operator (dashboard), Academy, Settings
   state/                     stores Zustand (game, settings), persistance
