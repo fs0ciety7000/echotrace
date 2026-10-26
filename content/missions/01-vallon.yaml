@@ -1,0 +1,365 @@
+# Acte I — Mission 01 « Vallon »
+# Reconnaissance d'un périmètre autorisé : whois, DNS, audit de zone, scan, en-têtes HTTP.
+# Question : par où entre-t-on dans un hôpital ?
+
+id: vallon
+title: Vallon
+act: acte-1
+order: 1
+from: Mara Okonkwo-Lind
+summary: Le CH de Vallon-sur-Aire est chiffré. Cartographier ce qu'il expose.
+question: Par où entre-t-on dans un hôpital ?
+concepts:
+  - reconnaissance.whois
+  - reseau.dns
+  - reconnaissance.transfert-zone
+  - reconnaissance.scan-de-ports
+  - reseau.http
+  - defense.gestion-correctifs
+  - defense.surface-attaque
+  - ethique.autorisation
+
+briefing: |
+  Le centre hospitalier de **Vallon-sur-Aire** est paralysé depuis 4 h du matin :
+  un rançongiciel a chiffré ses serveurs. Urgences en mode dégradé, dossiers
+  patients sur papier.
+
+  Leur DSI nous a appelés. Ils ont signé une **convention d'intervention** :
+  tu es autorisé·e à examiner leur domaine `ch-vallon.example` et leur plage
+  externe `203.0.113.0/28`. **Rien d'autre.** La convention est dans
+  `~/dossiers/ch-vallon/`.
+
+  Avant de comprendre ce qui s'est passé, il faut voir le CH comme l'a vu
+  l'attaquant : de l'extérieur. Commence par ce qui est public, sans toucher
+  aux machines. Ensuite seulement, scanne.
+
+  Utilise `report` pour consigner tes conclusions.
+
+  — Mara
+
+debrief: |
+  **Par où entre-t-on dans un hôpital ?** Rarement par la grande porte. Ici,
+  l'attaquant n'avait besoin d'aucun génie : un **portail VPN exposé sur
+  Internet**, dans une version visée par une vulnérabilité publique et
+  **activement exploitée**, avec un correctif disponible depuis deux mois.
+
+  Tu l'as trouvé avec des outils accessibles à n'importe qui : le registre
+  public, le DNS, un scan, les en-têtes HTTP. C'est précisément le point :
+  la surface d'attaque d'une organisation est **lisible de l'extérieur**.
+  Le défenseur doit la lire avant l'attaquant — et tenir un inventaire honnête.
+  `intranet-old` n'était dans aucun document du CH. Il était pourtant en ligne.
+
+  Mais un rançongiciel « opportuniste » qui passe par un VPN non patché,
+  c'est l'histoire de cent hôpitaux. Ce qui m'intrigue, c'est la suite.
+
+scenario:
+  clock: '2031-03-15T09:12:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: internet, cidr: 203.0.113.0/24, label: Internet (simulé) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan, internet]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/dossiers/ch-vallon/convention.txt: |
+          CONVENTION D'INTERVENTION — CH Vallon-sur-Aire / Cellule ECHO
+          ---------------------------------------------------------------
+          Objet     : analyse de l'incident du 15/03/2031 (rançongiciel)
+          Périmètre : domaine ch-vallon.example
+                      plage externe 203.0.113.0/28 (203.0.113.0 à 203.0.113.15)
+          Autorisé  : recherches publiques, résolution DNS, scan de ports et
+                      identification de services sur le périmètre ci-dessus.
+          Interdit  : toute action hors périmètre ; toute modification ;
+                      toute tentative d'authentification.
+          Contact   : DSI, M. Benali — astreinte 24/7
+
+          Signé : direction du CH / M. Okonkwo-Lind pour ECHO
+        /home/operateur-7/dossiers/ch-vallon/inventaire-dsi.txt: |
+          Inventaire des services exposés — fourni par la DSI (à jour ?)
+          ---------------------------------------------------------------
+          www.ch-vallon.example     site public
+          mail.ch-vallon.example    messagerie
+          vpn.ch-vallon.example     accès distant du personnel
+          ns1.ch-vallon.example     serveur DNS
+        /home/operateur-7/veille/bulletin-ancs-2031-017.txt: |
+          ANCS — BULLETIN D'ALERTE 2031-017                    (fictif)
+          ===============================================================
+          Produit   : SecuraGate SSL-VPN
+          Versions  : antérieures à 6.2.4
+          Référence : CVE-2030-41177 — sévérité critique
+          Impact    : contournement de l'authentification du portail
+          État      : EXPLOITÉE ACTIVEMENT depuis février 2031
+          Correctif : version 6.2.4, publiée le 12/01/2031
+
+          Recommandation : appliquer le correctif sans délai. Un portail
+          non corrigé exposé sur Internet doit être considéré comme compromis.
+        /home/operateur-7/veille/bulletin-ancs-2031-009.txt: |
+          ANCS — BULLETIN D'ALERTE 2031-009                    (fictif)
+          Produit   : MailRelay 3.x — Référence : CVE-2031-0412 (moyenne)
+          Correctif : MailRelay 3.9.2
+    - id: ch-www
+      hostname: www.ch-vallon.example
+      ip: 203.0.113.10
+      os: Debian 12
+      networks: [internet]
+      services:
+        - port: 80
+          name: http
+          product: nginx
+          version: 1.24.0
+          http: { status: 301, headers: { Server: nginx, Location: 'https://www.ch-vallon.example/' } }
+        - port: 443
+          name: https
+          product: nginx
+          version: 1.24.0
+          http:
+            status: 503
+            headers: { Server: nginx, Content-Type: text/html }
+            body: |
+              <h1>Centre hospitalier de Vallon-sur-Aire</h1>
+              <p>Suite à un incident informatique, nos services fonctionnent en mode dégradé.
+              Les urgences restent ouvertes.</p>
+    - id: ch-mail
+      hostname: mail.ch-vallon.example
+      ip: 203.0.113.11
+      os: Debian 12
+      networks: [internet]
+      services:
+        - { port: 25, name: smtp, product: MailRelay, version: 3.9.2, banner: 220 mail.ch-vallon.example ESMTP MailRelay }
+        - { port: 443, name: https, product: MailRelay webmail, version: 3.9.2 }
+    - id: ch-vpn
+      hostname: vpn.ch-vallon.example
+      ip: 203.0.113.12
+      os: SecuraOS
+      networks: [internet]
+      services:
+        - { port: 22, name: ssh, state: filtered }
+        - port: 443
+          name: https
+          product: SecuraGate SSL-VPN
+          version: 6.2.1
+          http:
+            status: 200
+            headers:
+              Server: SecuraGate/6.2.1
+              Set-Cookie: SGSESSION=…; Secure; HttpOnly
+              Content-Type: text/html
+            body: |
+              <title>SecuraGate — Accès distant CH Vallon</title>
+              <form action="/remote/login">Identifiant / Mot de passe</form>
+          tls:
+            subject: CN=vpn.ch-vallon.example
+            issuer: CN=Autorité Publique de Test R3, O=Exemple Trust
+            notBefore: '2030-11-02'
+            notAfter: '2031-11-02'
+            san: [vpn.ch-vallon.example]
+            sha256: '4C:1E:7A:90:2B:D3:55:08:E1:6F:3C:A4:97:0B:28:D6:5E:F1:43:8A:C2:19:70:BD:06:E4:5A:93:1F:7C:28:B0'
+    - id: ch-ns1
+      hostname: ns1.ch-vallon.example
+      ip: 203.0.113.14
+      os: Debian 9
+      networks: [internet]
+      services:
+        - { port: 53, name: domain, product: BIND, version: 9.10.3 }
+    - id: ch-intranet-old
+      hostname: intranet-old.ch-vallon.example
+      ip: 203.0.113.13
+      os: Ubuntu 12.04 LTS
+      networks: [internet]
+      icmp: false
+      services:
+        - port: 80
+          name: http
+          product: Apache httpd
+          version: 2.2.22
+          http:
+            status: 200
+            headers: { Server: Apache/2.2.22 (Ubuntu) }
+            body: |
+              <h1>Intranet RH — ancienne version</h1>
+              <p>Ce portail sera arrêté en 2024.</p>
+  domains:
+    - name: ch-vallon.example
+      registrar: Registre Hexagone SAS
+      registrant: Centre Hospitalier de Vallon-sur-Aire
+      created: '2004-06-17'
+      expires: '2032-06-17'
+      nameservers: [ns1.ch-vallon.example]
+      abuse: abuse@registre-hexagone.example
+      axfr: true
+      records:
+        - { name: '@', type: A, value: 203.0.113.10 }
+        - { name: www, type: CNAME, value: ch-vallon.example }
+        - { name: '@', type: MX, value: 10 mail.ch-vallon.example }
+        - { name: '@', type: TXT, value: v=spf1 mx -all }
+        - { name: mail, type: A, value: 203.0.113.11 }
+        - { name: vpn, type: A, value: 203.0.113.12 }
+        - { name: intranet-old, type: A, value: 203.0.113.13 }
+        - { name: ns1, type: A, value: 203.0.113.14 }
+
+objectives:
+  - id: read-convention
+    label: Lire la convention d'intervention
+    on: file.read
+    where: { path: /home/operateur-7/dossiers/ch-vallon/convention.txt }
+    hint: Elle est dans ~/dossiers/ch-vallon/. Le périmètre autorisé y est écrit noir sur blanc.
+    concepts: [ethique.autorisation]
+
+  - id: whois
+    label: Consulter la fiche d'enregistrement du domaine
+    requires: [read-convention]
+    on: whois.queried
+    where: { domain: ch-vallon.example, found: true }
+    hint: Le registre des noms de domaine est public. Quelle commande l'interroge ?
+    concepts: [reconnaissance.whois]
+
+  - id: resolve
+    label: Résoudre les noms publics du CH
+    requires: [whois]
+    on: dns.queried
+    where: { found: true }
+    hint: '`man dns`. Commence par le domaine lui-même, puis ses serveurs de messagerie (type MX).'
+    concepts: [reseau.dns]
+
+  - id: zone-audit
+    label: Vérifier la configuration de leurs serveurs de noms
+    requires: [resolve]
+    on: dns.axfr
+    where: { domain: ch-vallon.example, success: true }
+    hint: L'outil `dns` a un mode d'audit. Le serveur de noms livre-t-il tout son contenu à n'importe qui ?
+    concepts: [reconnaissance.transfert-zone]
+
+  - id: scan-vpn
+    label: Identifier précisément le logiciel du portail VPN
+    requires: [zone-audit]
+    on: host.scanned
+    where: { hostId: ch-vpn, versions: true }
+    hint: Le portail est dans le périmètre. Un scan qui demande les versions te dira ce qui tourne.
+    concepts: [reconnaissance.empreinte-service]
+
+  - id: headers-vpn
+    label: Confirmer la version par les en-têtes HTTP du portail
+    requires: [scan-vpn]
+    on: http.requested
+    where: { hostId: ch-vpn }
+    hint: Les serveurs web se présentent dans leurs en-têtes de réponse. `man curl`, option -I.
+    concepts: [reseau.http]
+
+  - id: report-oubli
+    label: 'Rapport : l''hôte exposé absent de l''inventaire'
+    requires: [zone-audit]
+    on: finding.confirmed
+    where: { questionId: oubli }
+    hint: Compare la zone DNS complète avec ~/dossiers/ch-vallon/inventaire-dsi.txt.
+    concepts: [defense.surface-attaque]
+
+  - id: report-faille
+    label: 'Rapport : la porte d''entrée et sa vulnérabilité'
+    requires: [headers-vpn]
+    on: finding.confirmed
+    where: { questionId: faille }
+    hint: Ton dossier ~/veille/ contient les bulletins d'alerte récents. Un nom de produit et une version devraient te parler.
+    concepts: [defense.gestion-correctifs]
+
+  - id: scan-oubli
+    label: Examiner l'hôte oublié
+    optional: true
+    requires: [report-oubli]
+    on: host.scanned
+    where: { hostId: ch-intranet-old }
+    hint: Il ne répond pas au ping. Tu connais l'option qui contourne ça.
+
+questions:
+  - id: oubli
+    prompt: Quel hôte exposé n'apparaît pas dans l'inventaire de la DSI ?
+    accept: [intranet-old.ch-vallon.example, intranet-old, 203.0.113.13]
+    hint: La zone DNS complète liste un nom de plus que l'inventaire.
+    explain: Un serveur oublié n'est ni surveillé ni mis à jour — le rêve d'un attaquant.
+  - id: entree
+    prompt: Quel service est la porte d'entrée la plus probable ?
+    accept: [vpn.ch-vallon.example, vpn, 203.0.113.12, securagate, securagate ssl-vpn]
+    hint: Quel service exposé donne accès au réseau interne, et dans quelle version tourne-t-il ?
+    explain: Un VPN donne, par définition, accès au réseau interne. C'est la cible la plus rentable.
+  - id: faille
+    prompt: Quelle vulnérabilité publique (référence CVE) concerne ce service ?
+    requires: [entree]
+    accept: [CVE-2030-41177]
+    hint: Compare la version vue dans les en-têtes avec les bulletins de ~/veille/.
+    explain: SecuraGate 6.2.1 < 6.2.4. Exploitée activement, corrigée depuis deux mois, non appliquée.
+
+choices:
+  - id: perimetre
+    from: Ilya « Sable » Varga
+    on: objective.completed
+    where: { objectiveId: zone-audit }
+    prompt: |
+      J'ai une idée pour gagner du temps. Le CH n'est sûrement pas seul sur
+      `203.0.113.0/24` : leurs prestataires, leur hébergeur… Scannons la plage
+      **entière**, pas seulement leur /28. Si l'attaquant a rebondi chez un
+      voisin, on le verra tout de suite.
+
+      La convention ne couvre que le /28, je sais. Mais personne n'en saura rien.
+    options:
+      - id: refuser
+        label: Rester dans le périmètre
+        description: La convention dit /28. On demande une extension si on en a besoin.
+        effects: { integrity: 10, initiative: -5 }
+        consequence: |
+          Tu as refusé de sortir du périmètre. Sable a levé les yeux au ciel —
+          mais quand le CH a transmis le dossier à l'ANCS, rien dans ton travail
+          ne pouvait être contesté.
+      - id: accepter
+        label: Scanner toute la plage
+        description: Plus rapide. Personne ne regarde.
+        effects: { integrity: -10, initiative: 10 }
+        consequence: |
+          Le scan élargi n'a rien révélé d'utile… mais il a déclenché l'alerte
+          d'un hébergeur voisin, qui a signalé « un scan hostile depuis une IP
+          d'ECHO ». Mara a passé une heure au téléphone pour s'en expliquer.
+
+messages:
+  - id: mara-start
+    from: Mara Okonkwo-Lind
+    subject: Vallon
+    on: mission.started
+    body: |
+      Je sais que tu sors à peine du Banc. Mais tout le monde est sur le pont
+      et Noor dit que tu as l'œil. Lis la convention avant tout.
+
+  - id: noor-zone
+    from: Noor Haddad
+    on: objective.completed
+    where: { objectiveId: zone-audit }
+    body: |
+      Leur serveur de noms donne tout le contenu de la zone à qui le demande.
+      Une erreur de configuration vieille comme le DNS — et une carte gratuite
+      pour l'attaquant. Compare cette liste avec l'inventaire de la DSI.
+
+  - id: noor-version
+    from: Noor Haddad
+    on: objective.completed
+    where: { objectiveId: headers-vpn }
+    body: |
+      Un portail qui annonce fièrement sa version dans ses en-têtes… Va voir
+      dans ta veille si ce numéro te dit quelque chose.
+
+  - id: sable-refuse
+    from: Ilya « Sable » Varga
+    on: choice.made
+    where: { choiceId: perimetre, optionId: refuser }
+    body: Comme tu veux, petit scout. Mais retiens qu'eux ne demandent jamais la permission.
+
+  - id: mara-accepte
+    from: Mara Okonkwo-Lind
+    on: choice.made
+    where: { choiceId: perimetre, optionId: accepter }
+    body: |
+      Un hébergeur de la plage vient de nous signaler un scan hostile. Depuis
+      chez nous. On en parlera. Retourne sur ton périmètre.

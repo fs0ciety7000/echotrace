@@ -10,7 +10,7 @@ quiz:
     answer: 1
     explain: '/24 = 24 bits pour le réseau, il reste 32 − 24 = 8 bits pour les hôtes : 2⁸ = 256 adresses (de .0 à .255).'
   - q: Laquelle de ces adresses est privée (non routée sur Internet) ?
-    choices: [8.8.8.8, 10.7.0.7, 151.101.1.69]
+    choices: [203.0.113.50, 10.7.0.7, 198.51.100.9]
     answer: 1
     explain: '`10.0.0.0/8`, `172.16.0.0/12` et `192.168.0.0/16` sont réservées aux réseaux privés.'
   - q: Pourquoi le jeu utilise-t-il des adresses comme `203.0.113.10` ?
