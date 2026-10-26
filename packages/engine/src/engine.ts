@@ -1,7 +1,7 @@
 import { registerDefaultCommands } from './commands/index.ts';
 import type { Concept, MissionSpec } from './content/schema.ts';
 import { EventBus, type EventMap, type EventName } from './events.ts';
-import { type JournalState, recordEncounter, recordStudy } from './journal.ts';
+import { type JournalState, recordEncounter, recordQuiz, recordStudy } from './journal.ts';
 import { type MissionProgress, MissionRunner, newProgress } from './missions/runner.ts';
 import { danger, line, subtle } from './output.ts';
 import { CommandRegistry } from './shell/command.ts';
@@ -82,6 +82,9 @@ export class Engine {
           break;
         case 'concept.studied':
           recordStudy(this.journal, event.payload.id, this.state.clock);
+          break;
+        case 'concept.mastered':
+          recordQuiz(this.journal, event.payload.id, this.state.clock);
           break;
         case 'host.pinged':
           this.addExposure(1);
@@ -173,6 +176,11 @@ export class Engine {
   /** Marks a concept as studied (fiche opened from the UI or `learn`). */
   study(conceptId: string): void {
     if (this.concepts.has(conceptId)) this.emit('concept.studied', { id: conceptId });
+  }
+
+  /** Records a passed quiz (the UI grades it; the journal only keeps the result). */
+  passQuiz(conceptId: string): void {
+    if (this.concepts.get(conceptId)?.quiz.length) this.emit('concept.mastered', { id: conceptId });
   }
 
   /** Asks the player for a line of input (password…). The next execute() goes to `resolve`. */

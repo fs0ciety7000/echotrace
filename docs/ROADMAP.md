@@ -22,7 +22,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Briefing (modale) et débrief (statistiques, réponse à la question)
 - ✅ Fiches consultables en panneau latéral (étude = maîtrise 2), notifications
 - ✅ Messages entrants (Comms) : déclenchés par événements, machine à écrire séquentielle, commande `mail`, badge non lus
-- ⬜ Journal d'apprentissage : écran complet + mini-quiz (maîtrise 3)
+- ✅ Journal d'apprentissage : vue complète (catégories, maîtrise globale, fiches verrouillées) + quiz par fiche (sans-faute → maîtrise 3), 31 questions
 - ✅ Paramètres : Haute lisibilité, Mouvement réduit
 - ⬜ Paramètres : taille du terminal, son, réinitialiser la sauvegarde
 - ✅ PWA : manifest, icônes, service worker Workbox (jouable hors ligne, installable Chrome/Edge)

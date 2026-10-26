@@ -4,6 +4,7 @@ import { concepts, getMission, missions } from '../content/index.ts';
 import { deleteSave, loadSave, type SaveFile, writeSave } from './persistence.ts';
 
 export type Screen = 'menu' | 'operator';
+export type View = 'terminal' | 'journal';
 
 export interface TermEntry {
   id: number;
@@ -26,6 +27,9 @@ type Modal = 'briefing' | 'debrief' | 'settings' | null;
 
 interface GameStore {
   screen: Screen;
+  view: View;
+  /** Fiche selected in the journal view. */
+  journalSelection: string | null;
   engine: Engine | null;
   /** Bumped after every engine mutation so selectors re-run (engine state is mutable). */
   rev: number;
@@ -49,6 +53,10 @@ interface GameStore {
   setModal: (modal: Modal) => void;
   showConcept: (id: string | null) => void;
   setComms: (open: boolean) => void;
+  setView: (view: View) => void;
+  /** Opens a fiche in the journal view (counts as studying it). */
+  openInJournal: (id: string) => void;
+  passQuiz: (id: string) => void;
   /** Marks every delivered message as read (called once the comms panel has shown them). */
   markMessagesRead: () => void;
   dismissToast: (id: number) => void;
@@ -131,7 +139,7 @@ export const useGame = create<GameStore>()((set, get) => {
           break;
         case 'message.received': {
           const msg = engine.mission?.spec.messages.find((m) => m.id === event.payload.messageId);
-          const preview = msg?.subject ?? msg?.body.trim().split('\n')[0] ?? '';
+          const preview = (msg?.subject ?? msg?.body.trim().split('\n')[0] ?? '').replace(/\*\*|`/g, '');
           toast({ tone: 'signal', title: `Message — ${event.payload.from}`, body: preview, action: 'comms' });
           break;
         }
@@ -146,6 +154,8 @@ export const useGame = create<GameStore>()((set, get) => {
 
   return {
     screen: 'menu',
+    view: 'terminal',
+    journalSelection: null,
     engine: null,
     rev: 0,
     scrollback: [],
@@ -209,7 +219,7 @@ export const useGame = create<GameStore>()((set, get) => {
 
     toMenu() {
       void get().save();
-      set({ screen: 'menu', modal: null, openConcept: null, commsOpen: false });
+      set({ screen: 'menu', view: 'terminal', modal: null, openConcept: null, commsOpen: false });
       void get().init();
     },
 
@@ -257,6 +267,24 @@ export const useGame = create<GameStore>()((set, get) => {
     },
 
     setComms: (commsOpen) => set({ commsOpen, openConcept: null }),
+
+    setView: (view) => set({ view, openConcept: null, commsOpen: false }),
+
+    openInJournal(id) {
+      get().engine?.study(id);
+      set((s) => ({ view: 'journal', journalSelection: id, openConcept: null, commsOpen: false, rev: s.rev + 1 }));
+      scheduleSave();
+    },
+
+    passQuiz(id) {
+      const engine = get().engine;
+      if (!engine) return;
+      engine.passQuiz(id);
+      const c = engine.concepts.get(id);
+      toast({ tone: 'trace', title: 'Fiche validée', body: c ? `${c.title} — maîtrise 3/3` : undefined });
+      set((s) => ({ rev: s.rev + 1 }));
+      scheduleSave();
+    },
 
     markMessagesRead() {
       const mission = get().engine?.mission;

@@ -15,7 +15,7 @@ Chaque concept a une fiche (`content/concepts`). La maîtrise est mesurable et e
 | 0 | Jamais rencontrée | — |
 | 1 — rencontrée | Commande utilisée, objectif accompli ou concept vu en jeu | ●○○ |
 | 2 — étudiée | Fiche ouverte (clic) ou `learn <id>` | ●●○ |
-| 3 — validée | Mini-quiz réussi (Phase 1, à venir) | ●●● |
+| 3 — validée | Quiz de la fiche réussi **sans faute** (choix mélangés à chaque essai, explication après chaque réponse) | ●●● |
 
 Le journal **survit aux nouvelles parties** : la connaissance appartient au joueur, pas à la sauvegarde.
 

@@ -10,6 +10,7 @@ import { MasteryMeter } from './MasteryMeter.tsx';
 export function ConceptDrawer() {
   const id = useGame((s) => s.openConcept);
   const show = useGame((s) => s.showConcept);
+  const openInJournal = useGame((s) => s.openInJournal);
   const engine = useGame((s) => s.engine);
   useGame((s) => s.rev);
   const concept = id ? conceptById.get(id) : undefined;
@@ -31,6 +32,15 @@ export function ConceptDrawer() {
           <div className="mt-3 flex items-center gap-2 text-xs text-fg-subtle">
             <MasteryMeter value={m} />
             <span>{['inconnue', 'rencontrée', 'étudiée', 'validée'][m]}</span>
+            {concept.quiz.length > 0 && m < 3 && (
+              <button
+                type="button"
+                onClick={() => openInJournal(concept.id)}
+                className="ml-auto text-signal hover:text-signal-strong"
+              >
+                Tester ma compréhension →
+              </button>
+            )}
           </div>
         </>
       }

@@ -2,6 +2,7 @@ import { mastery } from '@echotrace/engine';
 import { BookOpen, LogOut, Mail, Network, Radar, Settings, SquareTerminal } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { CATEGORY_TITLES, conceptById } from '../content/index.ts';
+import { JournalView } from '../features/journal/JournalView.tsx';
 import { MasteryMeter } from '../features/journal/MasteryMeter.tsx';
 import { ObjectivesList } from '../features/missions/ObjectivesPanel.tsx';
 import { EchoTerm } from '../features/terminal/EchoTerm.tsx';
@@ -54,7 +55,8 @@ function RailButton({
 function Rail() {
   const setModal = useGame((s) => s.setModal);
   const toMenu = useGame((s) => s.toMenu);
-  const run = useGame((s) => s.run);
+  const view = useGame((s) => s.view);
+  const setView = useGame((s) => s.setView);
   const setComms = useGame((s) => s.setComms);
   const unread = useGame((s) => s.engine?.mission?.unreadCount() ?? 0);
   useGame((s) => s.rev);
@@ -64,9 +66,19 @@ function Rail() {
         <Logo />
       </div>
       <RailButton icon={<Radar size={18} />} label="Briefing" onClick={() => setModal('briefing')} />
-      <RailButton icon={<SquareTerminal size={18} />} label="Terminal" active />
+      <RailButton
+        icon={<SquareTerminal size={18} />}
+        label="Terminal"
+        active={view === 'terminal'}
+        onClick={() => setView('terminal')}
+      />
       <RailButton icon={<Network size={18} />} label="Vue réseau" disabled />
-      <RailButton icon={<BookOpen size={18} />} label="Journal" onClick={() => run('journal')} />
+      <RailButton
+        icon={<BookOpen size={18} />}
+        label="Journal"
+        active={view === 'journal'}
+        onClick={() => setView('journal')}
+      />
       <RailButton icon={<Mail size={18} />} label="Messages" onClick={() => setComms(true)} badge={unread} />
       <div className="mt-auto flex flex-col gap-1">
         <RailButton icon={<Settings size={18} />} label="Paramètres" onClick={() => setModal('settings')} />
@@ -253,7 +265,7 @@ function StatusBar() {
   const expLabel = exposure >= 60 ? 'élevée' : exposure >= 30 ? 'modérée' : 'faible';
 
   return (
-    <footer className="col-span-3 flex h-7 items-center gap-5 border-t border-line bg-void px-4 font-mono text-[11px] text-fg-subtle">
+    <footer className="col-start-2 flex h-7 items-center gap-5 border-t border-line bg-void px-4 font-mono text-[11px] text-fg-subtle">
       <span className="flex items-center gap-2">
         <StatusDot tone={session.stack.length ? 'echo' : 'trace'} pulse />
         <span className="text-fg-muted">{session.stack.length ? 'SESSION DISTANTE' : 'CONNECTÉ'}</span> {host.hostname}
@@ -274,9 +286,22 @@ function StatusBar() {
 
 export function Operator() {
   const engine = useGame((s) => s.engine);
+  const view = useGame((s) => s.view);
   useGame((s) => s.rev);
   if (!engine) return null;
   const { user } = engine.state.session;
+
+  if (view === 'journal') {
+    return (
+      <div className="grid h-full grid-cols-[56px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_28px] bg-void">
+        <Rail />
+        <main className="min-h-0 p-3">
+          <JournalView />
+        </main>
+        <StatusBar />
+      </div>
+    );
+  }
 
   return (
     <div className="grid h-full grid-cols-[56px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_28px] bg-void">

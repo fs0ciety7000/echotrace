@@ -107,7 +107,7 @@ Captures de la v0 : [menu](screenshots/menu.png) · [briefing](screenshots/brief
 - Les nœuds apparaissent **au fil de la découverte** (rien n'est révélé gratuitement).
 - Inspecteur latéral : services, notes du joueur, actions qui écrivent la commande dans le terminal (le joueur voit toujours la commande → apprentissage).
 
-## 5. Journal d'apprentissage (v1)
+## 5. Journal d'apprentissage ✅ (v0)
 
 ```
 ┌──────────────────────┬─────────────────────────────────────────────────────┐

@@ -60,15 +60,28 @@ const SafeHostname = z.string().refine(isSafeHostname, {
 
 export const CONCEPT_CATEGORIES = ['reseau', 'systeme', 'reconnaissance', 'forensique', 'defense', 'ethique'] as const;
 
+export const QuizQuestionSchema = z
+  .object({
+    q: z.string().min(5),
+    choices: z.array(z.string().min(1)).min(2).max(4),
+    /** Index of the correct choice (choices are shuffled at display). */
+    answer: z.number().int().min(0),
+    /** Shown after answering, right or wrong: this is where the learning happens. */
+    explain: z.string().min(10),
+  })
+  .refine((q) => q.answer < q.choices.length, { message: 'answer hors des choix' });
+
 export const ConceptMetaSchema = z.object({
   id: z.string().regex(/^[a-z]+(\.[a-z0-9-]+)+$/, 'id attendu : categorie.nom-du-concept'),
   title: z.string().min(1),
   category: z.enum(CONCEPT_CATEGORIES),
   summary: z.string().min(10).max(240),
   related: z.array(z.string()).default([]),
+  quiz: z.array(QuizQuestionSchema).default([]),
 });
 
 export type ConceptMeta = z.infer<typeof ConceptMetaSchema>;
+export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
 export interface Concept extends ConceptMeta {
   /** Markdown body. */
   body: string;
@@ -141,6 +154,7 @@ export const TriggerSchema = z.object({
     'session.opened',
     'auth.failed',
     'concept.studied',
+    'concept.mastered',
   ]),
   /** Shallow match on the event payload; array payload fields match by inclusion. */
   where: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),

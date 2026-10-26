@@ -21,6 +21,18 @@ related: [reseau.adresse-ip] # ids existants uniquement
 ## Éthique / Pour aller plus loin
 ```
 
+### Quiz (obligatoire, 2–4 questions)
+Dans le frontmatter, après `related` :
+```yaml
+quiz:
+  - q: "Un scan indique `3306/tcp filtered`. Qu'est-ce que ça signifie ?"
+    choices: [Réponse A, Réponse B, Réponse C]   # 2 à 4 choix, mélangés à l'affichage
+    answer: 1                                     # index (0-based) de la bonne réponse
+    explain: Toujours expliquer, que le joueur ait juste ou faux.
+```
+⚠ YAML : mettre entre guillemets tout texte contenant `: ` (espace insécable français compris) ou, dans une liste `[…]`, une virgule. `pnpm content:check` détecte un nombre de choix incohérent avec `answer`, pas une virgule mal placée : relire les choix affichés.
+Une bonne question teste la **compréhension** (« que peux-tu conclure ? », « pourquoi ? »), pas la mémoire d'un numéro de port isolé. Les mauvaises réponses sont des erreurs plausibles, pas des absurdités.
+
 Règles :
 - Commencer par **pourquoi ça marche**, pas par la commande.
 - Une fiche = un concept. Si tu écris « et aussi… », c'est une nouvelle fiche liée.

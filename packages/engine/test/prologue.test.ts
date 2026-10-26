@@ -56,3 +56,18 @@ describe('prologue', () => {
     expect(mastery(e.journal['reseau.port'])).toBe(2);
   });
 });
+
+describe('quizzes', () => {
+  it('every fiche has a quiz', async () => {
+    const { concepts } = await import('./helpers.ts');
+    for (const c of concepts) expect(c.quiz.length, c.id).toBeGreaterThanOrEqual(2);
+  });
+
+  it('a passed quiz brings mastery to 3', () => {
+    const e = newPrologue();
+    e.passQuiz('reseau.port');
+    expect(mastery(e.journal['reseau.port'])).toBe(3);
+    e.passQuiz('nope.unknown');
+    expect(e.journal['nope.unknown']).toBeUndefined();
+  });
+});

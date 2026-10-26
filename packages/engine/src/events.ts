@@ -17,6 +17,7 @@ export interface EventMap {
   'auth.failed': { hostId: string; user: string };
   'concept.encountered': { id: string; source: string };
   'concept.studied': { id: string };
+  'concept.mastered': { id: string };
   'hint.requested': { missionId: string; objectiveId: string };
   'objective.completed': { missionId: string; objectiveId: string };
   'mission.completed': { missionId: string };

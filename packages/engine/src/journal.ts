@@ -35,6 +35,11 @@ export function recordEncounter(journal: JournalState, id: string, source: strin
   return true;
 }
 
+export function recordQuiz(journal: JournalState, id: string, clock: number): void {
+  recordStudy(journal, id, clock);
+  (journal[id] as JournalEntry).quizPassed = true;
+}
+
 export function recordStudy(journal: JournalState, id: string, clock: number): void {
   const entry = journal[id] ?? { firstSeen: clock, uses: 0, studied: false, quizPassed: false, source: 'journal' };
   entry.studied = true;
