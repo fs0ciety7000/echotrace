@@ -20,6 +20,7 @@ export interface EventMap {
   'hint.requested': { missionId: string; objectiveId: string };
   'objective.completed': { missionId: string; objectiveId: string };
   'mission.completed': { missionId: string };
+  'message.received': { missionId: string; messageId: string; from: string };
 }
 
 export type EventName = keyof EventMap;

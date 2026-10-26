@@ -248,6 +248,7 @@ export function EchoTerm({ className }: { className?: string }) {
 
       <input
         ref={inputRef}
+        data-terminal-input
         value={draft}
         onChange={(e) => {
           setDraft(e.target.value);

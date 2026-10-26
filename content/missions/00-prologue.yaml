@@ -245,3 +245,67 @@ objectives:
       Reviens sur ton poste (`exit`). 10.7.0.66 ne répond pas au ping…
       ce qui ne veut pas dire qu'elle n'existe pas. Relis `man nmap`, option -Pn.
     concepts: [reseau.ping-icmp]
+
+messages:
+  - id: mara-welcome
+    from: Mara Okonkwo-Lind
+    subject: Premier jour
+    on: mission.started
+    body: |
+      Bienvenue parmi nous. Je suis coincée avec la Fondation toute la matinée,
+      Noor s'occupe de ta formation sur le Banc.
+
+      Une seule règle aujourd'hui : tu ne sors pas du Banc. Rien d'autre n'est
+      dans ton périmètre.
+
+  - id: noor-ping
+    from: Noor Haddad
+    on: objective.completed
+    where: { objectiveId: ping-banc }
+    body: |
+      Bien. Le ping te dit que banc-01 est **là**. Il ne te dit pas ce qu'elle
+      **fait**. Pour ça, il faut regarder quelles portes sont ouvertes — les ports.
+
+  - id: noor-scan
+    from: Noor Haddad
+    on: objective.completed
+    where: { objectiveId: scan-banc }
+    body: |
+      Tu vois la ligne `3306/tcp filtered` ? Quelque chose est là, mais un pare-feu
+      avale les paquets. Note-le, c'est le genre de détail qui compte en vrai.
+
+      Si tu as le temps, fais un `nmap -sV banc-02` : tu verras à quoi ressemble
+      une machine que personne n'a mise à jour depuis dix ans.
+
+  - id: noor-login
+    from: Noor Haddad
+    on: objective.completed
+    where: { objectiveId: login-banc }
+    body: |
+      Tu es dedans. Avant de toucher à quoi que ce soit, retiens que **ta**
+      connexion vient d'être écrite dans un journal. Va lire lequel.
+
+  - id: noor-iris
+    from: Noor Haddad
+    subject: 10.7.0.66
+    on: objective.completed
+    where: { objectiveId: read-authlog }
+    body: |
+      Attends. 10.7.0.66, cette nuit à 03:12…
+
+      C'est le poste d'Iris. Elle n'avait aucune raison d'être sur le Banc, encore
+      moins avec un compte stagiaire, et encore moins après deux essais sur `root`.
+
+      Ne dis rien à Mara pour l'instant. Je veux d'abord comprendre.
+
+  - id: unknown-chant
+    from: inconnu
+    subject: '◇'
+    on: objective.completed
+    where: { objectiveId: find-iris }
+    body: |
+      tu as entendu le chant.
+
+      ne le scanne plus. ils écoutent aussi.
+
+      — 0

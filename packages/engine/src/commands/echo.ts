@@ -136,4 +136,51 @@ export const learn: Command = {
   },
 };
 
-export const echoCommands = [objectives, hint, journal, learn];
+const formatTime = (ms: number): string => new Date(ms).toISOString().slice(11, 16);
+
+export const mail: Command = {
+  name: 'mail',
+  aliases: ['messages'],
+  category: 'echo',
+  summary: 'lit les messages de la cellule',
+  usage: 'mail [n]',
+  description:
+    'Sans argument, liste les messages reçus (● = non lu).\n`mail 2` affiche le message n°2 et le marque comme lu.',
+  run({ argv, engine }) {
+    const m = engine.mission;
+    const inbox = m?.inbox() ?? [];
+    if (!m || inbox.length === 0) return [line(muted('Aucun message.'))];
+    const n = argv[0] === undefined ? null : Number(argv[0]);
+    if (n === null) {
+      return [
+        line(heading('MESSAGERIE ECHO'), subtle(`  ${m.unreadCount()} non lu(s)`)),
+        blank(),
+        ...table(
+          inbox.map((msg, i) => [
+            msg.read ? subtle(' ') : { t: '●', s: 'accent' },
+            command(String(i + 1), `mail ${i + 1}`),
+            subtle(formatTime(msg.at)),
+            echo(msg.from),
+            msg.read ? muted(msg.subject ?? firstLine(msg.body)) : plain(msg.subject ?? firstLine(msg.body)),
+          ]),
+        ),
+      ];
+    }
+    const msg = Number.isInteger(n) ? inbox[n - 1] : undefined;
+    if (!msg) return [line(muted(`Pas de message n°${argv[0]}. Tape `), command('mail'), muted('.'))];
+    m.markRead(msg.id);
+    return [
+      line(subtle('De : '), echo(msg.from), subtle(`  ·  ${formatTime(msg.at)} UTC`)),
+      ...(msg.subject ? [line(subtle('Objet : '), plain(msg.subject))] : []),
+      blank(),
+      ...markdownToLines(msg.body.trim()),
+    ];
+  },
+};
+
+function firstLine(body: string): string {
+  const l = body.trim().split('\n')[0] ?? '';
+  return l.length > 60 ? `${l.slice(0, 57)}…` : l;
+}
+
+export const echoCommands = [objectives, hint, mail, journal, learn];

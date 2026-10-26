@@ -18,6 +18,8 @@ export interface Toast {
   tone: 'signal' | 'trace' | 'echo' | 'warn';
   title: string;
   body?: string;
+  /** What clicking the toast opens (it is dismissed either way). */
+  action?: 'comms';
 }
 
 type Modal = 'briefing' | 'debrief' | 'settings' | null;
@@ -32,6 +34,7 @@ interface GameStore {
   toasts: Toast[];
   modal: Modal;
   openConcept: string | null;
+  commsOpen: boolean;
   hasSave: boolean;
   saveSummary: string | null;
   lastSavedAt: number | null;
@@ -45,6 +48,9 @@ interface GameStore {
   setDraft: (draft: string) => void;
   setModal: (modal: Modal) => void;
   showConcept: (id: string | null) => void;
+  setComms: (open: boolean) => void;
+  /** Marks every delivered message as read (called once the comms panel has shown them). */
+  markMessagesRead: () => void;
   dismissToast: (id: number) => void;
   save: () => Promise<void>;
 }
@@ -123,6 +129,12 @@ export const useGame = create<GameStore>()((set, get) => {
             if (c) freshConcepts.push(c.title);
           }
           break;
+        case 'message.received': {
+          const msg = engine.mission?.spec.messages.find((m) => m.id === event.payload.messageId);
+          const preview = msg?.subject ?? msg?.body.trim().split('\n')[0] ?? '';
+          toast({ tone: 'signal', title: `Message — ${event.payload.from}`, body: preview, action: 'comms' });
+          break;
+        }
         case 'host.discovered': {
           const h = engine.state.world.hosts[event.payload.hostId];
           toast({ tone: 'signal', title: 'Hôte découvert', body: `${h?.hostname ?? '?'} · ${event.payload.ip}` });
@@ -141,6 +153,7 @@ export const useGame = create<GameStore>()((set, get) => {
     toasts: [],
     modal: null,
     openConcept: null,
+    commsOpen: false,
     hasSave: false,
     saveSummary: null,
     lastSavedAt: null,
@@ -196,7 +209,7 @@ export const useGame = create<GameStore>()((set, get) => {
 
     toMenu() {
       void get().save();
-      set({ screen: 'menu', modal: null, openConcept: null });
+      set({ screen: 'menu', modal: null, openConcept: null, commsOpen: false });
       void get().init();
     },
 
@@ -239,8 +252,18 @@ export const useGame = create<GameStore>()((set, get) => {
     showConcept(id) {
       const engine = get().engine;
       if (id && engine) engine.study(id);
-      set((s) => ({ openConcept: id, rev: s.rev + 1 }));
+      set((s) => ({ openConcept: id, commsOpen: id ? false : s.commsOpen, rev: s.rev + 1 }));
       if (id) scheduleSave();
+    },
+
+    setComms: (commsOpen) => set({ commsOpen, openConcept: null }),
+
+    markMessagesRead() {
+      const mission = get().engine?.mission;
+      if (!mission || mission.unreadCount() === 0) return;
+      mission.markRead();
+      set((s) => ({ rev: s.rev + 1 }));
+      scheduleSave();
     },
 
     dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),

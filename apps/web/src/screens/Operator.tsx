@@ -18,12 +18,14 @@ function RailButton({
   active,
   disabled,
   onClick,
+  badge = 0,
 }: {
   icon: ReactNode;
   label: string;
   active?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  badge?: number;
 }) {
   return (
     <button
@@ -31,7 +33,7 @@ function RailButton({
       onClick={onClick}
       disabled={disabled}
       title={disabled ? `${label} — bientôt` : label}
-      aria-label={label}
+      aria-label={badge ? `${label} (${badge} non lu${badge > 1 ? 's' : ''})` : label}
       className={cx(
         'relative flex size-10 items-center justify-center rounded-sm transition-colors duration-(--duration-fast)',
         active ? 'bg-raised text-signal' : 'text-fg-subtle hover:bg-raised hover:text-fg',
@@ -40,6 +42,11 @@ function RailButton({
     >
       {active && <span aria-hidden className="absolute inset-y-2 -left-2 w-0.5 rounded-full bg-signal" />}
       {icon}
+      {badge > 0 && (
+        <span className="absolute top-1 right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-signal px-0.5 font-mono text-[9px] font-semibold text-void">
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
@@ -48,6 +55,9 @@ function Rail() {
   const setModal = useGame((s) => s.setModal);
   const toMenu = useGame((s) => s.toMenu);
   const run = useGame((s) => s.run);
+  const setComms = useGame((s) => s.setComms);
+  const unread = useGame((s) => s.engine?.mission?.unreadCount() ?? 0);
+  useGame((s) => s.rev);
   return (
     <nav aria-label="Outils" className="row-span-2 flex flex-col items-center gap-1 border-r border-line bg-void py-3">
       <div className="mb-3 flex h-8 items-center">
@@ -57,7 +67,7 @@ function Rail() {
       <RailButton icon={<SquareTerminal size={18} />} label="Terminal" active />
       <RailButton icon={<Network size={18} />} label="Vue réseau" disabled />
       <RailButton icon={<BookOpen size={18} />} label="Journal" onClick={() => run('journal')} />
-      <RailButton icon={<Mail size={18} />} label="Messages" disabled />
+      <RailButton icon={<Mail size={18} />} label="Messages" onClick={() => setComms(true)} badge={unread} />
       <div className="mt-auto flex flex-col gap-1">
         <RailButton icon={<Settings size={18} />} label="Paramètres" onClick={() => setModal('settings')} />
         <RailButton icon={<LogOut size={18} />} label="Menu principal" onClick={toMenu} />
@@ -75,9 +85,11 @@ const CONTACTS: { name: string; role: string; tone: Tone; status: string }[] = [
 function LeftColumn() {
   const engine = useGame((s) => s.engine);
   const setDraft = useGame((s) => s.setDraft);
+  const setComms = useGame((s) => s.setComms);
   useGame((s) => s.rev);
   if (!engine) return null;
   const mission = engine.mission?.spec;
+  const inbox = engine.mission?.inbox() ?? [];
   const hosts = Object.entries(engine.state.knowledge)
     .filter(([, k]) => k.discovered)
     .map(([id, k]) => ({ host: engine.state.world.hosts[id], k }))
@@ -92,20 +104,35 @@ function LeftColumn() {
         </div>
       </Panel>
 
-      <Panel eyebrow="Contacts">
+      <Panel eyebrow="Comms">
         <ul className="px-2 py-2">
-          {CONTACTS.map((c) => (
-            <li key={c.name} className="flex items-center gap-2.5 rounded-sm px-2 py-1.5">
-              <StatusDot tone={c.tone} pulse={c.tone === 'trace'} />
-              <span className="min-w-0 flex-1">
-                <span className={cx('block truncate text-sm', c.tone === 'neutral' ? 'text-fg-subtle' : 'text-fg')}>
-                  {c.name}
-                </span>
-                <span className="block truncate text-xs text-fg-subtle">{c.role}</span>
-              </span>
-              <span className="font-mono text-[11px] text-fg-subtle">{c.status}</span>
-            </li>
-          ))}
+          {CONTACTS.map((c) => {
+            const unread = inbox.filter((m) => m.from === c.name && !m.read).length;
+            return (
+              <li key={c.name}>
+                <button
+                  type="button"
+                  onClick={() => setComms(true)}
+                  className="flex w-full items-center gap-2.5 rounded-sm px-2 py-1.5 text-left hover:bg-raised"
+                >
+                  <StatusDot tone={c.tone} pulse={c.tone === 'trace'} />
+                  <span className="min-w-0 flex-1">
+                    <span className={cx('block truncate text-sm', c.tone === 'neutral' ? 'text-fg-subtle' : 'text-fg')}>
+                      {c.name}
+                    </span>
+                    <span className="block truncate text-xs text-fg-subtle">{c.role}</span>
+                  </span>
+                  {unread > 0 ? (
+                    <span className="rounded-full bg-signal-soft px-1.5 font-mono text-[11px] text-signal-strong">
+                      {unread}
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[11px] text-fg-subtle">{c.status}</span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </Panel>
 

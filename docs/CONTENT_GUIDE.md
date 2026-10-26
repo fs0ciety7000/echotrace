@@ -94,6 +94,23 @@ objectives:
 | `session.opened` | `hostId`, `user` |
 | `auth.failed` | `hostId`, `user` |
 | `concept.studied` | `id` |
+| `objective.completed` *(messages)* | `missionId`, `objectiveId` |
+| `mission.started` / `mission.completed` *(messages)* | `missionId` |
+
+### Messages
+Messages diégétiques (Noor, Mara, inconnu…) livrés dans le panneau Comms et lisibles au terminal avec `mail`.
+
+```yaml
+messages:
+  - id: noor-ping
+    from: Noor Haddad            # nom exact d'un contact pour le compteur « non lus » ; `inconnu` = style anonyme
+    subject: Optionnel
+    on: objective.completed      # ou mission.started, mission.completed, ou tout événement d'objectif
+    where: { objectiveId: ping-banc }
+    body: |
+      Markdown court (3–6 lignes). Tapé en machine à écrire à la première lecture.
+```
+Règles : un message **réagit** à ce que le joueur vient de faire (jamais une consigne déguisée qui double l'objectif) ; il apporte du lore, une nuance technique, ou une tension.
 
 La mission est accomplie quand tous les objectifs **non optionnels** sont faits ; les optionnels restent accomplissables jusqu'au retour au menu.
 

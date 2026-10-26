@@ -45,6 +45,15 @@ export function parseMission(yamlText: string, source = 'mission'): MissionSpec 
   for (const o of mission.objectives) {
     for (const r of o.requires) if (!objIds.has(r)) issues.push(`objectif ${o.id} : requires « ${r} » inconnu`);
   }
+  const msgIds = new Set<string>();
+  for (const m of mission.messages) {
+    if (msgIds.has(m.id)) issues.push(`message « ${m.id} » dupliqué`);
+    msgIds.add(m.id);
+    const ref = m.where.objectiveId;
+    if (m.on === 'objective.completed' && (typeof ref !== 'string' || !objIds.has(ref))) {
+      issues.push(`message ${m.id} : where.objectiveId « ${String(ref)} » inconnu`);
+    }
+  }
   if (issues.length) throw new ContentError(source, `\n${issues.map((i) => `  • ${i}`).join('\n')}`);
   return mission;
 }

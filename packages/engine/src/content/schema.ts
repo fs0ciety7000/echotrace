@@ -156,6 +156,17 @@ export const ObjectiveSchema = TriggerSchema.extend({
   concepts: z.array(z.string()).default([]),
 });
 
+/** In-world messages (Noor, Mara…) delivered when their trigger fires. */
+export const MessageSchema = z.object({
+  id: z.string().regex(/^[a-z0-9-]+$/),
+  from: z.string(),
+  subject: z.string().optional(),
+  /** Short Markdown body. */
+  body: z.string(),
+  on: z.enum(['mission.started', 'objective.completed', 'mission.completed', ...TriggerSchema.shape.on.options]),
+  where: TriggerSchema.shape.where,
+});
+
 export const MissionSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
   title: z.string(),
@@ -170,7 +181,9 @@ export const MissionSchema = z.object({
   concepts: z.array(z.string()).default([]),
   scenario: ScenarioSchema,
   objectives: z.array(ObjectiveSchema).min(1),
+  messages: z.array(MessageSchema).default([]),
 });
 
 export type MissionSpec = z.infer<typeof MissionSchema>;
 export type ObjectiveSpec = z.infer<typeof ObjectiveSchema>;
+export type MessageSpec = z.infer<typeof MessageSchema>;

@@ -1,4 +1,4 @@
-import type { MissionSpec, ObjectiveSpec } from '../content/schema.ts';
+import type { MessageSpec, MissionSpec, ObjectiveSpec } from '../content/schema.ts';
 import type { EventBus, GameEvent } from '../events.ts';
 
 export interface MissionProgress {
@@ -8,6 +8,21 @@ export interface MissionProgress {
   status: 'active' | 'completed';
   startedAt: number;
   completedAt?: number;
+  /** Delivered messages, in arrival order. Optional for saves made before messages existed. */
+  inbox?: InboxEntry[];
+}
+
+export interface InboxEntry {
+  id: string;
+  /** Simulated clock at delivery. */
+  at: number;
+  read: boolean;
+}
+
+export interface MessageView extends InboxEntry {
+  from: string;
+  subject?: string;
+  body: string;
 }
 
 export type ObjectiveState = 'locked' | 'active' | 'done';
@@ -21,7 +36,7 @@ export interface ObjectiveView {
 }
 
 export function newProgress(missionId: string, clock: number): MissionProgress {
-  return { missionId, completed: [], hintsUsed: [], status: 'active', startedAt: clock };
+  return { missionId, completed: [], hintsUsed: [], status: 'active', startedAt: clock, inbox: [] };
 }
 
 /** Shallow payload match; array fields match when they include the expected value. */
@@ -48,6 +63,33 @@ export class MissionRunner {
     this.progress = progress;
     this.bus = bus;
     this.now = now;
+    this.progress.inbox ??= [];
+    // Messages addressed to the very start arrive silently with a fresh mission.
+    if (progress.completed.length === 0) {
+      for (const m of spec.messages) if (m.on === 'mission.started') this.deliver(m, false);
+    }
+  }
+
+  private deliver(m: MessageSpec, notify = true): void {
+    const inbox = this.progress.inbox as InboxEntry[];
+    if (inbox.some((e) => e.id === m.id)) return;
+    inbox.push({ id: m.id, at: this.now(), read: false });
+    if (notify) this.bus.emit('message.received', { missionId: this.spec.id, messageId: m.id, from: m.from });
+  }
+
+  inbox(): MessageView[] {
+    return (this.progress.inbox ?? []).flatMap((e) => {
+      const m = this.spec.messages.find((x) => x.id === e.id);
+      return m ? [{ ...e, from: m.from, body: m.body, ...(m.subject ? { subject: m.subject } : {}) }] : [];
+    });
+  }
+
+  unreadCount(): number {
+    return (this.progress.inbox ?? []).filter((e) => !e.read).length;
+  }
+
+  markRead(id?: string): void {
+    for (const e of this.progress.inbox ?? []) if (id === undefined || e.id === id) e.read = true;
   }
 
   private isUnlocked(o: ObjectiveSpec): boolean {
@@ -77,6 +119,11 @@ export class MissionRunner {
 
   /** Optional objectives stay completable after the mission itself is done (until debrief). */
   handle(event: GameEvent): void {
+    for (const m of this.spec.messages) {
+      if (m.on === event.type && matchesWhere(event.payload as unknown as Record<string, unknown>, m.where)) {
+        this.deliver(m);
+      }
+    }
     for (const o of this.spec.objectives) {
       if (o.on !== event.type || this.stateOf(o) !== 'active') continue;
       if (!matchesWhere(event.payload as unknown as Record<string, unknown>, o.where)) continue;

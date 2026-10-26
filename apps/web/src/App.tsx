@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { CommsDrawer } from './features/comms/CommsDrawer.tsx';
 import { ConceptDrawer } from './features/journal/ConceptDrawer.tsx';
 import { BriefingModal } from './features/missions/BriefingModal.tsx';
 import { DebriefModal } from './features/missions/DebriefModal.tsx';
@@ -28,6 +29,7 @@ export function App() {
       <DebriefModal />
       <SettingsModal />
       <ConceptDrawer />
+      <CommsDrawer />
       <Toasts />
     </div>
   );

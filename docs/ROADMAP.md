@@ -21,7 +21,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Sauvegarde locale (IndexedDB)
 - ✅ Briefing (modale) et débrief (statistiques, réponse à la question)
 - ✅ Fiches consultables en panneau latéral (étude = maîtrise 2), notifications
-- ⬜ Messages entrants (Noor / Mara) avec typewriter
+- ✅ Messages entrants (Comms) : déclenchés par événements, machine à écrire séquentielle, commande `mail`, badge non lus
 - ⬜ Journal d'apprentissage : écran complet + mini-quiz (maîtrise 3)
 - ✅ Paramètres : Haute lisibilité, Mouvement réduit
 - ⬜ Paramètres : taille du terminal, son, réinitialiser la sauvegarde
