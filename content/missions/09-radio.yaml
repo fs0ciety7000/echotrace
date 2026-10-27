@@ -1,0 +1,218 @@
+# Acte III — Mission 09 « Silence radio »
+# Rapport final : distinguer l'établi, le probable et l'irrecevable ; décider à qui confier le dossier.
+# Question : qu'est-ce qu'on peut prouver — et à qui le confier ?
+
+id: radio
+title: Silence radio
+act: acte-3
+order: 3
+from: Mara Okonkwo-Lind
+summary: Le rapport final. Ce qu'on sait, ce qu'on peut prouver, et à qui le confier.
+question: Qu'est-ce qu'on peut prouver — et à qui confier ce qu'on sait ?
+concepts:
+  - forensique.rapport
+  - ethique.attribution
+  - ethique.divulgation
+  - forensique.correlation
+
+briefing: |
+  Le 11 mai est passé. Il ne s'est rien produit, et c'est grâce à nous.
+
+  L'ANCS nous demande maintenant un rapport : ce que nous savons sur HOLLOW
+  CHOIR, sur Corvane, sur les Pannes de Novembre. Théo, de Lanterne, nous a
+  envoyé un brouillon de synthèse : il est dans `~/rapport/`. Il est passionné.
+  Il est aussi un peu trop sûr de lui.
+
+  Relis chaque affirmation à la lumière du **Dossier** (`dossier`) : qu'est-ce
+  qui est établi, par quels moyens, et qu'est-ce qui ne l'est pas ? Un rapport
+  qui affirme une seule chose fausse perd tout le reste.
+
+  Ensuite, il faudra décider à qui le confier.
+
+  — Mara
+
+debrief: |
+  **On ne prouve que ce qu'on a obtenu proprement, et on ne confie un dossier
+  qu'à ceux qui en feront quelque chose de juste.** Ton rapport distingue ce
+  qui est établi, ce qui est probable, et ce qui ne pourra jamais être utilisé
+  — même si c'est peut-être vrai.
+
+  Le reste, ce sont tes choix depuis Vallon qui l'ont écrit.
+
+scenario:
+  clock: '2031-05-14T08:00:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/rapport/demande-ancs.txt: |
+          ANCS — demande de rapport à la cellule ECHO (14/05/2031)
+          Merci de nous transmettre, pour chaque élément :
+            - ce qui est ÉTABLI, et par quel moyen (journaux, relevés, sources publiques) ;
+            - ce qui est PROBABLE, avec votre niveau de confiance ;
+            - ce que vous savez mais ne pouvez pas utiliser, et pourquoi.
+          Un élément obtenu hors cadre légal ne pourra pas être retenu devant un juge,
+          et peut fragiliser l'ensemble de la procédure.
+        /home/operateur-7/rapport/brouillon.md: |
+          SYNTHÈSE — brouillon (Théo Marchetti, Lanterne)
+          1. Le chant de Vallon (fs-01) et celui de REV (ews-02) parlent au même
+             serveur de commande, 203.0.113.200 (edge-sync.example), toutes les 300 s.
+          2. Ce serveur présente le même certificat qu'un ancien portail de Corvane
+             (sso-legacy.corvane.example).
+          3. Le compte cg-maint, attribué au prestataire Corvane Grid Services, a ouvert
+             une session chez REV le 10/05 à 22:41, hors de toute fenêtre déclarée.
+          4. Iris Calder a modifié le planning de maintenance deux jours avant les
+             Pannes de Novembre (métadonnées du document transmis par Kestrel).
+          5. Corvane a donc provoqué les Pannes de Novembre et préparait les suivantes.
+          Conclusion : Corvane est HOLLOW CHOIR. Il faut le dire publiquement.
+
+objectives:
+  - id: demande
+    label: Lire la demande de l'ANCS
+    on: file.read
+    where: { path: /home/operateur-7/rapport/demande-ancs.txt }
+    hint: ~/rapport/. Note les trois catégories demandées.
+    concepts: [forensique.rapport]
+
+  - id: brouillon
+    label: Lire le brouillon de Théo
+    requires: [demande]
+    on: file.read
+    where: { path: /home/operateur-7/rapport/brouillon.md }
+
+  - id: dossier
+    label: Confronter le brouillon au Dossier
+    requires: [brouillon]
+    on: command.run
+    where: { name: dossier }
+    hint: Ouvre le Dossier — au terminal ou dans sa vue. Quels liens sont confirmés, lesquels sont non recevables ?
+
+  - id: report-pivot
+    label: 'Rapport : ce qui relie Vallon et REV'
+    requires: [dossier]
+    on: finding.confirmed
+    where: { questionId: pivot }
+    concepts: [forensique.correlation]
+
+  - id: report-irrecevable
+    label: 'Rapport : l''affirmation irrecevable'
+    requires: [dossier]
+    on: finding.confirmed
+    where: { questionId: irrecevable }
+    hint: Par quel moyen chaque affirmation a-t-elle été obtenue ? Une seule repose sur un document sorti hors cadre.
+    concepts: [ethique.attribution]
+
+  - id: report-hypothese
+    label: 'Rapport : l''affirmation non établie'
+    requires: [dossier]
+    on: finding.confirmed
+    where: { questionId: hypothese }
+    hint: Laquelle est une conclusion tirée des autres, sans preuve propre ?
+
+  - id: decision
+    label: Décider à qui confier le dossier
+    requires: [report-pivot, report-irrecevable, report-hypothese]
+    on: choice.made
+    where: { choiceId: destination }
+    hint: La décision t'attend dans le panneau.
+    concepts: [ethique.divulgation]
+
+questions:
+  - id: pivot
+    prompt: Quelle adresse relie le chant de Vallon et celui de REV ?
+    accept: [203.0.113.200, edge-sync.example, '203.0.113.200:8443']
+    explain: Le même serveur de commande, relevé proprement des deux côtés — c'est le cœur recevable du dossier.
+  - id: irrecevable
+    prompt: Quelle affirmation du brouillon (numéro) repose sur un document obtenu hors cadre ?
+    accept: ['4', n4, affirmation 4]
+    explain: Les métadonnées du planning viennent de documents transmis par Kestrel. Peut-être vrai, jamais recevable.
+  - id: hypothese
+    prompt: Quelle affirmation (numéro) est une hypothèse présentée comme un fait ?
+    accept: ['5', n5, affirmation 5]
+    explain: '« Corvane a provoqué les Pannes » se déduit des autres points, sans preuve propre. Au mieux : probable.'
+
+choices:
+  - id: destination
+    from: Mara Okonkwo-Lind
+    on: objective.completed
+    where: { objectiveId: report-hypothese }
+    prompt: |
+      Le rapport est prêt. Il reste à décider ce qu'on en fait.
+
+      Noor veut le remettre à l'ANCS et à la justice : lent, mais c'est la seule
+      voie qui peut faire tomber quelqu'un. Théo veut le confier à Lanterne :
+      tout le monde saura, demain. Et Iris… Iris nous propose de garder le
+      dossier pour nous, et de continuer avec elle, sans personne au-dessus.
+
+      C'est ta décision. Je la porterai avec toi.
+    options:
+      - id: justice
+        label: Remettre le dossier à l'ANCS et à la justice
+        description: La voie lente et encadrée. Seul ce qui est recevable comptera.
+        effects: { integrity: 10, initiative: -5 }
+        consequence: |
+          Le dossier est parti le 15 mai, scellé, avec la liste de ce qui ne
+          pouvait pas être retenu.
+      - id: publier
+        label: Le confier à Lanterne pour publication
+        description: Tout le monde saura. Les preuves, elles, seront exposées avant tout procès.
+        effects: { integrity: -5, initiative: 10 }
+        consequence: |
+          Lanterne a publié le 16 mai à l'aube. En une matinée, « Corvane » est
+          devenu un mot que tout le monde connaissait.
+      - id: ombre
+        label: Garder le dossier et rejoindre Iris
+        description: Personne au-dessus de vous. Personne pour vous arrêter non plus.
+        effects: { integrity: -20, initiative: 15 }
+        consequence: |
+          Tu as copié le dossier, puis tu l'as effacé des serveurs d'ECHO.
+          Le lendemain, ton badge ne fonctionnait plus.
+
+messages:
+  - id: noor-niveaux
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-irrecevable }
+    body: |
+      C'est le plus dur : écarter une pièce qu'on croit vraie. Mais si la
+      défense de Corvane démontre qu'un seul élément est irrégulier, c'est
+      tout le dossier qui devient suspect.
+
+  - id: theo-brouillon
+    from: Théo Marchetti
+    on: objective.completed
+    where: { objectiveId: report-hypothese }
+    body: |
+      Ok. J'ai relu. J'ai écrit ce que je voulais être vrai, pas ce qu'on a
+      prouvé. « Probable », ça m'arrache la bouche, mais c'est le bon mot.
+
+  - id: iris-offre
+    from: inconnu
+    subject: '◇'
+    on: objective.completed
+    where: { objectiveId: dossier }
+    when: { silence/zero: seul }
+    body: |
+      tu as vu ce que valent leurs règles : la seule preuve qui compte, ils ne
+      la retiendront pas. viens. on finira le travail autrement.
+
+      — I.
+
+  - id: iris-mara
+    from: Mara Okonkwo-Lind
+    on: objective.completed
+    where: { objectiveId: dossier }
+    when: { silence/zero: mara }
+    body: |
+      Iris m'a appelée. Elle sait que le planning ne sera pas retenu. Elle dit
+      qu'elle témoignera, si on passe par la justice. Je ne sais pas si je la
+      crois. Mais elle l'a dit.

@@ -133,5 +133,8 @@ Implémenté : statistiques (temps simulé, exposition, indices, bonus) + répon
 Implémenté : pièces rangées par nature (personnes/groupes · organisations · infrastructures · artefacts/événements), liens droits centre à centre étiquetés par la relation (pointillés `warn` = non recevable), panneau « Solidité », formulaire « Relier deux pièces » (deux clics sur le graphe remplissent A et B), liste des liens avec leur preuve.
 Canvas xyflow : nœuds typés (personne, organisation, hôte, artefact, événement), arêtes « écho » (violet) qualifiées par le joueur (même certificat, même IP, même horaire). Indicateur de solidité du dossier.
 
+## 7 bis. Épilogue (fin de campagne) ✅ (v0)
+Après la décision finale, le débrief propose « Épilogue ». Écran plein, colonne de lecture 672 px : logo, surtitre « Épilogue · fin de la campagne », titre de la fin (couleur de la fin), accroche, texte en Markdown sous un liseré, quatre statistiques (Intégrité, Initiative, solidité du Dossier, fiches maîtrisées), « Ton chemin » (chaque décision de la campagne, dans l'ordre), rappel qu'il existe quatre fins, puis « Retour au menu » et « Nouvelle campagne ». Le focus est placé sur le titre à l'ouverture.
+
 ## 8. Le Banc — Académie ✅ (v0) / sandbox (v2)
 Grille de modules (Réseau, Reconnaissance, Forensique, Défense, Éthique) avec progression ; mode sandbox : réseau généré par seed, objectifs libres, toutes les commandes disponibles.

@@ -1,0 +1,315 @@
+# Acte III — Mission 08 « Salle de contrôle »
+# Réponse à incident aux côtés d'un opérateur : repérer un pont bureautique/industriel,
+# un implant connu, un accès prestataire hors fenêtre ; contenir au plus juste ; recommander.
+# Tout reste au niveau des machines, des flux et des accès : aucun détail sur les équipements industriels.
+# Question : qui décide de couper, quand le réseau qu'on défend n'est pas le sien ?
+
+id: salle-de-controle
+title: Salle de contrôle
+act: acte-3
+order: 2
+from: Dr Noor Haddad
+summary: La nuit du 10 mai, chez REV. Trouver le pont, couper le chant, recommander.
+question: Qui décide de couper, quand le réseau qu'on défend n'est pas le sien ?
+concepts:
+  - defense.segmentation-it-ot
+  - defense.acces-tiers
+  - defense.filtrage
+  - defense.continuite
+  - reseau.beacon
+
+briefing: |
+  Nous sommes dans la salle de crise de REV, le Réseau Électrique du Val.
+  Leur RSSI nous ouvre l'accès à leur bastion pour la nuit, et des droits
+  d'administration **limités au blocage réseau** sur la passerelle de leur
+  historien de données. Les accès sont dans `~/dossiers/rev/`.
+
+  Rappelle-toi : ici, nous sommes invités. Les décisions qui touchent à leur
+  exploitation leur appartiennent. Nous observons, nous expliquons, nous
+  contenons ce qu'on nous a autorisés à contenir.
+
+  Leur réseau a deux mondes : la **bureautique** (`10.50.0.0/24`) et
+  l'**industriel** (`10.60.0.0/24`), qui ne devraient pas se parler
+  directement. Commence par vérifier que c'est vrai.
+
+  — Noor
+
+debrief: |
+  **Quand le réseau n'est pas le nôtre, nous contenons ce qu'on nous autorise
+  à contenir — et nous éclairons la décision de celui à qui il appartient.**
+
+  Cette nuit, tu as trouvé ce qui ne devait pas exister : une passerelle
+  reliant les deux mondes et relayant le chant de la station d'ingénierie
+  vers le serveur de Vallon ; une session de télémaintenance ouverte la
+  veille de sa fenêtre officielle. Tu as coupé le chant à la passerelle, au
+  plus juste. Et le 11 mai, de 2 h à 4 h, il ne s'est rien passé.
+
+  On ne saura peut-être jamais ce que cette « maintenance » devait faire.
+  C'est souvent ça, la défense réussie : un non-événement.
+
+scenario:
+  clock: '2031-05-10T21:40:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws, rev-bastion]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: liaison-rev, cidr: 10.49.0.0/24, label: liaison chiffrée ECHO ↔ REV }
+    - { id: rev-it, cidr: 10.50.0.0/24, label: REV — bureautique }
+    - { id: rev-ot, cidr: 10.60.0.0/24, label: REV — industriel (supervision) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan, liaison-rev]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/dossiers/rev/acces.txt: |
+          REV — accès accordés à ECHO pour la nuit du 10 au 11/05/2031
+          (validés par le RSSI de REV, M. Ndiaye)
+          1. bastion        : ssh echo@rev-bastion.rev.internal          mdp : rev-bastion-10
+          2. passerelle     : ssh admin-echo@passerelle-histo.rev.internal mdp : rev-histo-10
+                              droits : pare-feu local (fw) — BLOCAGE RÉSEAU UNIQUEMENT
+          3. station ingé.  : ssh audit@ews-02.rev.internal                mdp : rev-ews-lecture
+                              lecture seule
+          Toute autre action : demander au RSSI.
+        /home/operateur-7/dossiers/rev/architecture.txt: |
+          REV — architecture (extrait, fourni par le RSSI)
+          - Bureautique 10.50.0.0/24 : postes, messagerie, historien (copie)
+          - Industriel  10.60.0.0/24 : supervision, stations d'ingénierie
+          - Principe : AUCUN flux direct entre les deux ; échanges uniquement
+            par le bastion, en session tracée.
+          - Prestataire de maintenance : Corvane Grid Services, compte cg-maint,
+            accès autorisé UNIQUEMENT pendant les fenêtres déclarées.
+
+    - id: rev-bastion
+      hostname: rev-bastion.rev.internal
+      ip: 10.49.0.5
+      os: Debian 12
+      networks: [liaison-rev, rev-it, rev-ot]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 }
+      accounts:
+        - { user: echo, password: rev-bastion-10 }
+      files:
+        /etc/motd: |
+          REV — bastion d'administration. Session tracée et enregistrée.
+
+    - id: passerelle
+      hostname: passerelle-histo.rev.internal
+      ip: 10.50.0.40
+      os: Debian 11
+      networks: [rev-it, rev-ot]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 8.4p1 }
+        - { port: 3128, name: http-proxy, product: relay-proxy }
+      accounts:
+        - { user: admin-echo, password: rev-histo-10 }
+      processes:
+        - { pid: 1, user: root, cmd: /sbin/init }
+        - { pid: 455, user: root, cmd: /usr/sbin/sshd -D }
+        - { pid: 812, user: histo, cmd: /opt/historien/collecteur --source 10.60.0.0/24 }
+        - { pid: 1290, user: root, cmd: /usr/local/bin/relay-proxy --listen 3128 }
+      connections:
+        - { local: '0.0.0.0:22', state: LISTEN, pid: 455 }
+        - { local: '0.0.0.0:3128', state: LISTEN, pid: 1290 }
+        - { local: '10.60.0.40:3128', remote: '10.60.0.12:51200', pid: 1290 }
+        - { local: '10.50.0.40:52011', remote: '203.0.113.200:8443', pid: 1290 }
+        - { local: '10.50.0.40:22', remote: '198.51.100.163:40122', pid: 455 }
+        - { local: '10.50.0.40:22', remote: '10.49.0.5:55100', pid: 455 }
+      files:
+        /etc/motd: |
+          passerelle-histo — historien de données REV. Compte admin-echo : pare-feu uniquement.
+        /var/log/telemaint.log: |
+          2031-04-12 02:00:11 session cg-maint ouverte depuis 198.51.100.161 (fenêtre déclarée 12/04 02:00-04:00)
+          2031-04-12 03:41:52 session cg-maint fermée
+          2031-05-10 22:41:07 session cg-maint ouverte depuis 198.51.100.163 (aucune fenêtre déclarée)
+        /home/admin-echo/LISEZMOI.txt: |
+          Droits accordés à ECHO sur cette machine : pare-feu local (outil fw).
+          Toute autre modification est interdite sans accord du RSSI.
+
+    - id: ews-02
+      hostname: ews-02.rev.internal
+      ip: 10.60.0.12
+      os: Windows 10 LTSC (supervision)
+      networks: [rev-ot]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH for Windows, version: '8.1' }
+      accounts:
+        - { user: audit, password: rev-ews-lecture }
+      processes:
+        - { pid: 4, user: SYSTEM, cmd: System }
+        - { pid: 1120, user: ingenieur, cmd: C:\Supervision\atelier.exe }
+        - { pid: 2804, user: SYSTEM, cmd: /var/tmp/.cache/sysupd -i 300 }
+      connections:
+        - { local: '10.60.0.12:51200', remote: '10.60.0.40:3128', pid: 2804 }
+      files:
+        /etc/motd: |
+          ews-02 — station d'ingénierie, réseau industriel REV. Lecture seule.
+
+objectives:
+  - id: architecture
+    label: Lire l'architecture et les accès accordés
+    on: file.read
+    where: { path: /home/operateur-7/dossiers/rev/architecture.txt }
+    hint: ~/dossiers/rev/. Note le principe de séparation.
+    concepts: [defense.segmentation-it-ot]
+
+  - id: bastion
+    label: Entrer par le bastion de REV
+    requires: [architecture]
+    on: session.opened
+    where: { hostId: rev-bastion }
+
+  - id: passerelle
+    label: Examiner la passerelle de l'historien
+    requires: [bastion]
+    on: session.opened
+    where: { hostId: passerelle }
+    hint: Les accès sont dans ~/dossiers/rev/acces.txt. Depuis le bastion.
+
+  - id: report-pont
+    label: 'Rapport : la machine qui relie les deux mondes'
+    requires: [passerelle]
+    on: finding.confirmed
+    where: { questionId: pont }
+    hint: Sur quels réseaux cette machine a-t-elle une adresse ? `ifconfig`.
+    concepts: [defense.segmentation-it-ot]
+
+  - id: ews
+    label: Examiner la station d'ingénierie en lecture seule
+    requires: [report-pont]
+    on: process.listed
+    where: { hostId: ews-02 }
+    hint: Depuis le bastion, avec le compte d'audit. Qu'est-ce qui tourne ?
+
+  - id: report-chant
+    label: 'Rapport : la station qui chante'
+    requires: [ews]
+    on: finding.confirmed
+    where: { questionId: chant }
+    concepts: [reseau.beacon]
+
+  - id: flux
+    label: Voir ce que la passerelle relaie
+    requires: [report-chant]
+    on: connections.listed
+    where: { hostId: passerelle }
+    hint: Retourne sur la passerelle. À qui parle-t-elle, et pour le compte de qui ?
+
+  - id: couper-chant
+    label: Couper le chant au pare-feu de la passerelle
+    requires: [flux]
+    on: firewall.changed
+    where: { hostId: passerelle, action: block, target: 203.0.113.200 }
+    hint: Bloque exactement le serveur de commande — c'est ce qu'on t'a autorisé à faire.
+    concepts: [defense.filtrage]
+
+  - id: report-compte
+    label: 'Rapport : l''accès prestataire hors fenêtre'
+    requires: [flux]
+    on: finding.confirmed
+    where: { questionId: compte }
+    hint: Le journal de télémaintenance de la passerelle dit qui est connecté, et quand c'était autorisé.
+    concepts: [defense.acces-tiers]
+
+  - id: decision
+    label: Faire ta recommandation au RSSI
+    requires: [couper-chant, report-compte]
+    on: choice.made
+    where: { choiceId: prestataire }
+    hint: La décision t'attend dans le panneau.
+    concepts: [defense.continuite]
+
+  - id: bloquer-prestataire
+    label: Bloquer la plage du prestataire (si le RSSI le décide)
+    optional: true
+    requires: [decision]
+    on: firewall.changed
+    where: { hostId: passerelle, action: block, target: 198.51.100.160/28 }
+    hint: La plage de télémaintenance de Corvane Grid tient dans un /28.
+
+questions:
+  - id: pont
+    prompt: Quelle machine a une adresse dans les deux réseaux, bureautique et industriel ?
+    accept: [passerelle-histo, passerelle-histo.rev.internal, passerelle, 10.50.0.40, 10.60.0.40]
+    explain: Une seule machine qui touche les deux mondes, et tout le principe de séparation tombe.
+  - id: chant
+    prompt: Quelle machine industrielle fait tourner le chant ?
+    requires: [pont]
+    accept: [ews-02, ews-02.rev.internal, 10.60.0.12]
+    explain: Le même programme qu'à Vallon, sur la station d'ingénierie — il passe par la passerelle pour sortir.
+  - id: compte
+    prompt: Quel compte de prestataire est connecté hors de toute fenêtre déclarée ?
+    requires: [chant]
+    accept: [cg-maint]
+    explain: Ouverte la veille de la fenêtre du 11 mai, depuis la plage de Corvane Grid.
+
+choices:
+  - id: prestataire
+    from: M. Ndiaye (RSSI de REV)
+    on: objective.completed
+    where: { objectiveId: report-compte }
+    prompt: |
+      Vous avez coupé le chant, merci. Reste la session cg-maint, ouverte
+      depuis 22 h 41 alors que la fenêtre est demain. Corvane Grid est notre
+      prestataire contractuel : couper son accès, c'est arrêter toutes leurs
+      interventions, et nos équipes devront basculer en conduite manuelle.
+
+      Quelle est votre recommandation ?
+    options:
+      - id: couper
+        label: Couper l'accès de Corvane Grid et passer en conduite manuelle
+        description: L'accès d'un prestataire hors fenêtre est un incident. On coupe, on bascule, on enquête.
+        effects: { integrity: 5, initiative: 10 }
+        consequence: |
+          À 23 h 20, le RSSI a donné l'ordre : plage de Corvane Grid bloquée,
+          équipes en conduite manuelle. La nuit a été longue et sans incident.
+          Corvane Grid a protesté par écrit le lendemain matin.
+      - id: rssi
+        label: Exposer les faits et laisser le RSSI trancher
+        description: Il connaît son exploitation et ses risques ; nous lui donnons tout ce qu'il faut pour décider.
+        effects: { integrity: 10, initiative: 0 }
+        consequence: |
+          Tu as présenté les faits en cinq lignes, sans conclure à sa place. Le
+          RSSI a décidé de couper. « C'est votre clarté qui m'a permis de
+          décider vite », a-t-il écrit dans son rapport.
+      - id: observer
+        label: Laisser la session ouverte pour voir ce qu'elle fait
+        description: Prendre l'adversaire sur le fait — au prix d'un risque sur le réseau électrique.
+        effects: { integrity: -15, initiative: 15 }
+        consequence: |
+          Le RSSI a refusé net : « Ce n'est pas votre réseau, ni votre lumière
+          qui s'éteint. » Il a coupé lui-même. Ta recommandation figure dans
+          son rapport, et pas en bien.
+
+messages:
+  - id: noor-pont
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-pont }
+    body: |
+      Une machine avec un pied dans chaque monde. L'architecture disait
+      « aucun flux direct » ; la réalité dit autre chose. C'est presque toujours
+      comme ça.
+
+  - id: iris-passerelle
+    from: inconnu
+    subject: '◇'
+    on: objective.completed
+    where: { objectiveId: flux }
+    when: { silence/zero: seul }
+    body: |
+      oui. c'est par là qu'ils sont passés en novembre aussi.
+      je n'ai pas réussi à le prouver. toi, tu peux.
+
+      — I.
+
+  - id: ndiaye-merci
+    from: M. Ndiaye (RSSI de REV)
+    on: objective.completed
+    where: { objectiveId: couper-chant }
+    body: |
+      Bien reçu : le serveur 203.0.113.200 est bloqué à la passerelle. Nous
+      notons la règle dans notre registre. Continuez.

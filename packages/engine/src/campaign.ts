@@ -12,6 +12,8 @@ export interface CampaignState {
   decisions: Record<string, string>;
   /** Evidence graph progress (added with the Dossier; absent in older saves). */
   dossier?: DossierProgress;
+  /** Ending reached (id), once the campaign is over. */
+  ending?: string;
 }
 
 export const GAUGE_START = 50;

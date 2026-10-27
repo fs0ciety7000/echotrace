@@ -1,12 +1,15 @@
 import {
   type Concept,
   type DossierSpec,
+  type EndingsSpec,
   type MissionSpec,
   parseConcept,
   parseDossier,
+  parseEndings,
   parseMission,
 } from '@echotrace/engine';
 import dossierRaw from '../../../../content/dossier.yaml?raw';
+import finsRaw from '../../../../content/fins.yaml?raw';
 
 /**
  * Content is bundled at build time from /content and validated on load.
@@ -48,3 +51,6 @@ export const CATEGORY_TITLES: Record<Concept['category'], string> = {
 
 /** The campaign evidence graph (content/dossier.yaml). */
 export const dossier: DossierSpec = parseDossier(dossierRaw);
+
+/** Campaign endings (content/fins.yaml). */
+export const endings: EndingsSpec = parseEndings(finsRaw);

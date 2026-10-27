@@ -1,0 +1,252 @@
+# Acte III — Mission 07 « Fréquence »
+# Corrélation d'indicateurs sur des exports partagés ; distinguer un vrai écho d'un faux positif ;
+# décider comment alerter.
+# Question : une correspondance suffit-elle à désigner une cible ?
+
+id: frequence
+title: Fréquence
+act: acte-3
+order: 1
+from: Mara Okonkwo-Lind
+summary: Nos indicateurs résonnent ailleurs. Trouver où, et prévenir à temps.
+question: Une correspondance d'indicateurs suffit-elle à désigner une cible ?
+concepts:
+  - forensique.correlation
+  - forensique.ioc
+  - ethique.divulgation
+  - reconnaissance.osint
+
+briefing: |
+  Le CERT sectoriel de l'énergie a accepté notre demande : il nous transmet,
+  sous accord de partage, les journaux de sortie de trois opérateurs
+  d'électricité. Ils sont dans `~/partage-energie/`. Nos indicateurs — tout ce
+  qu'on a appris depuis Vallon — sont dans `~/indicateurs/`.
+
+  Si le chant est quelque part dans ces réseaux, je veux savoir où. Et je veux
+  savoir pourquoi maintenant : six mois après les Pannes de Novembre, presque
+  jour pour jour.
+
+  Attention aux fausses alertes. Un indicateur faible qui « matche », ce n'est
+  pas un adversaire.
+
+  — Mara
+
+debrief: |
+  **Une correspondance est une piste ; plusieurs correspondances
+  indépendantes font un cas.** Chez l'opérateur A, un seul point commun : un
+  fournisseur DNS partagé par des milliers de clients. Faux positif. Chez REV,
+  le Réseau Électrique du Val, une machine interne parlait toutes les cinq
+  minutes au serveur de commande de Vallon. Même adresse, même rythme. Ce n'est
+  plus une coïncidence.
+
+  Et l'avis public de Corvane Grid Services annonçait une télémaintenance chez
+  REV pour le **11 mai, de 2 h à 4 h**. Six mois jour pour jour après les
+  Pannes.
+
+  Il reste quatre jours.
+
+scenario:
+  clock: '2031-05-07T09:30:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/indicateurs/ioc-echo.txt: |
+          INDICATEURS ECHO — consolidés au 06/05/2031
+          type        valeur                      fiabilité   origine
+          domaine     edge-sync.example           forte       Vallon (fs-01)
+          ip          203.0.113.200               forte       Vallon (fs-01)
+          fichier     /var/tmp/.cache/sysupd      forte       Vallon (fs-01)
+          rythme      300 s                       moyenne     Vallon (fs-01)
+          plage       203.0.113.64/29             forte       hameçonnage + webmail
+          domaine     lanterne-presse.example     forte       hameçonnage
+          dns         ns1.dns-relais.example      FAIBLE      fournisseur partagé
+        /home/operateur-7/partage-energie/LISEZMOI.txt: |
+          CERT sectoriel énergie → ECHO — accord de partage n°2031-14
+          Diffusion : TLP:AMBER (ECHO et les opérateurs concernés uniquement).
+          Fichiers : connexions sortantes, 05/05 et 06/05, trois opérateurs.
+            op-a.csv   Opérateur A (anonymisé)
+            op-b.csv   Opérateur B (anonymisé)
+            rev.csv    Réseau Électrique du Val (REV) — accord nominatif
+          Format : date;source_interne;destination;nom;octets
+        /home/operateur-7/partage-energie/op-a.csv: |
+          date;source_interne;destination;nom;octets
+          2031-05-05T08:01:10Z;10.31.0.20;192.0.2.80;www.meteo-publique.example;20412
+          2031-05-05T08:15:42Z;10.31.0.53;198.51.100.53;ns1.dns-relais.example;512
+          2031-05-05T09:02:03Z;10.31.0.21;192.0.2.81;maj.editeur-scada.example;881023
+          2031-05-06T08:14:09Z;10.31.0.53;198.51.100.53;ns1.dns-relais.example;498
+        /home/operateur-7/partage-energie/op-b.csv: |
+          date;source_interne;destination;nom;octets
+          2031-05-05T07:58:00Z;10.32.0.11;192.0.2.80;www.meteo-publique.example;19870
+          2031-05-05T10:20:31Z;10.32.0.40;203.0.113.10;www.ch-vallon.example;5120
+          2031-05-06T07:59:12Z;10.32.0.11;192.0.2.80;www.meteo-publique.example;20033
+        /home/operateur-7/partage-energie/rev.csv: |
+          date;source_interne;destination;nom;octets
+          2031-05-05T02:00:07Z;10.50.0.40;203.0.113.200;edge-sync.example;412
+          2031-05-05T02:05:07Z;10.50.0.40;203.0.113.200;edge-sync.example;409
+          2031-05-05T02:10:06Z;10.50.0.40;203.0.113.200;edge-sync.example;415
+          2031-05-05T08:12:44Z;10.50.0.11;192.0.2.80;www.meteo-publique.example;20410
+          2031-05-05T09:30:02Z;10.50.0.40;198.51.100.161;telemaint.corvane-grid.example;88120
+          2031-05-06T02:00:06Z;10.50.0.40;203.0.113.200;edge-sync.example;411
+          2031-05-06T02:05:07Z;10.50.0.40;203.0.113.200;edge-sync.example;410
+        /home/operateur-7/osint/avis-maintenance-grid.txt: |
+          Corvane Grid Services — avis public d'interventions programmées (mai 2031)
+          - 2031-05-04 · Opérateur Nord      · inspection postes source (sur site)
+          - 2031-05-11 · REV                 · télémaintenance, 02:00 – 04:00
+          - 2031-05-18 · Opérateur Sud-Ouest · mise à jour supervision (sur site)
+
+objectives:
+  - id: ioc
+    label: Relire les indicateurs de la cellule
+    on: file.read
+    where: { path: /home/operateur-7/indicateurs/ioc-echo.txt }
+    hint: ~/indicateurs/. Note la colonne fiabilité.
+    concepts: [forensique.ioc]
+
+  - id: accord
+    label: Lire les conditions de l'accord de partage
+    requires: [ioc]
+    on: file.read
+    where: { path: /home/operateur-7/partage-energie/LISEZMOI.txt }
+    hint: Avant d'exploiter des données confiées, on lit les conditions.
+
+  - id: report-operateur
+    label: 'Rapport : l''opérateur touché'
+    requires: [accord]
+    on: finding.confirmed
+    where: { questionId: operateur }
+    hint: 'Cherche chaque indicateur fort dans les trois fichiers. grep accepte plusieurs fichiers à la suite (pas de joker * ici : nomme-les).'
+    concepts: [forensique.correlation]
+
+  - id: report-machine
+    label: 'Rapport : la machine qui chante'
+    requires: [report-operateur]
+    on: finding.confirmed
+    where: { questionId: machine }
+
+  - id: report-faux-positif
+    label: 'Rapport : le faux positif'
+    requires: [report-operateur]
+    on: finding.confirmed
+    where: { questionId: faux-positif }
+    hint: Un autre opérateur correspond à un indicateur. Lequel, et quelle est sa fiabilité ?
+
+  - id: avis
+    label: Consulter l'avis public de Corvane Grid
+    requires: [report-machine]
+    on: file.read
+    where: { path: /home/operateur-7/osint/avis-maintenance-grid.txt }
+    concepts: [reconnaissance.osint]
+
+  - id: report-date
+    label: 'Rapport : la date à risque'
+    requires: [avis]
+    on: finding.confirmed
+    where: { questionId: date }
+
+  - id: decision
+    label: Décider comment alerter
+    requires: [report-date, report-faux-positif]
+    on: choice.made
+    where: { choiceId: alerte }
+    hint: La décision t'attend dans le panneau.
+    concepts: [ethique.divulgation]
+
+questions:
+  - id: operateur
+    prompt: Quel opérateur présente des connexions vers l'infrastructure de Vallon ?
+    accept: [REV, rev.csv, Réseau Électrique du Val, reseau electrique du val, rev-energie]
+    explain: 'REV : des connexions vers 203.0.113.200 (edge-sync.example) toutes les cinq minutes.'
+  - id: machine
+    prompt: Quelle adresse interne de REV contacte le serveur de commande ?
+    requires: [operateur]
+    accept: [10.50.0.40]
+    explain: Une seule machine interne, au rythme du chant — 300 secondes.
+  - id: faux-positif
+    prompt: Quel autre opérateur correspond à un indicateur, mais seulement à un indicateur faible ?
+    requires: [operateur]
+    accept: [op-a, opérateur a, operateur a, a]
+    hint: Regarde la colonne fiabilité de nos indicateurs.
+    explain: L'opérateur A interroge le fournisseur DNS partagé — comme des milliers d'autres. Faux positif.
+  - id: date
+    prompt: Quelle intervention à risque est programmée chez cet opérateur (date) ?
+    requires: [machine]
+    accept: ['2031-05-11', 11/05/2031, 11 mai 2031, 11 mai]
+    explain: Une télémaintenance Corvane Grid, de 2 h à 4 h — six mois jour pour jour après les Pannes.
+
+choices:
+  - id: alerte
+    from: Mara Okonkwo-Lind
+    on: objective.completed
+    where: { objectiveId: report-date }
+    prompt: |
+      Quatre jours. Il faut prévenir. La question, c'est **qui** et **comment**.
+
+      Les données viennent du CERT sectoriel, sous TLP:AMBER : on peut les
+      partager avec REV et l'autorité, pas avec le public. Théo propose une
+      alerte publique « pour que tous les opérateurs vérifient ». Noor veut
+      passer par l'ANCS, qui coordonnera. Toi ?
+    options:
+      - id: coordonner
+        label: Prévenir REV et l'ANCS en même temps
+        description: L'opérateur peut agir tout de suite ; l'autorité coordonne la suite.
+        effects: { integrity: 10, initiative: 5 }
+        consequence: |
+          L'équipe sécurité de REV a rappelé dans l'heure, l'ANCS dans la
+          journée. La télémaintenance du 11 est « reportée pour raisons
+          techniques ». REV vous ouvre ses portes pour la nuit du 10.
+      - id: ancs
+        label: Passer uniquement par l'ANCS
+        description: La voie officielle ; elle décidera de prévenir REV.
+        effects: { integrity: 5, initiative: -10 }
+        consequence: |
+          L'ANCS a prévenu REV… deux jours plus tard. Il restait quarante-huit
+          heures pour préparer la nuit du 10. Juste assez.
+      - id: public
+        label: Lancer une alerte publique avec Lanterne
+        description: Tous les opérateurs vérifient — mais l'accord de partage est rompu.
+        effects: { integrity: -10, initiative: 15 }
+        consequence: |
+          L'alerte de Lanterne a fait le tour du secteur. Plusieurs opérateurs
+          ont vérifié leurs réseaux. Le CERT sectoriel a suspendu l'accord de
+          partage, et Corvane a su exactement ce que vous saviez.
+
+messages:
+  - id: noor-faux-positif
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-faux-positif }
+    body: |
+      Bien vu. Si on avait alerté l'opérateur A sur la base du DNS partagé, on
+      aurait brûlé notre crédibilité pour rien. La fiabilité d'un indicateur
+      compte autant que sa présence.
+
+  - id: iris-onze
+    from: inconnu
+    subject: '◇'
+    on: objective.completed
+    where: { objectiveId: report-date }
+    when: { silence/zero: seul }
+    body: |
+      tu as vu la date. moi aussi, il y a six mois, trop tard.
+      la passerelle. regarde la passerelle.
+
+      — I.
+
+  - id: mara-onze
+    from: Mara Okonkwo-Lind
+    on: objective.completed
+    where: { objectiveId: report-date }
+    when: { silence/zero: mara }
+    body: |
+      Iris vient de nous écrire, à toutes les deux : « la passerelle ». Elle
+      n'en dit pas plus. Je crois qu'elle a enfin décidé de nous faire confiance.

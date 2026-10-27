@@ -1,6 +1,8 @@
 import {
   type CampaignState,
   campaignOrder,
+  computeEnding,
+  dossierProgressOf,
   Engine,
   type GameEvent,
   type JournalState,
@@ -9,12 +11,13 @@ import {
   newCampaign,
   nextMission,
   type ProposeResult,
+  solidity,
 } from '@echotrace/engine';
 import { create } from 'zustand';
-import { concepts, dossier, getMission, missions } from '../content/index.ts';
+import { concepts, dossier, endings, getMission, missions } from '../content/index.ts';
 import { deleteSave, loadJournal, loadSave, type SaveFile, writeJournal, writeSave } from './persistence.ts';
 
-export type Screen = 'menu' | 'operator' | 'banc';
+export type Screen = 'menu' | 'operator' | 'banc' | 'ending';
 /** Campaign play is saved; Banc exercises only feed the journal. */
 export type Mode = 'campagne' | 'banc';
 export type View = 'terminal' | 'journal' | 'network' | 'dossier';
@@ -68,6 +71,8 @@ interface GameStore {
   /** The mission that follows the current one, if any. */
   upcoming: () => MissionSpec | undefined;
   choose: (choiceId: string, optionId: string) => void;
+  /** Shows the epilogue once the closing decision is taken. */
+  showEnding: () => void;
   continueGame: () => Promise<void>;
   toMenu: () => void;
   run: (input: string) => void;
@@ -297,9 +302,21 @@ export const useGame = create<GameStore>()((set, get) => {
         .filter(Boolean)
         .join(' · ');
       toast({ tone: 'echo', title: `Décision : ${option.label}`, body: effects || undefined });
+      if (get().mode === 'campagne') {
+        // The ending is fixed by the closing decision, with the Dossier as it stands at that moment.
+        const score = solidity(dossier, dossierProgressOf(engine.campaign), engine.dossierContext()).score;
+        const ending = computeEnding(endings, { campaign: engine.campaign, solidity: score });
+        if (ending) engine.campaign.ending = ending.id;
+      }
       const done = engine.mission?.progress.status === 'completed';
       set((s) => ({ modal: done ? 'debrief' : null, rev: s.rev + 1 }));
       scheduleSave();
+    },
+
+    showEnding() {
+      if (!get().engine?.campaign.ending) return;
+      void get().save();
+      set({ screen: 'ending', modal: null, openConcept: null, commsOpen: false, toasts: [] });
     },
 
     async continueGame() {

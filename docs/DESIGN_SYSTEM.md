@@ -200,6 +200,9 @@ Barre d'état : `INTÉGRITÉ` (trace) et `INITIATIVE` (warn), mètres 64 px + va
 ### 9.15 Pièce du Dossier
 Carte 190 px, fond `raised`, surtitre mono du type + icône Lucide (User, Users, Building2, Server, FileText, Zap). Bordure `line-strong` ; `echo-line` si la pièce est déjà reliée ; `echo` + halo `echo-soft` quand elle est sélectionnée (repère A/B). Liens : trait `echo` 1,5 px avec flèche ; pointillés `warn` pour un lien non recevable. Jauge de solidité : dégradé `--gradient-echo`.
 
+### 9.16 Épilogue
+Écran plein sur `void` avec trame de points. Le titre (48 px, semi-gras) et le liseré du texte prennent la couleur de la fin : Lumière `signal`, Écho `echo`, Silence `danger`, Bruit `warn` (texte + `*-line`). Statistiques en grille comme le débrief. Aucun nouveau token.
+
 ### 9.12 Drawer (panneau latéral)
 Niveau 3 (verre), ancré à droite, 460 px max, liseré supérieur de la couleur du contexte (`echo` fiche, `signal` comms). Échap ferme ; à la fermeture le focus revient au terminal (`[data-terminal-input]`).
 

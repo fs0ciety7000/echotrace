@@ -44,12 +44,13 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Exemples « Dans le jeu » des fiches alignés sur les missions réelles (noms, adresses, sorties des outils)
 - ✅ Le Banc : écran Académie + 3 modules rejouables (Adresses & ports, Reconnaissance passive, Lire un journal web) ; hors campagne, seul le journal en garde trace (stockage séparé)
 
-## Phase 3 — Profondeur 🟡
+## Phase 3 — Profondeur 🟡 (campagne complète jouable)
 - ✅ Outils ECHO de défense : `mailcheck` (en-têtes, SPF/DKIM/DMARC, liens trompeurs), `meta` (métadonnées), `fw` (pare-feu, refuse les blocages trop larges ; `netstat` en tient compte)
 - ✅ Acte II « Interférences » : 04 Hameçon · 05 Kestrel · 06 Silence sur la ligne (tests solveurs, décisions reliées à l'acte précédent)
 - ✅ 35 fiches (8 nouvelles : hameçonnage, SPF/DKIM/DMARC, domaine sosie, culture du signalement, métadonnées, OSINT, sources, filtrage)
 - ✅ Graphe d'enquête « Dossier » : pièces débloquées par les missions et les décisions, liens proposés par le joueur et confirmés seulement par les preuves, solidité et recevabilité (vue graphe + commande `dossier`)
-- ⬜ Acte III « Silence radio » et fins (la solidité du Dossier y comptera)
+- ✅ Acte III « Silence radio » : 07 Fréquence · 08 Salle de contrôle · 09 Silence radio (tests solveurs) ; 41 fiches (6 nouvelles : corrélation, segmentation IT/OT, accès des tiers, divulgation coordonnée, rapport, continuité d'activité)
+- ✅ Quatre fins pilotées par les données (`content/fins.yaml` : décision finale, Intégrité, solidité du Dossier) + écran d'épilogue ; Dossier étendu à 20 pièces / 21 liens
 - ⬜ Mode sandbox (réseaux générés par seed)
 - ⬜ i18n (EN), sons, polissage animations, accessibilité auditée (WCAG 2.1 AA)
 
@@ -60,7 +61,6 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 
 ## Phase 5 — Outils & extensions ⬜
 - Éditeur de missions (web) produisant le YAML
-- Acte III + fins
 - Scénarios inspirés d'incidents réels anonymisés (avec fiches « ce qui s'est vraiment passé »)
 - Coop léger (2 opérateurs, rôles red/blue) — exploratoire
 - Wrapper Tauri si besoin d'un binaire natif

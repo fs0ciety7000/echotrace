@@ -1,0 +1,69 @@
+# Fins de la campagne — évaluées dans l'ordre ; la première dont toutes les conditions
+# sont remplies l'emporte, sinon `fallback`. La solidité est celle du Dossier (0–100)
+# au moment de la décision finale. Voir docs/CONTENT_GUIDE.md, section « Fins ».
+
+decision: radio/destination
+fallback: bruit
+
+endings:
+  - id: silence
+    title: Silence
+    tagline: Tu as choisi l'ombre. Personne ne saura si tu avais raison.
+    when: { decision: [ombre] }
+    text: |
+      Tu as rejoint Iris quelque part entre deux serveurs qui n'existent pas.
+      Vous continuez le travail, sans mandat ni contrôle, et sans personne pour
+      vous dire « non ».
+
+      Parfois, un chant se tait sans explication. Parfois, c'est vous.
+      ECHO a été mise sous enquête ; Mara a démissionné. Corvane n'a jamais été
+      inquiétée.
+
+      *Cette fin n'est pas une victoire. Une défense qui ne rend de comptes à
+      personne finit toujours par ressembler à ce qu'elle combat.*
+
+  - id: bruit
+    title: Bruit
+    tagline: Trop peu de preuves pour faire tomber qui que ce soit.
+    when: { maxSolidity: 34 }
+    text: |
+      Le dossier a circulé, a été commenté, contesté. Les avocats de Corvane
+      n'ont eu qu'à pointer les trous : des liens jamais établis, des pièces
+      qu'on ne pouvait pas utiliser. Au bout de trois semaines, plus personne
+      n'en parlait.
+
+      Le chant s'est tu chez REV. Il reprendra ailleurs.
+
+      *Une enquête vaut ce que valent ses liens prouvés. Rejoue la campagne et
+      relie ce que tu as trouvé, dans le Dossier.*
+
+  - id: lumiere
+    title: Lumière
+    tagline: Un dossier recevable, un procès, et une cellule sous tutelle.
+    when: { decision: [justice], minIntegrity: 55 }
+    text: |
+      L'instruction a duré deux ans. Corvane Grid Services a été mise en
+      examen pour accès frauduleux à des systèmes industriels ; sa maison mère
+      a vendu la filiale avant le procès. Les Pannes de Novembre n'ont jamais
+      été formellement attribuées — le planning, lui, n'a jamais été retenu.
+
+      ECHO a été reconnue, puis rattachée à l'ANCS. Plus de mandat flou, plus
+      d'initiative sans contrôle. Noor dirige la formation. Mara a un bureau
+      sans fenêtre et ne s'en plaint pas.
+
+      *La lumière est lente. Elle éclaire aussi ceux qui la portent.*
+
+  - id: echo
+    title: Écho
+    tagline: La vérité a fait le tour du monde. ECHO n'y a pas survécu.
+    when: { decision: [publier] }
+    text: |
+      L'enquête de Lanterne a fait chuter Corvane en une semaine : contrats
+      suspendus, dirigeants démissionnaires, auditions publiques. Partout, des
+      opérateurs ont vérifié leurs réseaux, et trouvé d'autres chants.
+
+      Mais les preuves exposées avant tout procès n'ont jamais pu être
+      jugées. Et ECHO, qui avait agi sans mandat, a été dissoute.
+      Théo a reçu un prix. Il ne l'a pas fêté.
+
+      *Publier fait savoir. Ça ne fait pas justice.*

@@ -170,6 +170,22 @@ links:
 ```
 Types de pièces : `personne, organisation, groupe, infrastructure, artefact, evenement`. Une pièce est disponible pendant sa mission et après. Les liens sont non orientés pour la vérification (A→B = B→A). `pnpm content:check` vérifie missions et décisions référencées. Événement : `dossier.linked` (`linkId`, `already`).
 
+### Les fins (`content/fins.yaml`)
+```yaml
+decision: radio/destination      # missionId/choiceId de la décision qui clôt la campagne
+fallback: bruit                  # fin retenue si aucune condition ne correspond
+endings:
+  - id: silence
+    title: Silence
+    tagline: Une ligne sous le titre.
+    when: { decision: [ombre] }  # options de la décision finale
+    text: |
+      Markdown de l'épilogue.
+  - id: lumiere
+    when: { decision: [justice], minIntegrity: 55, minSolidity: 35 }
+```
+Conditions possibles : `decision`, `minIntegrity`, `maxIntegrity`, `minInitiative`, `minSolidity`, `maxSolidity` (solidité du Dossier, 0–100, calculée au moment de la décision). Les fins sont évaluées **dans l'ordre** : la première dont toutes les conditions sont remplies l'emporte. `pnpm content:check` vérifie la décision, les options citées et le `fallback`. Règle : chaque fin est une conséquence lisible des choix, aucune n'est présentée comme « la bonne ».
+
 ### Questions de rapport (`report`)
 ```yaml
 questions:

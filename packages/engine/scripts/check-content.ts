@@ -7,6 +7,7 @@ import { join, resolve } from 'node:path';
 import { ContentError, checkConceptRefs, parseConcept, parseMission } from '../src/content/parse.ts';
 import type { Concept, MissionSpec } from '../src/content/schema.ts';
 import { parseDossier } from '../src/dossier.ts';
+import { parseEndings } from '../src/endings.ts';
 
 const root = resolve(import.meta.dirname, '../../../content');
 const errors: string[] = [];
@@ -56,6 +57,23 @@ try {
   console.log(`✓ dossier — ${dossier.items.length} pièces, ${dossier.links.length} liens`);
 } catch (e) {
   errors.push(e instanceof ContentError ? e.message : `dossier.yaml: ${String(e)}`);
+}
+
+// Endings: the closing decision and every option a condition names must exist.
+try {
+  const fins = parseEndings(readFileSync(join(root, 'fins.yaml'), 'utf8'));
+  const [mid, cid] = fins.decision.split('/');
+  const choice = missions.find((x) => x.id === mid)?.choices.find((c) => c.id === cid);
+  if (!choice) errors.push(`fins: décision « ${fins.decision} » inconnue`);
+  for (const e of fins.endings) {
+    for (const opt of e.when.decision ?? []) {
+      if (choice && !choice.options.some((o) => o.id === opt))
+        errors.push(`fins: ${e.id} — option « ${opt} » inconnue`);
+    }
+  }
+  console.log(`✓ fins — ${fins.endings.length} fins, décision ${fins.decision}`);
+} catch (e) {
+  errors.push(e instanceof ContentError ? e.message : `fins.yaml: ${String(e)}`);
 }
 
 if (errors.length) {

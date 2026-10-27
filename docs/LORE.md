@@ -119,13 +119,16 @@ HOLLOW CHOIR riposte contre la cellule ; une source s'offre de l'intérieur de C
 - Révélation de l'acte : Iris était chez Corvane en novembre 2030, la main sur le planning, et dit avoir tenté d'empêcher les Pannes.
 
 ### Acte III — *Silence radio*
-Nouvelle série de pannes programmée. Course contre la montre entre ECHO, CANTOR et l'ANCS.
-- Missions : réponse à incident sur un réseau industriel simulé (SCADA pédagogique), corrélation multi-sources, attribution, rédaction du rapport final.
-- Fins (selon Intégrité / Initiative / solidité du Dossier) :
+Une nouvelle « maintenance » est programmée, six mois jour pour jour après les Pannes. Course contre la montre.
+- **07 Fréquence** — sous accord de partage (TLP:AMBER), le CERT sectoriel transmet les journaux de sortie de trois opérateurs d'électricité. Le joueur corrèle les indicateurs d'ECHO : chez l'opérateur A, un seul indicateur *faible* (fournisseur DNS partagé) — faux positif ; chez **REV** (Réseau Électrique du Val), la machine `10.50.0.40` parle au serveur de commande de Vallon toutes les 300 s. L'avis public de Corvane Grid annonce une télémaintenance chez REV le **11 mai 2031, 2 h–4 h**. Choix : prévenir REV et l'ANCS / l'ANCS seule / alerte publique avec Lanterne.
+- **08 Salle de contrôle** — la nuit du 10 mai, dans la salle de crise de REV, avec l'accord de son RSSI (M. Ndiaye) et des droits limités au blocage réseau. Le joueur trouve `passerelle-histo`, une machine à cheval sur la bureautique et l'industriel, qui relaie le chant de la station d'ingénierie `ews-02` ; il le coupe au plus juste (`fw block 203.0.113.200`). Le journal de télémaintenance révèle une session `cg-maint` ouverte à 22 h 41, hors de toute fenêtre. Choix : recommander de couper le prestataire / exposer les faits et laisser le RSSI trancher / laisser la session ouverte pour observer. Tout reste au niveau des machines, des flux et des accès.
+- **09 Silence radio** — le rapport final pour l'ANCS. Le joueur relit la synthèse de Théo à la lumière du Dossier : ce qui est établi (le serveur commun aux deux chants), ce qui est irrecevable (le planning, issu des documents de Kestrel), ce qui n'est qu'une hypothèse (« Corvane a provoqué les Pannes »). Choix final : la justice / Lanterne / l'ombre avec Iris.
+- Fins (`content/fins.yaml`, selon la décision finale, l'Intégrité et la solidité du Dossier au moment de la décision) :
   - **Lumière** — dossier recevable, procès, ECHO reconnue mais sous tutelle.
   - **Écho** — vérité publiée par Lanterne, Corvane tombe, ECHO dissoute.
   - **Silence** — le joueur rejoint Iris dans l'ombre. Fin ambiguë, assumée comme non souhaitable.
   - **Bruit** — dossier insuffisant : rien ne change. Fin « échec » rejouable.
+  - Ordre d'évaluation : l'ombre mène toujours au Silence ; un Dossier sous 35 % de solidité mène au Bruit ; la justice avec une Intégrité ≥ 55 mène à la Lumière ; la publication à l'Écho ; tout autre cas au Bruit.
 
 ### Contenus annexes
 - **Contrats Lanterne** (side missions) : enquêtes courtes de vérification (fake leak, attribution douteuse).

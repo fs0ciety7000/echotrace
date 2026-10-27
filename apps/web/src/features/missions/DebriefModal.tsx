@@ -11,6 +11,7 @@ export function DebriefModal() {
   const upcoming = useGame((s) => s.upcoming);
   const mode = useGame((s) => s.mode);
   const openBanc = useGame((s) => s.openBanc);
+  const showEnding = useGame((s) => s.showEnding);
   const engine = useGame((s) => s.engine);
   useGame((s) => s.rev);
   const mission = engine?.mission;
@@ -51,6 +52,10 @@ export function DebriefModal() {
             <Button variant="primary" onClick={nextOperation} data-autofocus>
               {actOver ? 'Acte suivant' : 'Opération suivante'} : {next.title}
             </Button>
+          ) : engine.campaign.ending ? (
+            <Button variant="primary" onClick={showEnding} data-autofocus>
+              Épilogue
+            </Button>
           ) : (
             <Button variant="primary" onClick={toMenu} data-autofocus>
               Retour au menu
@@ -84,7 +89,7 @@ export function DebriefModal() {
           </p>
         </section>
       )}
-      {!next && mode === 'campagne' && (
+      {!next && mode === 'campagne' && !engine.campaign.ending && (
         <p className="mt-6 rounded-md border border-echo-line bg-echo-soft px-4 py-3 text-sm text-fg">
           Fin des opérations disponibles pour l'instant. La suite arrive dans une prochaine version — ton journal et tes
           décisions sont conservés.

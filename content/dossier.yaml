@@ -16,6 +16,8 @@ relations:
   - a modifié
   - précède
   - attribué à
+  - relaie
+  - planifié par
 
 items:
   - { id: iris, type: personne, label: Iris Calder, detail: Fondatrice d'ECHO (ECHO-0), disparue., unlock: { mission: prologue } }
@@ -33,6 +35,11 @@ items:
   - { id: grid, type: organisation, label: Corvane Grid Services, detail: Filiale qui planifie la maintenance des réseaux électriques., unlock: { mission: kestrel } }
   - { id: planning, type: artefact, label: Planning de novembre 2030, detail: Document transmis par Kestrel (sas d'analyse)., unlock: { mission: kestrel, decision: { kestrel/documents: [orienter, exploiter] } } }
   - { id: pannes, type: evenement, label: Pannes de Novembre, detail: Coupures d'électricité du 11/11/2030., unlock: { mission: kestrel } }
+  - { id: rev, type: organisation, label: Réseau Électrique du Val (REV), detail: Opérateur d'électricité régional., unlock: { mission: frequence } }
+  - { id: maintenance-mai, type: evenement, label: Télémaintenance du 11/05/2031, detail: 'Chez REV, 02:00–04:00, annoncée par avis public.', unlock: { mission: frequence } }
+  - { id: passerelle, type: infrastructure, label: passerelle-histo, detail: '10.50.0.40 / 10.60.0.40 · un pied dans chaque réseau de REV', unlock: { mission: salle-de-controle } }
+  - { id: chant-rev, type: artefact, label: Le chant de ews-02, detail: '/var/tmp/.cache/sysupd -i 300, sur la station d''ingénierie de REV', unlock: { mission: salle-de-controle } }
+  - { id: cg-maint, type: infrastructure, label: Compte cg-maint, detail: 'Télémaintenance du prestataire, session du 10/05 à 22:41 hors fenêtre', unlock: { mission: salle-de-controle } }
 
 links:
   - id: vpn-ch
@@ -128,3 +135,39 @@ links:
     evidence: Modifié le 09/11/2030 ; coupures le 11/11/2030 (communiqués publics de Corvane).
     weight: 2
     admissible: false
+  - id: rev-c2
+    from: chant-rev
+    to: edge-sync
+    relation: communique avec
+    evidence: Même programme, même rythme, même destination 203.0.113.200:8443 (ps sur ews-02, netstat sur la passerelle, avec l'accord de REV).
+    weight: 3
+  - id: rev-installe
+    from: chant-rev
+    to: rev
+    relation: installé chez
+    evidence: Relevé sur ews-02, station d'ingénierie de REV (mission Salle de contrôle).
+    weight: 1
+  - id: passerelle-relais
+    from: passerelle
+    to: chant-rev
+    relation: relaie
+    evidence: La station se connecte au relais de la passerelle (port 3128), qui sort vers le serveur de commande.
+    weight: 2
+  - id: cg-porte
+    from: cg-maint
+    to: passerelle
+    relation: porte d'entrée de
+    evidence: Journal de télémaintenance de la passerelle — session ouverte le 10/05 à 22:41 sans fenêtre déclarée.
+    weight: 2
+  - id: cg-grid
+    from: cg-maint
+    to: grid
+    relation: appartient à
+    evidence: Architecture de REV — compte du prestataire Corvane Grid Services ; connexion depuis sa plage de télémaintenance.
+    weight: 2
+  - id: maintenance-grid
+    from: maintenance-mai
+    to: grid
+    relation: planifié par
+    evidence: Avis public d'interventions programmées de Corvane Grid Services (mai 2031).
+    weight: 1

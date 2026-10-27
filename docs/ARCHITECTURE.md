@@ -93,6 +93,8 @@ Host {
 ### 3.4 Missions
 Une mission (YAML) déclare : briefing, scénario (monde initial ou patch du monde), **objectifs** déclenchés par des événements (`on: host.scanned, where: { ip: 203.0.113.10 }`), concepts associés, choix et débrief. Le `MissionRunner` écoute le bus et met à jour l'état des objectifs. Voir `CONTENT_GUIDE.md`.
 
+La campagne (`CampaignState` : missions faites, Intégrité, Initiative, décisions `missionId/choiceId`, progression du Dossier, fin) traverse les missions. Le Dossier (`dossier.ts`) et les fins (`endings.ts`, `content/fins.yaml`) sont des fonctions pures sur cet état : la fin est calculée par l'UI au moment de la décision finale, avec la solidité du Dossier à cet instant, et enregistrée dans `campaign.ending`.
+
 ### 3.5 Pédagogie (journal d'apprentissage)
 - Chaque `Concept` (Markdown + frontmatter) a un id stable (`net.port`, `recon.dns`, `forensics.auth-log`…).
 - Événement `concept.encountered` émis par les commandes (`nmap` → `net.port`, `net.service-fingerprint`) et les missions.
@@ -111,7 +113,7 @@ src/
   features/dossier/          graphe d'enquête (xyflow), chargé en différé
   features/network/          vue réseau (xyflow), chargée en différé (React.lazy) — chunk séparé
   features/journal/          fiches et progression
-  screens/                   MainMenu, Operator (dashboard), Academy, Settings
+  screens/                   MainMenu, Operator (dashboard), Academy, Ending (épilogue)
   state/                     stores Zustand (game, settings), persistance
   content/                   chargement + validation du contenu (glob Vite)
 ```
