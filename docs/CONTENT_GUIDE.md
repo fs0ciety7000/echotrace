@@ -153,6 +153,23 @@ hosts:
 Un e-mail à analyser avec `mailcheck` est un fichier texte brut (en-têtes, ligne vide, corps). Les résultats SPF/DKIM/DMARC sont lus dans `Authentication-Results`.
 Événements : `mail.analyzed` (`path`, `spf`, `dkim`, `dmarc`, `fromDomain`), `document.inspected` (`path`, `author`, `lastModifiedBy`), `firewall.changed` (`hostId`, `action`, `target`).
 
+### Le Dossier (`content/dossier.yaml`)
+```yaml
+relations: [même certificat, appartient à, …]   # vocabulaire proposé au joueur
+items:
+  - { id: edge-sync, type: infrastructure, label: edge-sync.example, detail: '…', unlock: { mission: confinement } }
+  - { id: planning, type: artefact, label: …, unlock: { mission: kestrel, decision: { kestrel/documents: [orienter, exploiter] } } }
+links:
+  - id: cert
+    from: edge-sync
+    to: sso-legacy
+    relation: même certificat        # doit figurer dans `relations`
+    evidence: Ce qui prouve le lien (affiché quand le joueur l'établit).
+    weight: 3                        # 1 indice faible · 2 solide · 3 décisif
+    admissible: true                 # false = repose sur des moyens irréguliers
+```
+Types de pièces : `personne, organisation, groupe, infrastructure, artefact, evenement`. Une pièce est disponible pendant sa mission et après. Les liens sont non orientés pour la vérification (A→B = B→A). `pnpm content:check` vérifie missions et décisions référencées. Événement : `dossier.linked` (`linkId`, `already`).
+
 ### Questions de rapport (`report`)
 ```yaml
 questions:

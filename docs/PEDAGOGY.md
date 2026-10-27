@@ -26,6 +26,9 @@ Le journal **survit aux nouvelles parties** : la connaissance appartient au joue
 - Le Banc : modules d'exercice rejouables (statut « fait »), sans effet sur la campagne.
 - Prévu : parcours d'académie plus longs, export du journal.
 
+## Le Dossier : relier, c'est affirmer
+Le joueur propose lui-même les liens entre pièces (« même certificat », « filiale de »…). Un lien n'est accepté **que si les preuves réunies l'établissent** ; sinon : « une intuition n'est pas une preuve ». La **solidité** ne compte que les liens recevables : un lien qui repose sur des documents volés éclaire l'enquête mais ne prouve rien — et les décisions éthiques (Kestrel) changent ce qui est disponible.
+
 ## Échelle de guidage
 1. Briefing (contexte + question), notes dans le monde.
 2. `objectives` : ce qu'il faut accomplir, jamais comment.

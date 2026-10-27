@@ -48,7 +48,8 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Outils ECHO de défense : `mailcheck` (en-têtes, SPF/DKIM/DMARC, liens trompeurs), `meta` (métadonnées), `fw` (pare-feu, refuse les blocages trop larges ; `netstat` en tient compte)
 - ✅ Acte II « Interférences » : 04 Hameçon · 05 Kestrel · 06 Silence sur la ligne (tests solveurs, décisions reliées à l'acte précédent)
 - ✅ 35 fiches (8 nouvelles : hameçonnage, SPF/DKIM/DMARC, domaine sosie, culture du signalement, métadonnées, OSINT, sources, filtrage)
-- ⬜ Graphe d'enquête « Dossier »
+- ✅ Graphe d'enquête « Dossier » : pièces débloquées par les missions et les décisions, liens proposés par le joueur et confirmés seulement par les preuves, solidité et recevabilité (vue graphe + commande `dossier`)
+- ⬜ Acte III « Silence radio » et fins (la solidité du Dossier y comptera)
 - ⬜ Mode sandbox (réseaux générés par seed)
 - ⬜ i18n (EN), sons, polissage animations, accessibilité auditée (WCAG 2.1 AA)
 

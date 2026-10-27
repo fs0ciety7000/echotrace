@@ -1,4 +1,12 @@
-import { type Concept, type MissionSpec, parseConcept, parseMission } from '@echotrace/engine';
+import {
+  type Concept,
+  type DossierSpec,
+  type MissionSpec,
+  parseConcept,
+  parseDossier,
+  parseMission,
+} from '@echotrace/engine';
+import dossierRaw from '../../../../content/dossier.yaml?raw';
 
 /**
  * Content is bundled at build time from /content and validated on load.
@@ -37,3 +45,6 @@ export const CATEGORY_TITLES: Record<Concept['category'], string> = {
   defense: 'Défense',
   ethique: 'Éthique & droit',
 };
+
+/** The campaign evidence graph (content/dossier.yaml). */
+export const dossier: DossierSpec = parseDossier(dossierRaw);

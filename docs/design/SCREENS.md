@@ -129,7 +129,8 @@ Captures de la v0 : [menu](screenshots/menu.png) · [briefing](screenshots/brief
 ## 6. Débrief ✅ (v0)
 Implémenté : statistiques (temps simulé, exposition, indices, bonus) + réponse à la question. À venir : réponse à la question de l'opération, chronologie de ce que le joueur a fait (avec son exposition), conséquences des choix, fiches gagnées, commentaire contradictoire Noor vs Sable.
 
-## 7. Graphe d'enquête — le Dossier (v2)
+## 7. Graphe d'enquête — le Dossier ✅ (v0)
+Implémenté : pièces rangées par nature (personnes/groupes · organisations · infrastructures · artefacts/événements), liens droits centre à centre étiquetés par la relation (pointillés `warn` = non recevable), panneau « Solidité », formulaire « Relier deux pièces » (deux clics sur le graphe remplissent A et B), liste des liens avec leur preuve.
 Canvas xyflow : nœuds typés (personne, organisation, hôte, artefact, événement), arêtes « écho » (violet) qualifiées par le joueur (même certificat, même IP, même horaire). Indicateur de solidité du dossier.
 
 ## 8. Le Banc — Académie ✅ (v0) / sandbox (v2)

@@ -8,15 +8,16 @@ import {
   type MissionSpec,
   newCampaign,
   nextMission,
+  type ProposeResult,
 } from '@echotrace/engine';
 import { create } from 'zustand';
-import { concepts, getMission, missions } from '../content/index.ts';
+import { concepts, dossier, getMission, missions } from '../content/index.ts';
 import { deleteSave, loadJournal, loadSave, type SaveFile, writeJournal, writeSave } from './persistence.ts';
 
 export type Screen = 'menu' | 'operator' | 'banc';
 /** Campaign play is saved; Banc exercises only feed the journal. */
 export type Mode = 'campagne' | 'banc';
-export type View = 'terminal' | 'journal' | 'network';
+export type View = 'terminal' | 'journal' | 'network' | 'dossier';
 
 export interface TermEntry {
   id: number;
@@ -79,6 +80,8 @@ interface GameStore {
   /** Opens a fiche in the journal view (counts as studying it). */
   openInJournal: (id: string) => void;
   passQuiz: (id: string) => void;
+  /** Proposes a Dossier link; returns the engine verdict. */
+  linkDossier: (a: string, b: string, relation: string) => ProposeResult | null;
   /** Marks every delivered message as read (called once the comms panel has shown them). */
   markMessagesRead: () => void;
   dismissToast: (id: number) => void;
@@ -155,6 +158,9 @@ export const useGame = create<GameStore>()((set, get) => {
             if (get().modal !== 'choice') set({ modal: 'debrief' });
           }, 900);
           break;
+        case 'dossier.linked':
+          if (!event.payload.already) toast({ tone: 'echo', title: 'Lien établi au Dossier' });
+          break;
         case 'choice.offered':
           setTimeout(() => {
             if (get().modal === null) set({ modal: 'choice' });
@@ -184,7 +190,7 @@ export const useGame = create<GameStore>()((set, get) => {
   };
 
   const start = (mission: MissionSpec, journal: JournalState, campaign: CampaignState, mode: Mode = 'campagne') => {
-    const engine = Engine.fromMission(mission, concepts, journal, campaign);
+    const engine = Engine.fromMission(mission, concepts, journal, campaign, dossier);
     attach(engine);
     set((s) => ({
       engine,
@@ -302,7 +308,7 @@ export const useGame = create<GameStore>()((set, get) => {
       try {
         // The standalone journal is the freshest (it also records Banc progress).
         const journal = (await loadJournal())?.journal ?? file.save.journal;
-        const engine = Engine.restore({ ...file.save, journal }, getMission(file.missionId), concepts);
+        const engine = Engine.restore({ ...file.save, journal }, getMission(file.missionId), concepts, dossier);
         attach(engine);
         nextId = Math.max(nextId, ...file.scrollback.map((e) => e.id + 1));
         set({
@@ -389,6 +395,15 @@ export const useGame = create<GameStore>()((set, get) => {
       get().engine?.study(id);
       set((s) => ({ view: 'journal', journalSelection: id, openConcept: null, commsOpen: false, rev: s.rev + 1 }));
       scheduleSave();
+    },
+
+    linkDossier(a, b, relation) {
+      const engine = get().engine;
+      if (!engine) return null;
+      const result = engine.linkDossier(a, b, relation);
+      set((s) => ({ rev: s.rev + 1 }));
+      scheduleSave();
+      return result;
     },
 
     passQuiz(id) {

@@ -1,9 +1,10 @@
 import { mastery } from '@echotrace/engine';
-import { BookOpen, LogOut, Mail, Network, Radar, Settings, SquareTerminal } from 'lucide-react';
+import { BookOpen, FolderSearch, LogOut, Mail, Network, Radar, Settings, SquareTerminal } from 'lucide-react';
 import { lazy, type ReactNode, Suspense, useState } from 'react';
 
 // The graph library is only needed when the player opens the network view.
 const NetworkView = lazy(() => import('../features/network/NetworkView.tsx').then((m) => ({ default: m.NetworkView })));
+const DossierView = lazy(() => import('../features/dossier/DossierView.tsx').then((m) => ({ default: m.DossierView })));
 
 type MobileTab = 'terminal' | 'mission' | 'contexte';
 
@@ -83,6 +84,12 @@ function Rail() {
         label="Vue réseau"
         active={view === 'network'}
         onClick={() => setView('network')}
+      />
+      <RailButton
+        icon={<FolderSearch size={18} />}
+        label="Dossier"
+        active={view === 'dossier'}
+        onClick={() => setView('dossier')}
       />
       <RailButton
         icon={<BookOpen size={18} />}
@@ -316,7 +323,7 @@ export function Operator() {
   if (!engine) return null;
   const { user } = engine.state.session;
 
-  if (view === 'journal' || view === 'network') {
+  if (view !== 'terminal') {
     return (
       <div className="grid h-full grid-cols-[56px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_28px] bg-void">
         <Rail />
@@ -324,8 +331,8 @@ export function Operator() {
           {view === 'journal' ? (
             <JournalView />
           ) : (
-            <Suspense fallback={<p className="p-4 text-sm text-fg-subtle">Chargement de la vue réseau…</p>}>
-              <NetworkView />
+            <Suspense fallback={<p className="p-4 text-sm text-fg-subtle">Chargement…</p>}>
+              {view === 'network' ? <NetworkView /> : <DossierView />}
             </Suspense>
           )}
         </main>
