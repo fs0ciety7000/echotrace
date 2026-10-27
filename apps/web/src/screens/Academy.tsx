@@ -1,9 +1,20 @@
-import { ArrowLeft, CheckCircle2, GraduationCap } from 'lucide-react';
+import { SANDBOX_LEVELS, SANDBOX_MISSION_ID, type SandboxLevel } from '@echotrace/engine';
+import { ArrowLeft, CheckCircle2, Dices, GraduationCap } from 'lucide-react';
+import { useState } from 'react';
 import { conceptById, missions } from '../content/index.ts';
 import { useGame } from '../state/game.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
+import { cx } from '../ui/cx.ts';
 import { Logo } from '../ui/Logo.tsx';
+
+const SEED_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/** UI-side randomness only: the engine turns the seed into a network deterministically. */
+function randomSeed(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  return Array.from(bytes, (b) => SEED_ALPHABET[b % SEED_ALPHABET.length]).join('');
+}
 
 /** Le Banc: short, replayable exercises outside the campaign. Only the journal remembers them. */
 export function Academy() {
@@ -64,7 +75,100 @@ export function Academy() {
             );
           })}
         </ol>
+
+        <SandboxCard done={bancDone.includes(SANDBOX_MISSION_ID)} />
       </section>
     </main>
+  );
+}
+
+function SandboxCard({ done }: { done: boolean }) {
+  const startSandbox = useGame((s) => s.startSandbox);
+  const [seed, setSeed] = useState(randomSeed);
+  const [level, setLevel] = useState<SandboxLevel>(2);
+  const levels = Object.entries(SANDBOX_LEVELS) as [string, (typeof SANDBOX_LEVELS)[SandboxLevel]][];
+
+  return (
+    <section
+      aria-labelledby="sandbox-title"
+      className="mt-6 rounded-md border border-echo-line bg-surface p-5 shadow-inset md:p-6"
+    >
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-xs text-fg-subtle">Sandbox</span>
+        {done && (
+          <Badge tone="trace" className="ml-auto">
+            <CheckCircle2 size={12} /> déjà réussi
+          </Badge>
+        )}
+      </div>
+      <h2 id="sandbox-title" className="mt-2 text-lg font-medium text-fg">
+        Exercice généré
+      </h2>
+      <p className="mt-1.5 max-w-2xl text-sm text-fg-muted">
+        Un réseau construit à partir d'une graine : une machine à corriger, une machine qui chante, une source qui
+        s'acharne. La même graine redonne toujours le même réseau — partage-la pour comparer vos méthodes.
+      </p>
+
+      <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end">
+        <fieldset>
+          <legend className="eyebrow mb-2">Niveau</legend>
+          <div className="flex overflow-hidden rounded-sm border border-line-strong">
+            {levels.map(([key, l]) => {
+              const value = Number(key) as SandboxLevel;
+              const active = value === level;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={active}
+                  title={l.summary}
+                  onClick={() => setLevel(value)}
+                  className={cx(
+                    'h-9 px-3 text-sm transition-colors duration-(--duration-fast) not-last:border-r not-last:border-line-strong',
+                    active ? 'bg-echo-soft text-echo-strong' : 'bg-raised text-fg-muted hover:text-fg',
+                  )}
+                >
+                  {l.label}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <div>
+          <label htmlFor="sandbox-seed" className="eyebrow mb-2 block">
+            Graine
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="sandbox-seed"
+              value={seed}
+              onChange={(e) => setSeed(e.target.value.toUpperCase().slice(0, 16))}
+              spellCheck={false}
+              autoComplete="off"
+              className="h-9 w-40 rounded-sm border border-line-strong bg-raised px-2 font-mono text-sm tracking-wider text-fg"
+            />
+            <Button
+              variant="ghost"
+              icon={<Dices size={14} />}
+              onClick={() => setSeed(randomSeed())}
+              aria-label="Graine au hasard"
+            >
+              Au hasard
+            </Button>
+          </div>
+        </div>
+
+        <Button
+          variant="primary"
+          className="md:ml-auto"
+          disabled={!seed.trim()}
+          onClick={() => startSandbox(seed, level)}
+        >
+          Générer et commencer
+        </Button>
+      </div>
+      <p className="mt-3 text-xs text-fg-subtle">{SANDBOX_LEVELS[level].summary}</p>
+    </section>
   );
 }

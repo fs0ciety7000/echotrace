@@ -5,12 +5,14 @@ import {
   dossierProgressOf,
   Engine,
   type GameEvent,
+  generateSandbox,
   type JournalState,
   type Line,
   type MissionSpec,
   newCampaign,
   nextMission,
   type ProposeResult,
+  type SandboxLevel,
   solidity,
 } from '@echotrace/engine';
 import { create } from 'zustand';
@@ -66,6 +68,8 @@ interface GameStore {
   newGame: () => void;
   openBanc: () => void;
   startBanc: (missionId: string) => void;
+  /** Starts a generated Banc exercise (same seed and level ⇒ same network). */
+  startSandbox: (seed: string, level: SandboxLevel) => void;
   /** Starts the next campaign mission, carrying journal and campaign over. */
   nextOperation: () => void;
   /** The mission that follows the current one, if any. */
@@ -282,6 +286,12 @@ export const useGame = create<GameStore>()((set, get) => {
       if (!mission) return;
       const journal = get().engine?.journal ?? carriedJournal;
       // A throwaway campaign: Banc decisions and completions never reach the real one.
+      start(mission, structuredClone(journal), newCampaign(), 'banc');
+    },
+
+    startSandbox(seed, level) {
+      const { mission } = generateSandbox(seed, level);
+      const journal = get().engine?.journal ?? carriedJournal;
       start(mission, structuredClone(journal), newCampaign(), 'banc');
     },
 

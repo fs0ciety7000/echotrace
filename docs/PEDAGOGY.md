@@ -23,7 +23,7 @@ Le journal **survit aux nouvelles parties** : la connaissance appartient au joue
 - Fiches par niveau de maîtrise et par catégorie (`journal`).
 - Par opération : temps simulé, exposition (bruit généré), indices demandés, objectifs bonus.
 - Quiz par fiche (maîtrise 3) et maîtrise globale en % dans le journal.
-- Le Banc : modules d'exercice rejouables (statut « fait »), sans effet sur la campagne.
+- Le Banc : modules d'exercice rejouables (statut « fait »), sans effet sur la campagne ; exercices générés par graine pour pratiquer la méthode (cartographier → comparer → comprendre → contenir) sur un réseau toujours nouveau, sans pouvoir apprendre les réponses par cœur.
 - Prévu : parcours d'académie plus longs, export du journal.
 
 ## Le Dossier : relier, c'est affirmer

@@ -26,7 +26,12 @@ export function parseConcept(markdown: string, source = 'concept'): Concept {
 }
 
 export function parseMission(yamlText: string, source = 'mission'): MissionSpec {
-  const result = MissionSchema.safeParse(parseYaml(yamlText));
+  return validateMission(parseYaml(yamlText), source);
+}
+
+/** Validates an already-built mission object (YAML or generated) — schema plus cross-references. */
+export function validateMission(data: unknown, source = 'mission'): MissionSpec {
+  const result = MissionSchema.safeParse(data);
   if (!result.success) throw new ContentError(source, `\n${formatZod(result.error)}`);
   const mission = result.data;
 

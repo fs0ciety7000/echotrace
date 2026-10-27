@@ -95,6 +95,9 @@ Une mission (YAML) déclare : briefing, scénario (monde initial ou patch du mon
 
 La campagne (`CampaignState` : missions faites, Intégrité, Initiative, décisions `missionId/choiceId`, progression du Dossier, fin) traverse les missions. Le Dossier (`dossier.ts`) et les fins (`endings.ts`, `content/fins.yaml`) sont des fonctions pures sur cet état : la fin est calculée par l'UI au moment de la décision finale, avec la solidité du Dossier à cet instant, et enregistrée dans `campaign.ending`.
 
+### 3.4 bis Le Banc généré (`sandbox.ts`)
+`generateSandbox(seed, level)` construit une `MissionSpec` complète (scénario, objectifs, questions) à partir d'une graine : hachage de la graine → PRNG mulberry32, sans `Math.random` ni horloge. La mission passe par la même validation que le contenu YAML (`validateMission` : schéma Zod, adresses sûres, références croisées) et renvoie aussi une séquence de commandes qui la résout, rejouée par les tests. Seule l'UI tire une graine au hasard (`crypto.getRandomValues`).
+
 ### 3.5 Pédagogie (journal d'apprentissage)
 - Chaque `Concept` (Markdown + frontmatter) a un id stable (`net.port`, `recon.dns`, `forensics.auth-log`…).
 - Événement `concept.encountered` émis par les commandes (`nmap` → `net.port`, `net.service-fingerprint`) et les missions.

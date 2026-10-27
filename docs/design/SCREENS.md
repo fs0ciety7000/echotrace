@@ -136,5 +136,6 @@ Canvas xyflow : nœuds typés (personne, organisation, hôte, artefact, événem
 ## 7 bis. Épilogue (fin de campagne) ✅ (v0)
 Après la décision finale, le débrief propose « Épilogue ». Écran plein, colonne de lecture 672 px : logo, surtitre « Épilogue · fin de la campagne », titre de la fin (couleur de la fin), accroche, texte en Markdown sous un liseré, quatre statistiques (Intégrité, Initiative, solidité du Dossier, fiches maîtrisées), « Ton chemin » (chaque décision de la campagne, dans l'ordre), rappel qu'il existe quatre fins, puis « Retour au menu » et « Nouvelle campagne ». Le focus est placé sur le titre à l'ouverture.
 
-## 8. Le Banc — Académie ✅ (v0) / sandbox (v2)
+## 8. Le Banc — Académie ✅ (v0) / sandbox ✅ (v1)
 Grille de modules (Réseau, Reconnaissance, Forensique, Défense, Éthique) avec progression ; mode sandbox : réseau généré par seed, objectifs libres, toutes les commandes disponibles.
+Implémenté (v1) : sous la grille, une carte « Exercice généré » (bordure `echo-line`) — niveau en boutons segmentés (Initiation · Standard · Avancé, `aria-pressed`), champ « Graine » en mono majuscules (16 caractères max) + bouton « Au hasard », puis « Générer et commencer ». La même graine et le même niveau redonnent toujours le même réseau. Badge « déjà réussi » après une réussite.

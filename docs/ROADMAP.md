@@ -51,7 +51,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Graphe d'enquête « Dossier » : pièces débloquées par les missions et les décisions, liens proposés par le joueur et confirmés seulement par les preuves, solidité et recevabilité (vue graphe + commande `dossier`)
 - ✅ Acte III « Silence radio » : 07 Fréquence · 08 Salle de contrôle · 09 Silence radio (tests solveurs) ; 41 fiches (6 nouvelles : corrélation, segmentation IT/OT, accès des tiers, divulgation coordonnée, rapport, continuité d'activité)
 - ✅ Quatre fins pilotées par les données (`content/fins.yaml` : décision finale, Intégrité, solidité du Dossier) + écran d'épilogue ; Dossier étendu à 20 pièces / 21 liens
-- ⬜ Mode sandbox (réseaux générés par seed)
+- ✅ Mode sandbox du Banc : exercices générés à partir d'une graine (3 niveaux, 4 à 8 machines) — machine à corriger, chant et sa destination, source de force brute à bloquer ; déterministe, solvable par construction (test sur 10 graines × 3 niveaux)
 - ⬜ i18n (EN), sons, polissage animations, accessibilité auditée (WCAG 2.1 AA)
 
 ## Phase 4 — En ligne ⬜

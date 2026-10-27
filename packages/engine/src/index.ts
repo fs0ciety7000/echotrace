@@ -8,6 +8,7 @@ export * from './events.ts';
 export * from './journal.ts';
 export * from './missions/runner.ts';
 export * from './output.ts';
+export * from './sandbox.ts';
 export type { Command, CommandCategory, CommandContext, CommandOutput } from './shell/command.ts';
 export { CATEGORY_LABELS, CommandRegistry } from './shell/command.ts';
 export { ParseError, parseArgs, tokenize } from './shell/tokenize.ts';
