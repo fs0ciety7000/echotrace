@@ -9,7 +9,7 @@ function play(file: string, commands: string[], campaign?: CampaignState) {
   return { e, outputs };
 }
 
-const after = (completed: string[], decisions: Record<string, string> = {}): CampaignState => ({
+const campaignAfter = (completed: string[], decisions: Record<string, string> = {}): CampaignState => ({
   completed,
   integrity: 60,
   initiative: 55,
@@ -82,7 +82,7 @@ describe('acte 2 — 06 silence', () => {
     const { e, outputs } = play(
       '06-silence.yaml',
       SOLUTION,
-      after(['hamecon', 'kestrel'], { 'hamecon/theo': 'signaler' }),
+      campaignAfter(['hamecon', 'kestrel'], { 'hamecon/theo': 'signaler' }),
     );
     expect(outputs[5]).toContain('203.0.113.69:60321');
     expect(outputs[8]).not.toContain('203.0.113.6');
@@ -101,7 +101,7 @@ describe('acte 2 — 06 silence', () => {
     const { e } = play(
       '06-silence.yaml',
       SOLUTION.slice(0, 2),
-      after(['hamecon', 'kestrel'], { 'hamecon/theo': 'couvrir' }),
+      campaignAfter(['hamecon', 'kestrel'], { 'hamecon/theo': 'couvrir' }),
     );
     expect(e.mission?.inbox().some((m) => m.id === 'mara-couvrir')).toBe(true);
   });

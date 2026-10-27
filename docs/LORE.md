@@ -112,10 +112,11 @@ L'hôpital régional de **Vallon-sur-Aire** subit un rançongiciel. ECHO intervi
 Choix narratif assumé : l'Acte I enseigne la **réponse à incident** et le **recoupement d'indices** du point de vue du défenseur ; la reconstitution détaillée de l'intrusion reste hors champ.
 
 ### Acte II — *Interférences*
-ECHO remonte la chaîne de sous-traitance. Kestrel entre en contact. HOLLOW CHOIR riposte : campagne de phishing ciblant la cellule, fuite de l'identité de Théo.
-- Missions : analyse d'e-mails (en-têtes, SPF/DKIM/DMARC), OSINT, analyse de malware simulée (statique), segmentation réseau, défense de l'infrastructure ECHO (missions blue team en temps limité).
-- Choix clé : accepter les documents volés par Kestrel (preuves irrecevables, mais vérité) ou les refuser.
-- Révélation : Iris Calder enquêtait seule sur les Pannes de Novembre. Ses traces dans les systèmes de Corvane ne sont pas celles d'une victime.
+HOLLOW CHOIR riposte contre la cellule ; une source s'offre de l'intérieur de Corvane ; Iris réapparaît.
+- **04 Hameçon** — un faux message « de Lanterne » (domaine sosie `lanterne-presse.example`, même registrar et mêmes serveurs de noms que le serveur de commande de Vallon). Le joueur l'analyse sans l'ouvrir (`mailcheck`, SPF/DKIM/DMARC), le compare à un vrai, retrouve dans le proxy le poste qui a soumis ses identifiants : celui de Théo. Choix : signaler / convaincre Théo de signaler / le couvrir.
+- **05 Kestrel** — une source anonyme de Corvane Grid Services dépose des documents. Le joueur vérifie son récit par des sources ouvertes, ouvre les fichiers dans le sas isolé et lit leurs métadonnées : le planning de maintenance de novembre 2030 a été modifié par `i.calder` le 9 novembre, deux jours avant les Pannes. Choix : sources publiques seules / orienter l'enquête sans citer / tout exploiter.
+- **06 Silence sur la ligne** — le webmail d'ECHO est visé (compte de Théo) depuis la plage du relais d'hameçonnage. Le joueur filtre au plus juste (`fw block 203.0.113.64/29`) sans couper le courrier légitime, vérifie, relie l'incident à la campagne. « 0 » se dévoile : *c'est moi, Iris. je n'étais pas leur victime.* Choix : transmettre à Mara / répondre seul·e / tracer le message.
+- Révélation de l'acte : Iris était chez Corvane en novembre 2030, la main sur le planning, et dit avoir tenté d'empêcher les Pannes.
 
 ### Acte III — *Silence radio*
 Nouvelle série de pannes programmée. Course contre la montre entre ECHO, CANTOR et l'ANCS.

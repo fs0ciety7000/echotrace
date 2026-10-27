@@ -72,7 +72,7 @@ export const mailcheck: Command = {
     if (!file) return [line(subtle(`usage : ${mailcheck.usage}`))];
     const target = engine.resolve(file);
     const node = getNode(engine.host().fs, target);
-    if (!node || node.kind !== 'file') return [line(danger(`mailcheck: ${file}: fichier introuvable`))];
+    if (node?.kind !== 'file') return [line(danger(`mailcheck: ${file}: fichier introuvable`))];
     const m = parseMail(node.content);
     const from = header(m, 'from') ?? '?';
     const fromAddr = addressOf(from);
@@ -147,7 +147,7 @@ export const meta: Command = {
     if (!file) return [line(subtle(`usage : ${meta.usage}`))];
     const target = engine.resolve(file);
     const node = getNode(engine.host().fs, target);
-    if (!node || node.kind !== 'file') return [line(danger(`meta: ${file}: fichier introuvable`))];
+    if (node?.kind !== 'file') return [line(danger(`meta: ${file}: fichier introuvable`))];
     const d = engine.host().documents?.[target];
     if (!d) return [line(muted(`${file} : aucune métadonnée (fichier texte brut).`))];
     engine.emit('document.inspected', {

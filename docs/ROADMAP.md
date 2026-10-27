@@ -44,11 +44,13 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Exemples « Dans le jeu » des fiches alignés sur les missions réelles (noms, adresses, sorties des outils)
 - ✅ Le Banc : écran Académie + 3 modules rejouables (Adresses & ports, Reconnaissance passive, Lire un journal web) ; hors campagne, seul le journal en garde trace (stockage séparé)
 
-## Phase 3 — Profondeur ⬜
-- Acte II (e-mails & en-têtes, OSINT, analyse statique simulée, missions blue team chronométrées)
-- Graphe d'enquête « Dossier »
-- Mode sandbox (réseaux générés par seed)
-- i18n (EN), sons, polissage animations, accessibilité auditée (WCAG 2.1 AA)
+## Phase 3 — Profondeur 🟡
+- ✅ Outils ECHO de défense : `mailcheck` (en-têtes, SPF/DKIM/DMARC, liens trompeurs), `meta` (métadonnées), `fw` (pare-feu, refuse les blocages trop larges ; `netstat` en tient compte)
+- ✅ Acte II « Interférences » : 04 Hameçon · 05 Kestrel · 06 Silence sur la ligne (tests solveurs, décisions reliées à l'acte précédent)
+- ✅ 35 fiches (8 nouvelles : hameçonnage, SPF/DKIM/DMARC, domaine sosie, culture du signalement, métadonnées, OSINT, sources, filtrage)
+- ⬜ Graphe d'enquête « Dossier »
+- ⬜ Mode sandbox (réseaux générés par seed)
+- ⬜ i18n (EN), sons, polissage animations, accessibilité auditée (WCAG 2.1 AA)
 
 ## Phase 4 — En ligne ⬜
 - `apps/server` : Hono + SQLite (Drizzle) — comptes (passkeys), sync des sauvegardes

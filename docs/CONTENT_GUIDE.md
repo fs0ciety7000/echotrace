@@ -139,6 +139,20 @@ domains:                            # whois et dns
       - { name: www, type: CNAME, value: exemple.example }
 ```
 
+### Documents et pare-feu (Acte II)
+```yaml
+hosts:
+  - id: echo-sas
+    documents:                     # meta <fichier>
+      /sas/kestrel/planning.odt: { author: …, lastModifiedBy: i.calder, company: …, created: '2030-10-20', modified: '2030-11-09', software: … }
+    firewall:                      # règles initiales de fw
+      - { source: 192.0.2.250, note: scanner bloqué le 02/03 }
+    files:
+      /sas/kestrel/planning.odt: (document bureautique — utilise meta)   # le fichier doit exister aussi
+```
+Un e-mail à analyser avec `mailcheck` est un fichier texte brut (en-têtes, ligne vide, corps). Les résultats SPF/DKIM/DMARC sont lus dans `Authentication-Results`.
+Événements : `mail.analyzed` (`path`, `spf`, `dkim`, `dmarc`, `fromDomain`), `document.inspected` (`path`, `author`, `lastModifiedBy`), `firewall.changed` (`hostId`, `action`, `target`).
+
 ### Questions de rapport (`report`)
 ```yaml
 questions:

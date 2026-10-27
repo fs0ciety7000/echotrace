@@ -86,8 +86,8 @@ export function DebriefModal() {
       )}
       {!next && mode === 'campagne' && (
         <p className="mt-6 rounded-md border border-echo-line bg-echo-soft px-4 py-3 text-sm text-fg">
-          Fin de la campagne disponible. L'Acte II arrive dans une prochaine version — ton journal et tes décisions sont
-          conservés.
+          Fin des opérations disponibles pour l'instant. La suite arrive dans une prochaine version — ton journal et tes
+          décisions sont conservés.
         </p>
       )}
       {optionalDone < optional.length && (
