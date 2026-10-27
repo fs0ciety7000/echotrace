@@ -11,9 +11,11 @@ import {
 } from '@echotrace/engine';
 import { create } from 'zustand';
 import { concepts, getMission, missions } from '../content/index.ts';
-import { deleteSave, loadSave, type SaveFile, writeSave } from './persistence.ts';
+import { deleteSave, loadJournal, loadSave, type SaveFile, writeJournal, writeSave } from './persistence.ts';
 
-export type Screen = 'menu' | 'operator';
+export type Screen = 'menu' | 'operator' | 'banc';
+/** Campaign play is saved; Banc exercises only feed the journal. */
+export type Mode = 'campagne' | 'banc';
 export type View = 'terminal' | 'journal' | 'network';
 
 export interface TermEntry {
@@ -37,6 +39,9 @@ type Modal = 'briefing' | 'debrief' | 'settings' | 'choice' | null;
 
 interface GameStore {
   screen: Screen;
+  mode: Mode;
+  /** Banc modules completed at least once. */
+  bancDone: string[];
   view: View;
   /** Fiche selected in the journal view. */
   journalSelection: string | null;
@@ -55,6 +60,8 @@ interface GameStore {
 
   init: () => Promise<void>;
   newGame: () => void;
+  openBanc: () => void;
+  startBanc: (missionId: string) => void;
   /** Starts the next campaign mission, carrying journal and campaign over. */
   nextOperation: () => void;
   /** The mission that follows the current one, if any. */
@@ -176,11 +183,12 @@ export const useGame = create<GameStore>()((set, get) => {
     });
   };
 
-  const start = (mission: MissionSpec, journal: JournalState, campaign: CampaignState) => {
+  const start = (mission: MissionSpec, journal: JournalState, campaign: CampaignState, mode: Mode = 'campagne') => {
     const engine = Engine.fromMission(mission, concepts, journal, campaign);
     attach(engine);
     set((s) => ({
       engine,
+      mode,
       screen: 'operator',
       view: 'terminal',
       scrollback: [banner(engine)],
@@ -194,6 +202,8 @@ export const useGame = create<GameStore>()((set, get) => {
 
   return {
     screen: 'menu',
+    mode: 'campagne',
+    bancDone: [],
     view: 'terminal',
     journalSelection: null,
     engine: null,
@@ -209,9 +219,13 @@ export const useGame = create<GameStore>()((set, get) => {
     lastSavedAt: null,
 
     async init() {
-      const file = await loadSave();
+      const [file, journalFile] = await Promise.all([loadSave(), loadJournal()]);
+      if (journalFile) {
+        carriedJournal = journalFile.journal;
+        set({ bancDone: journalFile.bancDone });
+      }
       if (!file) return;
-      carriedJournal = file.save.journal;
+      if (!journalFile) carriedJournal = file.save.journal;
       const mission = getMission(file.missionId);
       const done = file.save.mission?.completed.length ?? 0;
       const total = mission?.objectives.filter((o) => !o.optional).length ?? 0;
@@ -232,8 +246,31 @@ export const useGame = create<GameStore>()((set, get) => {
     },
 
     upcoming() {
-      const engine = get().engine;
-      return engine ? nextMission(missions, engine.campaign) : undefined;
+      const { engine, mode } = get();
+      return engine && mode === 'campagne' ? nextMission(missions, engine.campaign) : undefined;
+    },
+
+    openBanc() {
+      const { engine, mode } = get();
+      if (engine) {
+        void get().save();
+        carriedJournal = engine.journal;
+      }
+      set({
+        screen: 'banc',
+        modal: null,
+        openConcept: null,
+        commsOpen: false,
+        ...(mode === 'banc' ? { engine: null } : {}),
+      });
+    },
+
+    startBanc(missionId) {
+      const mission = getMission(missionId);
+      if (!mission) return;
+      const journal = get().engine?.journal ?? carriedJournal;
+      // A throwaway campaign: Banc decisions and completions never reach the real one.
+      start(mission, structuredClone(journal), newCampaign(), 'banc');
     },
 
     nextOperation() {
@@ -262,11 +299,14 @@ export const useGame = create<GameStore>()((set, get) => {
       const file = await loadSave();
       if (!file) return get().newGame();
       try {
-        const engine = Engine.restore(file.save, getMission(file.missionId), concepts);
+        // The standalone journal is the freshest (it also records Banc progress).
+        const journal = (await loadJournal())?.journal ?? file.save.journal;
+        const engine = Engine.restore({ ...file.save, journal }, getMission(file.missionId), concepts);
         attach(engine);
         nextId = Math.max(nextId, ...file.scrollback.map((e) => e.id + 1));
         set({
           engine,
+          mode: 'campagne',
           screen: 'operator',
           scrollback: [...file.scrollback, banner(engine)],
           modal: null,
@@ -283,7 +323,17 @@ export const useGame = create<GameStore>()((set, get) => {
 
     toMenu() {
       void get().save();
-      set({ screen: 'menu', view: 'terminal', modal: null, openConcept: null, commsOpen: false });
+      // Leaving a Banc exercise drops it: « Continuer » must resume the campaign save.
+      const leaveBanc = get().mode === 'banc' ? { engine: null, mode: 'campagne' as const } : {};
+      set({
+        screen: 'menu',
+        view: 'terminal',
+        modal: null,
+        openConcept: null,
+        commsOpen: false,
+        toasts: [],
+        ...leaveBanc,
+      });
       void get().init();
     },
 
@@ -361,8 +411,16 @@ export const useGame = create<GameStore>()((set, get) => {
     dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 
     async save() {
-      const { engine, scrollback } = get();
+      const { engine, scrollback, mode } = get();
       if (!engine?.mission) return;
+      const bancDone =
+        mode === 'banc' && engine.mission.progress.status === 'completed'
+          ? [...new Set([...get().bancDone, engine.mission.spec.id])]
+          : get().bancDone;
+      await writeJournal({ journal: engine.journal, bancDone });
+      carriedJournal = engine.journal;
+      if (bancDone !== get().bancDone) set({ bancDone });
+      if (mode === 'banc') return;
       const file: SaveFile = {
         missionId: engine.mission.spec.id,
         save: engine.snapshot(),

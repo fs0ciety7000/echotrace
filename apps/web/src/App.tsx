@@ -5,6 +5,7 @@ import { BriefingModal } from './features/missions/BriefingModal.tsx';
 import { ChoiceModal } from './features/missions/ChoiceModal.tsx';
 import { DebriefModal } from './features/missions/DebriefModal.tsx';
 import { SettingsModal } from './features/SettingsModal.tsx';
+import { Academy } from './screens/Academy.tsx';
 import { MainMenu } from './screens/MainMenu.tsx';
 import { Operator } from './screens/Operator.tsx';
 import { useGame } from './state/game.ts';
@@ -25,7 +26,7 @@ export function App() {
 
   return (
     <div className="grain h-full">
-      {screen === 'menu' ? <MainMenu /> : <Operator />}
+      {screen === 'menu' ? <MainMenu /> : screen === 'banc' ? <Academy /> : <Operator />}
       <BriefingModal />
       <DebriefModal />
       <ChoiceModal />

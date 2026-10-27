@@ -1,0 +1,124 @@
+# Le Banc — module 3 « Lire un journal web »
+id: banc-journaux
+title: Lire un journal web
+act: banc
+order: 3
+from: Dr Noor Haddad
+summary: Compter, trier et classer les lignes d'un journal pour comprendre un trafic.
+question: Comment distinguer un visiteur ordinaire d'un comportement inhabituel dans un journal ?
+concepts: [forensique.logs, forensique.pipelines, reseau.http]
+
+briefing: |
+  Exercice du Banc. Le site vitrine d'une association (fictive) s'inquiète :
+  « beaucoup d'erreurs ce matin, sommes-nous attaqués ? ». Le journal d'accès
+  est sur `banc-web`, compte `exercice`, mot de passe `journal-banc`.
+
+  Ne lis pas les lignes une à une : fais parler le journal avec des
+  **pipelines** (`cut`, `sort`, `uniq -c`, `grep`, `wc -l`).
+
+debrief: |
+  Un seul visiteur concentre toutes les erreurs : un **robot vérificateur de
+  liens** qui parcourt les anciennes adresses du site. Ce n'est pas une
+  attaque — c'est même un service rendu : il signale des liens cassés. Mais
+  pour le dire, il fallait **compter** (qui ? combien ?), **filtrer** (quelles
+  erreurs ?) et **lire** l'identité déclarée du visiteur.
+
+  Réflexe à garder : un pic d'erreurs se qualifie avant de se dramatiser.
+
+scenario:
+  clock: '2031-03-20T14:00:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws, banc-web]
+  networks:
+    - { id: banc, cidr: 10.7.1.0/24 }
+  hosts:
+    - { id: echo-ws, hostname: echo-ws, ip: 10.7.1.2, networks: [banc], accounts: [{ user: operateur-7 }] }
+    - id: banc-web
+      hostname: banc-web
+      ip: 10.7.1.10
+      networks: [banc]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 }
+        - { port: 80, name: http, product: nginx, version: 1.24.0 }
+      accounts:
+        - { user: exercice, password: journal-banc }
+      files:
+        /home/exercice/LISEZMOI.txt: |
+          Journal d'accès : /var/log/nginx/access.log
+          Format : IP - - [date] "MÉTHODE chemin HTTP/1.1" statut taille "référent" "navigateur"
+          Champs séparés par des espaces : l'IP est le champ 1, le statut le champ 9.
+        /var/log/nginx/access.log: |
+          198.51.100.19 - - [18/Mar/2031:08:00:00 +0000] "GET /horaires HTTP/1.1" 200 2004 "-" "Mozilla/5.0"
+          192.0.2.27 - - [18/Mar/2031:08:00:55 +0000] "GET /actualites HTTP/1.1" 200 2943 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:01:28 +0000] "GET /horaires HTTP/1.1" 200 6637 "-" "Mozilla/5.0"
+          192.0.2.14 - - [18/Mar/2031:08:02:42 +0000] "GET / HTTP/1.1" 200 2567 "-" "Mozilla/5.0"
+          192.0.2.27 - - [18/Mar/2031:08:03:29 +0000] "GET / HTTP/1.1" 200 6397 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:04:14 +0000] "GET /horaires HTTP/1.1" 200 3605 "-" "Mozilla/5.0"
+          192.0.2.51 - - [18/Mar/2031:08:05:31 +0000] "GET /acces HTTP/1.1" 200 8430 "-" "Mozilla/5.0"
+          192.0.2.27 - - [18/Mar/2031:08:05:51 +0000] "GET /horaires HTTP/1.1" 200 4587 "-" "Mozilla/5.0"
+          192.0.2.27 - - [18/Mar/2031:08:06:46 +0000] "GET /actualites HTTP/1.1" 200 8054 "-" "Mozilla/5.0"
+          192.0.2.14 - - [18/Mar/2031:08:07:49 +0000] "GET /horaires HTTP/1.1" 200 4912 "-" "Mozilla/5.0"
+          192.0.2.33 - - [18/Mar/2031:08:08:21 +0000] "GET / HTTP/1.1" 200 6745 "-" "Mozilla/5.0"
+          192.0.2.14 - - [18/Mar/2031:08:09:14 +0000] "GET / HTTP/1.1" 200 6192 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:09:49 +0000] "GET /horaires HTTP/1.1" 200 6322 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:10:46 +0000] "GET / HTTP/1.1" 200 6529 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:11:30 +0000] "GET /horaires HTTP/1.1" 200 2175 "-" "Mozilla/5.0"
+          192.0.2.33 - - [18/Mar/2031:08:12:19 +0000] "GET /horaires HTTP/1.1" 200 8806 "-" "Mozilla/5.0"
+          192.0.2.14 - - [18/Mar/2031:08:13:08 +0000] "GET /horaires HTTP/1.1" 200 4077 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:14:26 +0000] "GET / HTTP/1.1" 200 3132 "-" "Mozilla/5.0"
+          192.0.2.33 - - [18/Mar/2031:08:15:33 +0000] "GET /actualites HTTP/1.1" 200 7290 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:16:27 +0000] "GET /horaires HTTP/1.1" 200 6790 "-" "Mozilla/5.0"
+          192.0.2.51 - - [18/Mar/2031:08:17:08 +0000] "GET /actualites HTTP/1.1" 200 3138 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:18:27 +0000] "GET /acces HTTP/1.1" 200 7042 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:19:15 +0000] "GET / HTTP/1.1" 200 8704 "-" "Mozilla/5.0"
+          192.0.2.27 - - [18/Mar/2031:08:19:42 +0000] "GET / HTTP/1.1" 200 8394 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:20:42 +0000] "GET /acces HTTP/1.1" 200 2342 "-" "Mozilla/5.0"
+          192.0.2.51 - - [18/Mar/2031:08:21:29 +0000] "GET / HTTP/1.1" 200 3541 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:22:52 +0000] "GET / HTTP/1.1" 200 2970 "-" "Mozilla/5.0"
+          192.0.2.27 - - [18/Mar/2031:08:23:45 +0000] "GET /actualites HTTP/1.1" 200 7902 "-" "Mozilla/5.0"
+          192.0.2.33 - - [18/Mar/2031:08:25:13 +0000] "GET /horaires HTTP/1.1" 200 6580 "-" "Mozilla/5.0"
+          192.0.2.33 - - [18/Mar/2031:08:26:24 +0000] "GET /actualites HTTP/1.1" 200 2933 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:27:49 +0000] "GET /horaires HTTP/1.1" 200 7991 "-" "Mozilla/5.0"
+          192.0.2.14 - - [18/Mar/2031:08:28:15 +0000] "GET /contact HTTP/1.1" 200 6940 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:28:55 +0000] "GET /horaires HTTP/1.1" 200 6685 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:29:23 +0000] "GET /horaires HTTP/1.1" 200 6681 "-" "Mozilla/5.0"
+          192.0.2.51 - - [18/Mar/2031:08:30:42 +0000] "GET /acces HTTP/1.1" 200 6332 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:31:03 +0000] "GET /horaires HTTP/1.1" 200 7384 "-" "Mozilla/5.0"
+          192.0.2.33 - - [18/Mar/2031:08:32:31 +0000] "GET / HTTP/1.1" 200 2713 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:33:28 +0000] "GET /contact HTTP/1.1" 200 5516 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:33:48 +0000] "GET /acces HTTP/1.1" 200 5900 "-" "Mozilla/5.0"
+          192.0.2.51 - - [18/Mar/2031:08:34:30 +0000] "GET /horaires HTTP/1.1" 200 8931 "-" "Mozilla/5.0"
+          198.51.100.19 - - [18/Mar/2031:08:35:28 +0000] "GET /actualites HTTP/1.1" 200 3052 "-" "Mozilla/5.0"
+          192.0.2.27 - - [18/Mar/2031:08:36:35 +0000] "GET / HTTP/1.1" 200 6706 "-" "Mozilla/5.0"
+          198.51.100.8 - - [18/Mar/2031:08:37:36 +0000] "GET / HTTP/1.1" 200 2716 "-" "Mozilla/5.0"
+          192.0.2.33 - - [18/Mar/2031:08:38:42 +0000] "GET /actualites HTTP/1.1" 200 2274 "-" "Mozilla/5.0"
+          203.0.113.77 - - [18/Mar/2031:09:10:00 +0000] "GET /ancien-site/ HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:03 +0000] "GET /ancien-site/plan.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:06 +0000] "GET /ancien-site/equipe.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:09 +0000] "GET /ancien-site/tarifs.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:12 +0000] "GET /docs/brochure-2019.pdf HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:15 +0000] "GET /docs/brochure-2020.pdf HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:18 +0000] "GET /ancien-site/contact.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:21 +0000] "GET /ancien-site/acces.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:24 +0000] "GET /presse/2018.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:27 +0000] "GET /presse/2019.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:30 +0000] "GET /emploi/offre-12.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:33 +0000] "GET /emploi/offre-15.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:36 +0000] "GET /emploi/offre-21.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:39 +0000] "GET /ancien-site/faq.html HTTP/1.1" 404 312 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+          203.0.113.77 - - [18/Mar/2031:09:10:42 +0000] "GET / HTTP/1.1" 200 5120 "-" "VerifLiens/2.1 (+https://outils.example/robot)"
+
+objectives:
+  - { id: login, label: Te connecter à banc-web, on: session.opened, where: { hostId: banc-web } }
+  - { id: total, label: 'Rapport : nombre de requêtes', requires: [login], on: finding.confirmed, where: { questionId: total }, concepts: [forensique.pipelines], hint: '`wc -l` compte les lignes.' }
+  - { id: erreurs, label: 'Rapport : nombre d''erreurs 404', requires: [total], on: finding.confirmed, where: { questionId: erreurs }, hint: 'Filtre les lignes contenant " 404 " puis compte-les.' }
+  - { id: actif, label: 'Rapport : le visiteur le plus actif', requires: [total], on: finding.confirmed, where: { questionId: actif }, hint: 'cut -d " " -f 1 … | sort | uniq -c | sort -rn' }
+  - { id: qui, label: 'Rapport : qui est ce visiteur ?', requires: [actif, erreurs], on: finding.confirmed, where: { questionId: qui }, concepts: [reseau.http], hint: 'Regarde la fin de ses lignes : le champ « navigateur » (User-Agent).' }
+  - { id: verdict, label: 'Rapport : attaque ou pas ?', requires: [qui], on: finding.confirmed, where: { questionId: verdict } }
+
+questions:
+  - { id: total, prompt: Combien de requêtes contient le journal ?, accept: ['59'] }
+  - { id: erreurs, prompt: Combien de réponses 404 (page introuvable) ?, accept: ['14'], hint: Attention à ne compter que le statut, pas un 404 qui apparaîtrait ailleurs. }
+  - { id: actif, prompt: Quelle adresse a fait le plus de requêtes ?, accept: [203.0.113.77] }
+  - { id: qui, prompt: Quel outil se déclare derrière cette adresse ?, accept: [VerifLiens, VerifLiens/2.1, robot VerifLiens], explain: Un vérificateur de liens, qui annonce même une page d'information sur lui. }
+  - { id: verdict, prompt: S'agit-il d'une attaque (oui ou non) ?, accept: [non], hint: Que demande-t-il ? D'anciennes pages publiques. Que fait-il d'autre ?, explain: Non — un robot qui teste d'anciens liens. Le vrai sujet, c'est le site qui a cassé ses liens. }

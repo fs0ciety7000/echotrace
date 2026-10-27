@@ -1,0 +1,61 @@
+# Le Banc — module 2 « Reconnaissance passive »
+id: banc-recon
+title: Reconnaissance passive
+act: banc
+order: 2
+from: Dr Noor Haddad
+summary: Apprendre ce qu'un domaine dit de lui-même, sans toucher une seule machine.
+question: Que peut-on apprendre d'une organisation sans jamais la contacter ?
+concepts: [reconnaissance.whois, reseau.dns, reconnaissance.transfert-zone]
+
+briefing: |
+  Exercice du Banc. Le domaine d'entraînement `atelier-banc.example` est à
+  toi. Interdiction de scanner : uniquement ce qui est **public** — le
+  registre (`whois`) et le DNS (`dns`).
+
+debrief: |
+  Sans envoyer un seul paquet à ses machines, tu connais le registrar de
+  l'atelier, ses serveurs de noms, son serveur de messagerie, et — grâce à
+  une zone mal configurée — la liste de ses machines. C'est la
+  **reconnaissance passive** : discrète, légale sur des données publiques, et
+  souvent suffisante pour préparer la suite. Côté défense : savoir ce que tu
+  publies, et ne publier que ce qui est nécessaire.
+
+scenario:
+  clock: '2031-03-20T11:00:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24 }
+    - { id: internet, cidr: 198.51.100.0/24, label: Internet (simulé) }
+  hosts:
+    - { id: echo-ws, hostname: echo-ws, ip: 10.7.0.7, networks: [echo-lan, internet], accounts: [{ user: operateur-7 }] }
+    - { id: a-www, hostname: www.atelier-banc.example, ip: 198.51.100.60, networks: [internet], services: [{ port: 443, name: https }] }
+    - { id: a-mail, hostname: courrier.atelier-banc.example, ip: 198.51.100.61, networks: [internet], services: [{ port: 25, name: smtp }] }
+    - { id: a-git, hostname: depot-interne.atelier-banc.example, ip: 198.51.100.62, networks: [internet], services: [{ port: 443, name: https }] }
+  domains:
+    - name: atelier-banc.example
+      registrar: Registre Fictif SAS
+      registrant: Atelier du Banc (exercice)
+      created: '2027-09-14'
+      nameservers: [ns.atelier-banc.example]
+      axfr: true
+      records:
+        - { name: '@', type: A, value: 198.51.100.60 }
+        - { name: www, type: CNAME, value: atelier-banc.example }
+        - { name: '@', type: MX, value: 10 courrier.atelier-banc.example }
+        - { name: courrier, type: A, value: 198.51.100.61 }
+        - { name: depot-interne, type: A, value: 198.51.100.62 }
+        - { name: '@', type: TXT, value: v=spf1 mx -all }
+
+objectives:
+  - { id: whois, label: Consulter le registre, on: whois.queried, where: { domain: atelier-banc.example, found: true }, concepts: [reconnaissance.whois] }
+  - { id: registrar, label: 'Rapport : le registrar', requires: [whois], on: finding.confirmed, where: { questionId: registrar } }
+  - { id: mx, label: 'Rapport : le serveur de messagerie', requires: [whois], on: finding.confirmed, where: { questionId: mx }, concepts: [reseau.dns], hint: 'Les serveurs de messagerie sont publiés en type MX.' }
+  - { id: audit, label: Vérifier la configuration DNS, requires: [mx], on: dns.axfr, where: { domain: atelier-banc.example }, concepts: [reconnaissance.transfert-zone] }
+  - { id: discret, label: 'Rapport : la machine qu''on croyait discrète', requires: [audit], on: finding.confirmed, where: { questionId: discret } }
+
+questions:
+  - { id: registrar, prompt: Chez quel registrar le domaine est-il enregistré ?, accept: [Registre Fictif SAS, Registre Fictif] }
+  - { id: mx, prompt: Quel serveur reçoit le courrier du domaine ?, accept: [courrier.atelier-banc.example, courrier], hint: '`dns atelier-banc.example MX`' }
+  - { id: discret, prompt: Quel nom de machine n'aurait sans doute pas dû être publié ?, accept: [depot-interne.atelier-banc.example, depot-interne], hint: Lequel des noms listés semble réservé à un usage interne ?, explain: Un dépôt « interne » exposé sur Internet et listé publiquement est une invitation. }

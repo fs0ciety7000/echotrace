@@ -1,0 +1,63 @@
+# Le Banc — module 1 « Adresses & ports »
+id: banc-adresses
+title: Adresses & ports
+act: banc
+order: 1
+from: Dr Noor Haddad
+summary: Lire une adresse réseau, découvrir les machines d'une plage, identifier leurs services.
+question: Que dit une adresse comme 10.7.1.0/26, et comment savoir ce qui y vit ?
+concepts: [reseau.adresse-ip, reseau.ping-icmp, reseau.port, reconnaissance.scan-de-ports, reconnaissance.empreinte-service]
+
+briefing: |
+  Exercice du Banc : tout est autorisé ici, rien ne compte pour la campagne.
+  Seul ton journal en profite.
+
+  Le réseau d'exercice du jour est `10.7.1.0/26`. Combien de machines peut-il
+  contenir ? Lesquelles répondent ? Que font-elles ? Réponds avec `report`.
+
+debrief: |
+  Un `/26` laisse 32 − 26 = 6 bits pour les hôtes : 2⁶ = **64 adresses**,
+  de `.0` à `.63`. Une découverte d'hôtes (`nmap -sn`) dit **qui répond** ;
+  un scan de ports dit **ce qui écoute** ; l'option `-sV` dit **quoi
+  exactement**. Trois questions distinctes, trois coûts en bruit différents.
+
+scenario:
+  clock: '2031-03-20T10:00:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws]
+  networks:
+    - { id: banc, cidr: 10.7.1.0/26, label: Banc — exercice adresses }
+  hosts:
+    - { id: echo-ws, hostname: echo-ws, ip: 10.7.1.2, networks: [banc], accounts: [{ user: operateur-7 }] }
+    - id: b-web
+      hostname: banc-web
+      ip: 10.7.1.10
+      networks: [banc]
+      services:
+        - { port: 80, name: http, product: nginx, version: 1.24.0 }
+        - { port: 443, name: https, product: nginx, version: 1.24.0 }
+    - id: b-mail
+      hostname: banc-mail
+      ip: 10.7.1.25
+      networks: [banc]
+      services:
+        - { port: 25, name: smtp, product: MailRelay, version: 3.9.2 }
+        - { port: 993, name: imaps, product: Dovecot, version: 2.3.21 }
+    - id: b-db
+      hostname: banc-db
+      ip: 10.7.1.40
+      networks: [banc]
+      services:
+        - { port: 5432, name: postgresql, product: PostgreSQL, version: '15.6' }
+
+objectives:
+  - { id: ip, label: Identifier ton adresse et ton réseau, on: command.run, where: { name: ifconfig }, concepts: [reseau.adresse-ip], hint: '`ifconfig`' }
+  - { id: taille, label: 'Rapport : taille du réseau', requires: [ip], on: finding.confirmed, where: { questionId: taille }, hint: 'Un /26 laisse combien de bits pour les hôtes ? 2 puissance ce nombre.' }
+  - { id: sweep, label: Découvrir les machines actives, requires: [ip], on: host.discovered, where: { hostId: b-db }, hint: '`nmap -sn 10.7.1.0/26` liste qui répond ; un scan sans -sn liste aussi les ports.', concepts: [reconnaissance.scan-de-ports] }
+  - { id: base, label: 'Rapport : la machine de base de données', requires: [sweep], on: finding.confirmed, where: { questionId: base } }
+  - { id: https, label: 'Rapport : port du web chiffré', requires: [sweep], on: finding.confirmed, where: { questionId: https }, concepts: [reseau.port] }
+
+questions:
+  - { id: taille, prompt: Combien d'adresses contient 10.7.1.0/26 ?, accept: ['64'], hint: 32 − 26 = 6 bits libres., explain: '2⁶ = 64 adresses, de 10.7.1.0 à 10.7.1.63.' }
+  - { id: base, prompt: Quelle machine héberge une base de données ?, accept: [banc-db, 10.7.1.40], hint: Quel service correspond au port 5432 ?, explain: '5432 est le port conventionnel de PostgreSQL.' }
+  - { id: https, prompt: Sur quel port banc-web sert-il du web chiffré ?, accept: ['443', 443/tcp], explain: 443 = HTTPS par convention. }

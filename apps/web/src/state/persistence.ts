@@ -1,4 +1,4 @@
-import type { SaveData } from '@echotrace/engine';
+import type { JournalState, SaveData } from '@echotrace/engine';
 import { del, get, set } from 'idb-keyval';
 import type { TermEntry } from './game.ts';
 
@@ -34,5 +34,33 @@ export async function deleteSave(): Promise<void> {
     await del(KEY);
   } catch {
     /* nothing to delete */
+  }
+}
+
+/**
+ * The learning journal lives in its own entry: it is the player's knowledge,
+ * shared by the campaign and the Banc (which never touches the campaign save).
+ */
+export interface JournalFile {
+  journal: JournalState;
+  /** Banc modules completed at least once. */
+  bancDone: string[];
+}
+
+const JOURNAL_KEY = 'echotrace:journal:1';
+
+export async function loadJournal(): Promise<JournalFile | undefined> {
+  try {
+    return await get<JournalFile>(JOURNAL_KEY);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function writeJournal(file: JournalFile): Promise<void> {
+  try {
+    await set(JOURNAL_KEY, file);
+  } catch {
+    /* best effort */
   }
 }

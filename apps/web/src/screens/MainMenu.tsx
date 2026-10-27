@@ -16,7 +16,7 @@ interface Item {
 }
 
 export function MainMenu() {
-  const { hasSave, saveSummary, lastSavedAt, newGame, continueGame, setModal } = useGame();
+  const { hasSave, saveSummary, lastSavedAt, newGame, continueGame, setModal, openBanc } = useGame();
   const [active, setActive] = useState(0);
 
   const items: Item[] = [
@@ -29,7 +29,7 @@ export function MainMenu() {
       meta: hasSave ? 'Le journal est conservé' : 'Prologue',
       action: newGame,
     },
-    { id: 'academy', label: 'Le Banc — Académie', meta: 'Phase 2', disabled: true, action: () => {} },
+    { id: 'academy', label: 'Le Banc — Académie', meta: 'Exercices', action: openBanc },
     { id: 'settings', label: 'Paramètres', action: () => setModal('settings') },
   ];
 

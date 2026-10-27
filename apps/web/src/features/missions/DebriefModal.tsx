@@ -9,6 +9,8 @@ export function DebriefModal() {
   const toMenu = useGame((s) => s.toMenu);
   const nextOperation = useGame((s) => s.nextOperation);
   const upcoming = useGame((s) => s.upcoming);
+  const mode = useGame((s) => s.mode);
+  const openBanc = useGame((s) => s.openBanc);
   const engine = useGame((s) => s.engine);
   useGame((s) => s.rev);
   const mission = engine?.mission;
@@ -33,7 +35,7 @@ export function DebriefModal() {
     <Modal
       open={modal === 'debrief'}
       onClose={() => setModal(null)}
-      eyebrow="Débrief · opération accomplie"
+      eyebrow={mode === 'banc' ? 'Banc · exercice réussi' : 'Débrief · opération accomplie'}
       title={spec.title}
       accent="trace"
       footer={
@@ -41,7 +43,11 @@ export function DebriefModal() {
           <Button variant="ghost" onClick={() => setModal(null)}>
             Rester sur le poste
           </Button>
-          {next ? (
+          {mode === 'banc' ? (
+            <Button variant="primary" onClick={openBanc} data-autofocus>
+              Retour au Banc
+            </Button>
+          ) : next ? (
             <Button variant="primary" onClick={nextOperation} data-autofocus>
               {actOver ? 'Acte suivant' : 'Opération suivante'} : {next.title}
             </Button>
@@ -78,7 +84,7 @@ export function DebriefModal() {
           </p>
         </section>
       )}
-      {!next && (
+      {!next && mode === 'campagne' && (
         <p className="mt-6 rounded-md border border-echo-line bg-echo-soft px-4 py-3 text-sm text-fg">
           Fin de la campagne disponible. L'Acte II arrive dans une prochaine version — ton journal et tes décisions sont
           conservés.
