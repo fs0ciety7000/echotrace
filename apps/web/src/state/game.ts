@@ -16,6 +16,7 @@ import {
   solidity,
 } from '@echotrace/engine';
 import { create } from 'zustand';
+import { play } from '../audio/sound.ts';
 import { concepts, dossier, endings, getMission, missions } from '../content/index.ts';
 import { deleteSave, loadJournal, loadSave, type SaveFile, writeJournal, writeSave } from './persistence.ts';
 
@@ -162,9 +163,11 @@ export const useGame = create<GameStore>()((set, get) => {
         case 'objective.completed': {
           const o = engine.mission?.spec.objectives.find((x) => x.id === event.payload.objectiveId);
           toast({ tone: 'trace', title: 'Objectif accompli', body: o?.label ?? '' });
+          play('objective');
           break;
         }
         case 'mission.completed':
+          play('mission');
           // A decision may still be open on screen; the debrief waits for it.
           setTimeout(() => {
             // Only once per mission, and only if the player is still on this mission's screen
@@ -177,13 +180,17 @@ export const useGame = create<GameStore>()((set, get) => {
           }, 900);
           break;
         case 'dossier.linked':
-          if (!event.payload.already) toast({ tone: 'echo', title: 'Lien établi au Dossier' });
+          if (!event.payload.already) {
+            toast({ tone: 'echo', title: 'Lien établi au Dossier' });
+            play('link');
+          }
           break;
         case 'choice.offered':
           setTimeout(() => {
             if (get().modal === null) set({ modal: 'choice' });
           }, 1200);
           toast({ tone: 'warn', title: 'Décision attendue', body: 'Ta recommandation est demandée.' });
+          play('choice');
           break;
         case 'concept.encountered':
           // Only announce first encounters (uses === 1 after the journal handler ran).
@@ -196,13 +203,23 @@ export const useGame = create<GameStore>()((set, get) => {
           const msg = engine.mission?.spec.messages.find((m) => m.id === event.payload.messageId);
           const preview = (msg?.subject ?? msg?.body.trim().split('\n')[0] ?? '').replace(/\*\*|`/g, '');
           toast({ tone: 'signal', title: `Message — ${event.payload.from}`, body: preview, action: 'comms' });
+          play('message');
           break;
         }
         case 'host.discovered': {
           const h = engine.state.world.hosts[event.payload.hostId];
           toast({ tone: 'signal', title: 'Hôte découvert', body: `${h?.hostname ?? '?'} · ${event.payload.ip}` });
+          play('discover');
           break;
         }
+        case 'finding.confirmed':
+          play('finding');
+          break;
+        case 'finding.rejected':
+        case 'command.unknown':
+        case 'auth.failed':
+          play('error');
+          break;
       }
     });
   };

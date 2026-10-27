@@ -1,5 +1,6 @@
 import type { Line, Span } from '@echotrace/engine';
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { play } from '../../audio/sound.ts';
 import { type TermEntry, useGame } from '../../state/game.ts';
 import { cx } from '../../ui/cx.ts';
 
@@ -149,6 +150,7 @@ export function EchoTerm({ className }: { className?: string }) {
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!engine) return;
+    if (!e.ctrlKey && !e.metaKey && (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter')) play('key');
     if (e.key === 'Enter') {
       e.preventDefault();
       historyIndex.current = null;

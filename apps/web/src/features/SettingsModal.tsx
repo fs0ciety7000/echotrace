@@ -1,3 +1,4 @@
+import { play } from '../audio/sound.ts';
 import { useGame } from '../state/game.ts';
 import { useSettings } from '../state/settings.ts';
 import { cx } from '../ui/cx.ts';
@@ -42,7 +43,18 @@ function Toggle({
 export function SettingsModal() {
   const modal = useGame((s) => s.modal);
   const setModal = useGame((s) => s.setModal);
-  const { legible, reducedMotion, setLegible, setReducedMotion } = useSettings();
+  const {
+    legible,
+    reducedMotion,
+    sound,
+    volume,
+    keySounds,
+    setLegible,
+    setReducedMotion,
+    setSound,
+    setVolume,
+    setKeySounds,
+  } = useSettings();
   return (
     <Modal
       open={modal === 'settings'}
@@ -63,6 +75,47 @@ export function SettingsModal() {
           hint="Désactive animations et clignotements. Suit aussi la préférence de ton système."
           checked={reducedMotion}
           onChange={setReducedMotion}
+        />
+      </div>
+
+      <h3 className="eyebrow mt-6 mb-2">Son</h3>
+      <div className="space-y-2">
+        <Toggle
+          label="Sons d'interface"
+          hint="Brefs signaux pour les objectifs, messages, décisions et erreurs. Toujours accompagnés d'un message à l'écran."
+          checked={sound}
+          onChange={(v) => {
+            setSound(v);
+            if (v) play('objective');
+          }}
+        />
+        <div className={cx('rounded-md border border-line bg-raised/50 px-4 py-3', !sound && 'opacity-50')}>
+          <label htmlFor="settings-volume" className="flex items-center text-sm font-medium text-fg">
+            Volume
+            <span className="ml-auto font-mono text-xs text-fg-muted tabular">{volume} %</span>
+          </label>
+          <input
+            id="settings-volume"
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={volume}
+            disabled={!sound}
+            onChange={(e) => setVolume(Number(e.target.value))}
+            onPointerUp={() => play('message')}
+            onKeyUp={(e) => (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') && play('message')}
+            className="mt-2 w-full accent-signal"
+          />
+        </div>
+        <Toggle
+          label="Frappe au clavier"
+          hint="Un léger cliquetis à chaque touche dans le terminal."
+          checked={keySounds}
+          onChange={(v) => {
+            setKeySounds(v);
+            if (v) play('key');
+          }}
         />
       </div>
       <p className="mt-5 text-xs text-fg-subtle">

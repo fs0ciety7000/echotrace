@@ -203,6 +203,23 @@ Carte 190 px, fond `raised`, surtitre mono du type + icône Lucide (User, Users,
 ### 9.16 Épilogue
 Écran plein sur `void` avec trame de points. Le titre (48 px, semi-gras) et le liseré du texte prennent la couleur de la fin : Lumière `signal`, Écho `echo`, Silence `danger`, Bruit `warn` (texte + `*-line`). Statistiques en grille comme le débrief. Aucun nouveau token.
 
+### 9.17 Son
+Sons d'interface synthétisés (Web Audio, `apps/web/src/audio/sound.ts`) : aucun fichier audio, hors-ligne, rien à autoriser dans la CSP. Brefs (< 0,7 s), discrets, jamais en boucle, et **toujours redondants** avec un retour visuel (toast, ligne du terminal) — le son n'est jamais seul porteur d'information.
+
+| Signal | Événement | Timbre |
+|---|---|---|
+| `objective` | objectif accompli | deux notes montantes (mi–si), sinus |
+| `mission` | opération accomplie | arpège do–mi–sol–do, triangle |
+| `message` | message reçu | « ping » la + mi, triangle |
+| `choice` | décision attendue | quinte grave (fa–do), sinus long |
+| `finding` | conclusion confirmée | « blip » aigu |
+| `error` | commande inconnue, conclusion rejetée, authentification refusée | bourdon carré grave, très bas |
+| `link` | lien établi au Dossier | même note répétée trois fois, decrescendo — un écho |
+| `discover` | hôte découvert | goutte aiguë (rafales fusionnées) |
+| `key` | frappe dans le terminal (option) | bruit filtré de 18 ms |
+
+Réglages : sons d'interface (activés par défaut), volume 0–100 % (60), frappe au clavier (désactivée par défaut).
+
 ### 9.12 Drawer (panneau latéral)
 Niveau 3 (verre), ancré à droite, 460 px max, liseré supérieur de la couleur du contexte (`echo` fiche, `signal` comms). Échap ferme ; à la fermeture le focus revient au terminal (`[data-terminal-input]`).
 

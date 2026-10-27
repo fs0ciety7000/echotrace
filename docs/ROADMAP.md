@@ -24,7 +24,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Messages entrants (Comms) : déclenchés par événements, machine à écrire séquentielle, commande `mail`, badge non lus
 - ✅ Journal d'apprentissage : vue complète (catégories, maîtrise globale, fiches verrouillées) + quiz par fiche (sans-faute → maîtrise 3), 31 questions
 - ✅ Paramètres : Haute lisibilité, Mouvement réduit
-- ⬜ Paramètres : taille du terminal, son, réinitialiser la sauvegarde
+- 🟡 Paramètres : son ✅ (activation, volume, frappe) ; taille du terminal et réinitialisation de la sauvegarde à faire
 - ✅ PWA : manifest, icônes, service worker Workbox (jouable hors ligne, installable Chrome/Edge)
 - ✅ Premier déploiement : https://echo.fs0ciety.org (Coolify, auto-deploy sur push, Cloudflare proxifié, TLS strict)
 - ✅ Responsive : onglets Terminal / Objectifs / Comms sous 1024 px, journal liste ↔ fiche sous 768 px, testé à 390 px
@@ -53,7 +53,8 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Quatre fins pilotées par les données (`content/fins.yaml` : décision finale, Intégrité, solidité du Dossier) + écran d'épilogue ; Dossier étendu à 20 pièces / 21 liens
 - ✅ Mode sandbox du Banc : exercices générés à partir d'une graine (3 niveaux, 4 à 8 machines) — machine à corriger, chant et sa destination, source de force brute à bloquer ; déterministe, solvable par construction (test sur 10 graines × 3 niveaux)
 - ✅ Accessibilité auditée (WCAG 2.1 AA) : 0 violation axe sur 13 écrans × 2 thèmes, piège clavier du terminal supprimé, focus des panneaux, contrastes, reflow 320 px — voir `ACCESSIBILITY.md`
-- ⬜ i18n (EN), sons, polissage animations
+- ✅ Sons d'interface synthétisés (Web Audio, sans fichier) + réglages : activation, volume, frappe au clavier
+- ⬜ i18n (EN), polissage animations
 - ✅ Audit axe en CI (`pnpm a11y`, 11 écrans × 2 thèmes)
 - ⬜ Tests avec lecteurs d'écran réels (NVDA, VoiceOver)
 

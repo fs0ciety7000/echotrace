@@ -118,6 +118,7 @@ src/
   features/journal/          fiches et progression
   screens/                   MainMenu, Operator (dashboard), Academy, Ending (épilogue)
   state/                     stores Zustand (game, settings), persistance
+  audio/                     sons d'interface synthétisés (Web Audio), déclenchés par les événements du moteur
   content/                   chargement + validation du contenu (glob Vite)
 ```
 

@@ -32,6 +32,8 @@ Dernier audit : octobre 2026 (Phase 3). À refaire à chaque nouvel écran ou co
 - Focus visible (`:focus-visible`, anneau `line-focus`) sur tous les contrôles.
 - Graphes (vue réseau, Dossier) : chaque action a un équivalent clavier — liste des hôtes du panneau « Réseau connu », formulaire « Relier deux pièces » à listes déroulantes, commande `dossier` au terminal.
 
+- Son : chaque signal sonore double un retour visuel (toast, terminal) ; désactivable, volume réglable ; aucun son de plus de 3 s ni en boucle (1.4.2).
+
 ## 4. Limites connues / à faire
 - Pas encore de test avec de vrais lecteurs d'écran (NVDA, VoiceOver) : la sortie du terminal en `aria-live` peut être verbeuse sur les longues commandes (`nmap` sur un réseau).
 - Les nœuds des graphes xyflow eux-mêmes ne sont pas parcourables au clavier (alternatives ci-dessus).
