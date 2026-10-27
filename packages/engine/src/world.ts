@@ -32,6 +32,8 @@ export function buildState(spec: ScenarioSpec): EngineState {
       fs,
       processes: structuredClone(h.processes),
       connections: structuredClone(h.connections),
+      documents: structuredClone(h.documents),
+      firewall: structuredClone(h.firewall),
     };
   }
 

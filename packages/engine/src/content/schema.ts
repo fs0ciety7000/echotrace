@@ -143,6 +143,16 @@ export const ConnectionSchema = z.object({
   program: z.string().optional(),
 });
 
+export const DocumentMetaSchema = z.object({
+  title: z.string().optional(),
+  author: z.string(),
+  lastModifiedBy: z.string().optional(),
+  company: z.string().optional(),
+  created: z.string(),
+  modified: z.string(),
+  software: z.string().optional(),
+});
+
 export const HostSpecSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
   hostname: SafeHostname,
@@ -158,6 +168,10 @@ export const HostSpecSchema = z.object({
   processes: z.array(z.object({ pid: z.number().int().positive(), user: z.string(), cmd: z.string() })).default([]),
   /** Network sockets (netstat / ss). */
   connections: z.array(ConnectionSchema).default([]),
+  /** Document properties read by `meta`, keyed by absolute path. */
+  documents: z.record(z.string().startsWith('/'), DocumentMetaSchema).default({}),
+  /** Initial firewall rules (`fw`): sources whose traffic is dropped. */
+  firewall: z.array(z.object({ source: z.string(), note: z.string().optional() })).default([]),
 });
 
 export const NetworkSpecSchema = z.object({
@@ -230,6 +244,9 @@ export const TriggerSchema = z.object({
     'connections.listed',
     'finding.confirmed',
     'choice.made',
+    'mail.analyzed',
+    'document.inspected',
+    'firewall.changed',
   ]),
   /** Shallow match on the event payload; array payload fields match by inclusion. */
   where: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),

@@ -33,6 +33,9 @@ export interface EventMap {
   'finding.rejected': { missionId: string; questionId: string };
   'choice.offered': { missionId: string; choiceId: string };
   'choice.made': { missionId: string; choiceId: string; optionId: string };
+  'mail.analyzed': { hostId: string; path: string; spf: string; dkim: string; dmarc: string; fromDomain: string };
+  'document.inspected': { hostId: string; path: string; author: string; lastModifiedBy: string };
+  'firewall.changed': { hostId: string; action: 'block' | 'unblock'; target: string };
 }
 
 export type EventName = keyof EventMap;

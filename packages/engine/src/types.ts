@@ -122,6 +122,25 @@ export interface Host {
   fs: VfsDir;
   processes: Process[];
   connections: Connection[];
+  /** Optional for saves made before Act II. */
+  documents?: Record<string, DocumentMeta>;
+  firewall?: FirewallRule[];
+}
+
+export interface DocumentMeta {
+  title?: string;
+  author: string;
+  lastModifiedBy?: string;
+  company?: string;
+  created: string;
+  modified: string;
+  software?: string;
+}
+
+export interface FirewallRule {
+  /** IP or CIDR whose traffic is dropped. */
+  source: string;
+  note?: string;
 }
 
 export interface Network {

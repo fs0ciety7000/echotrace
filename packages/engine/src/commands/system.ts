@@ -1,5 +1,6 @@
 import { line, muted, plain, subtle, table, warning } from '../output.ts';
 import type { Command } from '../shell/command.ts';
+import { isBlocked } from './defense.ts';
 
 export const ps: Command = {
   name: 'ps',
@@ -35,7 +36,8 @@ export const netstat: Command = {
   run({ engine }) {
     const h = engine.host();
     engine.emit('connections.listed', { hostId: h.id });
-    const conns = h.connections ?? [];
+    // Traffic dropped by the host firewall no longer shows up as a live connection.
+    const conns = (h.connections ?? []).filter((c) => c.state === 'LISTEN' || !isBlocked(h.firewall, c.remote));
     if (conns.length === 0) return [line(muted('(aucune connexion)'))];
     const procs = h.processes ?? [];
     return table([
