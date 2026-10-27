@@ -1,0 +1,257 @@
+# Acte II — Mission 06 « Silence sur la ligne »
+# Défense de l'infrastructure d'ECHO : qualifier une alerte, filtrer au plus juste,
+# vérifier l'effet, relier l'incident à la campagne. Fin de l'Acte II.
+# Question : comment se défendre sans couper ce qui doit continuer à fonctionner ?
+
+id: silence
+title: Silence sur la ligne
+act: acte-2
+order: 3
+from: Dr Noor Haddad
+summary: La messagerie d'ECHO est prise pour cible. Contenir, au plus juste.
+question: Comment bloquer un adversaire sans couper ce qui doit continuer à fonctionner ?
+concepts:
+  - defense.filtrage
+  - defense.mfa
+  - forensique.ioc
+  - reseau.adresse-ip
+  - defense.culture-signalement
+
+briefing: |
+  L'alerte est tombée à 10 h 14 : le webmail de la cellule reçoit des
+  centaines de tentatives de connexion. Le résumé du SOC est dans `~/alertes/`.
+
+  Tu as les droits d'administration sur `echo-mx`, notre serveur de
+  messagerie (accès dans `~/dossiers/`). Objectif : **contenir**. Mais
+  attention — la messagerie doit continuer à recevoir le courrier de nos
+  partenaires. Un blocage trop large, et c'est nous qui nous coupons du monde.
+
+  — Noor
+
+debrief: |
+  **Se défendre, c'est filtrer juste.** Les tentatives venaient de trois
+  adresses voisines : une plage `/29` de huit adresses, la même que le serveur
+  d'envoi de l'hameçonnage. Bloquer cette plage a coupé l'adversaire ; bloquer
+  plus large aurait aussi coupé le serveur de Lanterne, qui nous écrit tous les
+  jours.
+
+  Le filtrage n'est qu'un **confinement** : l'adversaire changera d'adresse.
+  Ce qui l'a vraiment arrêté, c'est ce qui avait été fait avant — un mot de
+  passe réinitialisé vite, des sessions coupées, et l'authentification
+  multifacteur activée sur le webmail depuis l'Acte I.
+
+  Fin de l'Acte II. Les interférences n'étaient pas du bruit : quelqu'un
+  essayait de nous faire taire. Et quelqu'un d'autre essaie de nous parler.
+
+scenario:
+  clock: '2031-04-12T10:20:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws, echo-mx]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: internet-a, cidr: 203.0.113.0/24, label: Internet (simulé) }
+    - { id: internet-b, cidr: 198.51.100.0/24, label: Internet (simulé) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/alertes/soc-2031-04-12.txt: |
+          SOC ECHO — ALERTE 2031-04-12 10:14 — sévérité HAUTE
+          ------------------------------------------------------------
+          Service   : webmail (echo-mx, 443/tcp)
+          Constat   : 212 échecs d'authentification en 12 minutes,
+                      concentrés sur UN compte : t.marchetti
+          Sources   : 3 adresses externes, toutes dans 203.0.113.x
+          Réussites : aucune (authentification multifacteur exigée
+                      depuis le 03/04)
+          Action    : confinement demandé à l'astreinte (operateur-7)
+          Attention : echo-mx reçoit aussi le courrier légitime des
+                      partenaires (dont Lanterne, 198.51.100.30).
+        /home/operateur-7/dossiers/acces-mx.txt: |
+          echo-mx — compte d'administration de l'astreinte
+          compte : admin-op7   mot de passe : astreinte-mx-12
+          Pare-feu local : outil ECHO « fw » (fw list / fw block / fw unblock)
+
+    - id: echo-mx
+      hostname: echo-mx
+      ip: 10.7.0.25
+      os: Debian 12
+      networks: [echo-lan, internet-a, internet-b]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 }
+        - { port: 25, name: smtp, product: MailRelay, version: 3.9.2 }
+        - { port: 443, name: https, product: Webmail ECHO, version: '5.1' }
+      accounts:
+        - { user: admin-op7, password: astreinte-mx-12 }
+      firewall:
+        - { source: 192.0.2.250, note: 'scanner bloqué le 2031-03-02 (Mara)' }
+      processes:
+        - { pid: 1, user: root, cmd: /sbin/init }
+        - { pid: 512, user: root, cmd: /usr/sbin/sshd -D }
+        - { pid: 640, user: mail, cmd: /usr/sbin/mailrelay -d }
+        - { pid: 702, user: www-data, cmd: /usr/sbin/webmail --listen 443 }
+      connections:
+        - { local: '0.0.0.0:22', state: LISTEN, pid: 512 }
+        - { local: '0.0.0.0:25', state: LISTEN, pid: 640 }
+        - { local: '0.0.0.0:443', state: LISTEN, pid: 702 }
+        - { local: '10.7.0.25:443', remote: '10.7.0.11:52214', pid: 702 }
+        - { local: '10.7.0.25:443', remote: '10.7.0.9:50110', pid: 702 }
+        - { local: '10.7.0.25:25', remote: '198.51.100.30:41022', pid: 640 }
+        - { local: '10.7.0.25:443', remote: '203.0.113.66:51834', pid: 702 }
+        - { local: '10.7.0.25:443', remote: '203.0.113.67:44108', pid: 702 }
+        - { local: '10.7.0.25:443', remote: '203.0.113.69:60321', pid: 702 }
+        - { local: '10.7.0.25:22', remote: '10.7.0.7:55002', pid: 512 }
+      files:
+        /etc/motd: |
+          echo-mx — messagerie ECHO. Toute action d'administration est journalisée.
+
+objectives:
+  - id: alerte
+    label: Lire le résumé de l'alerte
+    on: file.read
+    where: { path: /home/operateur-7/alertes/soc-2031-04-12.txt }
+    hint: Il est dans ~/alertes/.
+
+  - id: report-cible
+    label: 'Rapport : le compte visé'
+    requires: [alerte]
+    on: finding.confirmed
+    where: { questionId: cible }
+    concepts: [defense.mfa]
+
+  - id: mx
+    label: Te connecter à echo-mx avec le compte d'astreinte
+    requires: [alerte]
+    on: session.opened
+    where: { hostId: echo-mx }
+    hint: Les accès sont dans ~/dossiers/acces-mx.txt.
+
+  - id: connexions
+    label: Identifier les connexions hostiles en cours
+    requires: [mx]
+    on: connections.listed
+    where: { hostId: echo-mx }
+    hint: Qui est connecté au webmail en ce moment ? `man netstat`.
+
+  - id: report-plage
+    label: 'Rapport : la plage d''adresses à bloquer'
+    requires: [connexions]
+    on: finding.confirmed
+    where: { questionId: plage }
+    hint: Trois adresses voisines. Quelle est la plus petite plage CIDR qui les contient toutes ?
+    concepts: [reseau.adresse-ip]
+
+  - id: bloquer
+    label: Bloquer cette plage sur echo-mx
+    requires: [report-plage]
+    on: firewall.changed
+    where: { hostId: echo-mx, action: block, target: 203.0.113.64/29 }
+    hint: '`man fw`. Bloque exactement la plage de ton rapport — pas plus large.'
+    concepts: [defense.filtrage]
+
+  - id: verifier
+    label: Vérifier que le trafic hostile a cessé et que le courrier passe toujours
+    requires: [bloquer]
+    on: connections.listed
+    where: { hostId: echo-mx }
+    hint: Un blocage non vérifié n'est qu'une supposition.
+
+  - id: report-lien
+    label: 'Rapport : le lien avec l''hameçonnage'
+    requires: [verifier]
+    on: finding.confirmed
+    where: { questionId: lien }
+    hint: Une des adresses bloquées te dit quelque chose. Tu l'as vue dans les en-têtes du 2 avril.
+    concepts: [forensique.ioc]
+
+  - id: decision
+    label: Répondre — ou non — au dernier message
+    requires: [report-lien]
+    on: choice.made
+    where: { choiceId: zero }
+    hint: Un message t'attend, et une décision avec.
+
+questions:
+  - id: cible
+    prompt: Quel compte les tentatives visent-elles ?
+    accept: [t.marchetti]
+    explain: Le compte de Théo — celui dont le mot de passe a été hameçonné le 2 avril.
+  - id: plage
+    prompt: Quelle plage CIDR bloquer pour couvrir les trois adresses hostiles, et elles seules ?
+    accept: [203.0.113.64/29]
+    hint: .66, .67 et .69 tiennent dans un bloc de 8 adresses aligné sur un multiple de 8.
+    explain: 203.0.113.64/29 couvre .64 à .71. Un /24 bloquerait 256 adresses pour rien.
+  - id: lien
+    prompt: Quel serveur de la campagne d'hameçonnage appartient à cette plage ?
+    requires: [plage]
+    accept: [relais-envoi.example, 203.0.113.66]
+    explain: Le relais d'envoi du faux message du 2 avril. Même adversaire, même infrastructure.
+
+choices:
+  - id: zero
+    from: inconnu
+    on: objective.completed
+    where: { objectiveId: report-lien }
+    prompt: |
+      tu as fermé leur porte. bien.
+
+      c'est moi, Iris. je n'étais pas leur victime. en novembre j'étais chez eux,
+      sur leur planning, et j'ai essayé d'arrêter ce qui allait se passer.
+      j'ai échoué.
+
+      je peux te dire le reste. seulement à toi. ne préviens personne : ils lisent
+      plus de choses que vous ne croyez.
+    options:
+      - id: mara
+        label: Transmettre le message à Mara
+        description: Pas de secret dans la cellule. Même celui-là.
+        effects: { integrity: 10, initiative: -5 }
+        consequence: |
+          Mara a lu le message trois fois. Puis elle a dit : « On répond ensemble. »
+          Iris n'a pas répondu. Pas encore.
+      - id: seul
+        label: Répondre seul·e, comme elle le demande
+        description: Elle a peut-être raison sur les fuites. Et c'est peut-être la seule chance.
+        effects: { integrity: -10, initiative: 10 }
+        consequence: |
+          Tu as répondu. Une adresse, une heure, « viens seul·e ». Tu n'en as parlé
+          à personne. Si c'est un piège, personne ne saura où te chercher.
+      - id: tracer
+        label: Ne pas répondre, mais analyser le message
+        description: D'où vient-il, par où est-il passé ? D'abord vérifier que c'est bien elle.
+        effects: { integrity: 5, initiative: 5 }
+        consequence: |
+          Le message est passé par trois relais, dont un que vous connaissez déjà.
+          Soit Iris utilise leurs outils, soit quelqu'un utilise son nom.
+
+messages:
+  - id: noor-mfa
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-cible }
+    body: |
+      Le compte de Théo. Ils ont son mot de passe du 2 avril — mais plus le
+      reste. L'authentification multifacteur, activée le lendemain, tient bon.
+
+  - id: mara-couvrir
+    from: Mara Okonkwo-Lind
+    on: objective.completed
+    where: { objectiveId: report-cible }
+    when: { hamecon/theo: couvrir }
+    body: |
+      En remontant les journaux, le SOC a trouvé une session du webmail de Théo
+      ouverte le 2 avril à 09:14, jamais fermée, jusqu'à hier soir. Quelqu'un a
+      lu sa boîte pendant dix jours. Pourquoi personne ne m'a rien dit ?
+
+  - id: noor-verifier
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: verifier }
+    body: |
+      Plus rien depuis la plage bloquée, et le courrier de Lanterne arrive
+      toujours. C'est ça, un bon confinement. Note la règle dans le registre.

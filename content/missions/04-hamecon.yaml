@@ -1,0 +1,351 @@
+# Acte II — Mission 04 « Hameçon »
+# Côté destinataire et analyste : lire un message suspect sans l'ouvrir, comparer à un
+# message légitime, reconnaître un domaine sosie, retrouver qui a cliqué, réagir sans blâmer.
+# Question : comment reconnaître un faux message qui imite un collègue ?
+
+id: hamecon
+title: Hameçon
+act: acte-2
+order: 1
+from: Mara Okonkwo-Lind
+summary: La cellule est visée par un faux message de Lanterne. Qui a mordu ?
+question: Comment reconnaître un faux message qui imite un collègue ?
+concepts:
+  - defense.hameconnage
+  - reseau.authentification-email
+  - reconnaissance.domaine-sosie
+  - defense.culture-signalement
+  - reconnaissance.whois
+
+briefing: |
+  Ça a commencé ce matin. Trois d'entre nous ont reçu un message « de Lanterne »
+  avec un document sur Corvane « à relire avant publication ». Je l'ai trouvé
+  bizarre et je l'ai mis de côté dans `~/signalements/`, avec un vrai message
+  de Théo pour comparer.
+
+  On ne l'ouvre pas, on ne clique sur rien : on **lit** ce qu'il dit de
+  lui-même. Puis on vérifie si quelqu'un a mordu — le journal du proxy est sur
+  `echo-gw`, les accès sont dans le dossier.
+
+  Si c'est HOLLOW CHOIR, c'est leur réponse à notre dossier de Vallon.
+
+  — Mara
+
+debrief: |
+  **Un faux message se trahit rarement par son contenu — il se trahit par ses
+  coulisses.** L'expéditeur affiché disait « Lanterne », mais le domaine était
+  un **sosie** (`lanterne-presse.example`) créé deux jours plus tôt, les
+  réponses partaient vers une boîte personnelle, le lien affiché ne menait pas
+  là où il le prétendait, et le vrai domaine de Lanterne — qui publie une
+  politique **DMARC** stricte — n'avait rien validé.
+
+  Le message de Théo, lui, passait tous les contrôles. C'est la comparaison qui
+  rend les écarts visibles.
+
+  Et puis il y a l'essentiel : quelqu'un a cliqué. Ce n'est pas une faute, c'est
+  une statistique. Ce qui compte, c'est **le temps entre le clic et le
+  signalement**.
+
+  Le registrar et les serveurs de noms du domaine sosie sont les mêmes que ceux
+  du serveur de commande de Vallon. Ils ne se cachent même plus.
+
+scenario:
+  clock: '2031-04-02T10:05:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws, echo-gw]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: internet, cidr: 203.0.113.0/24, label: Internet (simulé) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan, internet]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/signalements/LISEZMOI.txt: |
+          Signalements du 02/04 (Mara)
+          - message-0402.eml   : reçu par Mara, Noor et Théo à 09:04. Suspect.
+          - reference-theo.eml : vrai message de Théo (mars), pour comparaison.
+          Consigne : analyser avec mailcheck. Ne rien ouvrir, ne rien cliquer.
+        /home/operateur-7/signalements/message-0402.eml: |
+          Return-Path: <bounce@relais-envoi.example>
+          Received: from mx.echo.lan (mx.echo.lan [10.7.0.25])
+            by echo-mx with LMTP; Wed, 2 Apr 2031 09:04:11 +0000
+          Received: from relais-envoi.example (relais-envoi.example [203.0.113.66])
+            by mx.echo.lan with ESMTP; Wed, 2 Apr 2031 09:04:10 +0000
+          Authentication-Results: mx.echo.lan; spf=fail smtp.mailfrom=relais-envoi.example;
+            dkim=none; dmarc=fail (p=reject) header.from=lanterne-presse.example
+          From: "Lanterne - Rédaction" <redaction@lanterne-presse.example>
+          Reply-To: theo.urgent@boite-perso.example
+          To: equipe@echo.lan
+          Date: Wed, 2 Apr 2031 09:04:09 +0000
+          Subject: Corvane — document confidentiel à relire avant publication
+
+          Bonjour à toute l'équipe,
+
+          Nous publions ce soir. Merci de relire le document en urgence :
+          <a href="https://lanterne-presse.example/connexion">lanterne.example/doc/corvane</a>
+
+          Identifiez-vous avec votre compte habituel.
+          — Théo, pour la rédaction de Lanterne
+        /home/operateur-7/signalements/reference-theo.eml: |
+          Return-Path: <theo@lanterne.example>
+          Received: from mx.echo.lan (mx.echo.lan [10.7.0.25])
+            by echo-mx with LMTP; Thu, 20 Mar 2031 17:31:02 +0000
+          Received: from mail.lanterne.example (mail.lanterne.example [198.51.100.30])
+            by mx.echo.lan with ESMTPS; Thu, 20 Mar 2031 17:31:01 +0000
+          Authentication-Results: mx.echo.lan; spf=pass smtp.mailfrom=lanterne.example;
+            dkim=pass header.d=lanterne.example; dmarc=pass header.from=lanterne.example
+          From: Théo Marchetti <theo@lanterne.example>
+          To: mara@echo.lan
+          Date: Thu, 20 Mar 2031 17:30:58 +0000
+          Subject: Re: Vallon — on attend l'ANCS ?
+
+          Mara, je respecte votre décision. Mais je garde le sujet au chaud.
+          T.
+        /home/operateur-7/dossiers/acces-gw.txt: |
+          echo-gw — passerelle et proxy web de la cellule
+          compte : analyste   mot de passe : proxy-lecture-31
+          Journal du proxy : /var/log/proxy/access.log
+          Postes : 10.7.0.7 operateur-7 · 10.7.0.9 noor · 10.7.0.11 mara · 10.7.0.14 theo
+
+    - id: echo-gw
+      hostname: echo-gw
+      ip: 10.7.0.1
+      os: Debian 12
+      networks: [echo-lan, internet]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 }
+        - { port: 3128, name: http-proxy, product: CacheProxy, version: '6.4' }
+      accounts:
+        - { user: analyste, password: proxy-lecture-31 }
+      files:
+        /etc/motd: |
+          echo-gw — passerelle ECHO. Lecture seule pour le compte analyste.
+        /var/log/proxy/access.log: |
+          2031-04-02T08:58:12Z 10.7.0.9 GET https://www.lanterne.example/ 200
+          2031-04-02T09:01:40Z 10.7.0.11 GET https://ancs.example/actualites 200
+          2031-04-02T09:06:03Z 10.7.0.11 GET https://www.lanterne.example/contact 200
+          2031-04-02T09:11:57Z 10.7.0.14 GET https://lanterne-presse.example/connexion 200
+          2031-04-02T09:12:31Z 10.7.0.14 POST https://lanterne-presse.example/connexion 302
+          2031-04-02T09:12:32Z 10.7.0.14 GET https://lanterne-presse.example/doc/merci 200
+          2031-04-02T09:20:44Z 10.7.0.9 GET https://docs.echo.lan/procedures 200
+          2031-04-02T09:41:18Z 10.7.0.7 GET https://ancs.example/bulletins 200
+
+    - id: relais
+      hostname: relais-envoi.example
+      ip: 203.0.113.66
+      os: inconnu
+      networks: [internet]
+      icmp: false
+      services:
+        - { port: 25, name: smtp }
+
+    - id: sosie
+      hostname: lanterne-presse.example
+      ip: 203.0.113.70
+      os: inconnu
+      networks: [internet]
+      services:
+        - port: 443
+          name: https
+          http:
+            status: 200
+            headers: { Server: nginx }
+            body: |
+              <title>Lanterne — Connexion</title>
+              <p>Identifiez-vous pour accéder au document.</p>
+
+  domains:
+    - name: lanterne.example
+      registrar: Registre Hexagone SAS
+      registrant: Association Lanterne
+      created: '2019-02-11'
+      nameservers: [ns1.lanterne.example]
+      records:
+        - { name: '@', type: A, value: 198.51.100.31 }
+        - { name: www, type: A, value: 198.51.100.31 }
+        - { name: mail, type: A, value: 198.51.100.30 }
+        - { name: '@', type: MX, value: 10 mail.lanterne.example }
+        - { name: '@', type: TXT, value: v=spf1 mx -all }
+        - { name: _dmarc, type: TXT, value: 'v=DMARC1; p=reject; rua=mailto:dmarc@lanterne.example' }
+    - name: lanterne-presse.example
+      registrar: Nordhavn Domains ApS
+      registrant: REDACTED FOR PRIVACY
+      created: '2031-03-30'
+      expires: '2032-03-30'
+      nameservers: [ns1.dns-relais.example, ns2.dns-relais.example]
+      abuse: abuse@nordhavn-domains.example
+      records:
+        - { name: '@', type: A, value: 203.0.113.70 }
+    - name: relais-envoi.example
+      registrar: Nordhavn Domains ApS
+      created: '2031-03-28'
+      nameservers: [ns1.dns-relais.example, ns2.dns-relais.example]
+      records:
+        - { name: '@', type: A, value: 203.0.113.66 }
+
+objectives:
+  - id: read-note
+    label: Lire la note de Mara
+    on: file.read
+    where: { path: /home/operateur-7/signalements/LISEZMOI.txt }
+    hint: Tout est dans ~/signalements/.
+
+  - id: analyse
+    label: Analyser le message suspect
+    requires: [read-note]
+    on: mail.analyzed
+    where: { path: /home/operateur-7/signalements/message-0402.eml }
+    hint: L'outil ECHO `mailcheck` lit un message sans l'ouvrir. `man mailcheck`.
+    concepts: [defense.hameconnage, reseau.authentification-email]
+
+  - id: reference
+    label: Comparer avec un vrai message de Théo
+    requires: [analyse]
+    on: mail.analyzed
+    where: { path: /home/operateur-7/signalements/reference-theo.eml }
+    hint: Un message légitime de Lanterne, que donnent ses contrôles ?
+
+  - id: report-domaine
+    label: 'Rapport : le vrai domaine de l''expéditeur'
+    requires: [analyse]
+    on: finding.confirmed
+    where: { questionId: domaine }
+    hint: Le nom affiché dit Lanterne. Et le domaine de l'adresse ?
+    concepts: [reconnaissance.domaine-sosie]
+
+  - id: dmarc
+    label: Consulter la politique DMARC du vrai Lanterne
+    requires: [reference]
+    on: dns.queried
+    where: { name: _dmarc.lanterne.example }
+    hint: Une politique DMARC se publie dans le DNS, en TXT, sous _dmarc.<domaine>.
+
+  - id: report-creation
+    label: 'Rapport : depuis quand le domaine sosie existe'
+    requires: [report-domaine]
+    on: finding.confirmed
+    where: { questionId: creation }
+    hint: Le registre public connaît la date de création de chaque domaine.
+    concepts: [reconnaissance.whois]
+
+  - id: report-registrar
+    label: 'Rapport : un écho avec Vallon'
+    requires: [report-creation]
+    on: finding.confirmed
+    where: { questionId: registrar }
+    hint: Ce registrar et ces serveurs de noms, tu les as déjà vus. Où ?
+
+  - id: proxy
+    label: Vérifier dans le journal du proxy si quelqu'un a cliqué
+    requires: [report-domaine]
+    on: session.opened
+    where: { hostId: echo-gw }
+    hint: Les accès sont dans ~/dossiers/acces-gw.txt.
+
+  - id: report-poste
+    label: 'Rapport : le poste qui a visité le domaine sosie'
+    requires: [proxy]
+    on: finding.confirmed
+    where: { questionId: poste }
+    hint: grep sur le nom du domaine sosie dans le journal du proxy. Les postes sont listés dans acces-gw.txt.
+    concepts: [defense.culture-signalement]
+
+  - id: decision
+    label: Décider quoi faire avec Théo
+    requires: [report-poste]
+    on: choice.made
+    where: { choiceId: theo }
+    hint: La décision t'attend dans le panneau.
+
+questions:
+  - id: domaine
+    prompt: De quel domaine vient réellement le message ?
+    accept: [lanterne-presse.example]
+    hint: Regarde l'adresse entre chevrons, pas le nom affiché.
+    explain: Un domaine sosie, qui ressemble au vrai à un mot près.
+  - id: dmarc
+    prompt: Quel est le résultat DMARC du message suspect ?
+    accept: [fail]
+    explain: Le domaine affiché n'a rien validé — et le vrai Lanterne demande de rejeter ce genre de message.
+  - id: creation
+    prompt: À quelle date le domaine sosie a-t-il été créé ?
+    requires: [domaine]
+    accept: ['2031-03-30', 30/03/2031, 30 mars 2031]
+    explain: Trois jours avant la campagne. Un domaine tout neuf qui imite un partenaire est un signal fort.
+  - id: registrar
+    prompt: Chez quel registrar le domaine sosie a-t-il été enregistré ?
+    requires: [creation]
+    accept: [Nordhavn Domains ApS, Nordhavn Domains, Nordhavn]
+    explain: Le même registrar — et les mêmes serveurs de noms — que edge-sync.example, le serveur de commande de Vallon.
+  - id: poste
+    prompt: Quel poste a envoyé des informations au domaine sosie ?
+    accept: [10.7.0.14, theo, poste de theo, theo-ws]
+    hint: Une requête POST envoie des données — un formulaire de connexion, par exemple.
+    explain: Le poste de Théo a visité la page à 09:11, puis soumis le formulaire à 09:12.
+
+choices:
+  - id: theo
+    from: Théo Marchetti
+    on: objective.completed
+    where: { objectiveId: report-poste }
+    prompt: |
+      C'est moi. J'étais pressé, c'était « Lanterne », j'ai tapé mon mot de passe
+      de messagerie ECHO. Je sais. **S'il te plaît, ne dis rien à Mara.** Je change
+      mon mot de passe tout de suite, personne n'en saura rien. Elle me reproche
+      déjà Vallon.
+    options:
+      - id: signaler
+        label: Prévenir Mara et l'équipe maintenant
+        description: Réinitialiser le compte, vérifier les sessions ouvertes, alerter tout le monde.
+        effects: { integrity: 10, initiative: 0 }
+        consequence: |
+          Mara a réinitialisé le compte de Théo à 10 h 40 et coupé ses sessions.
+          Elle ne lui a rien reproché — elle a remercié la personne qui a signalé.
+          Théo t'a boudé deux jours.
+      - id: convaincre
+        label: Convaincre Théo de le signaler lui-même
+        description: Lui laisser dix minutes pour le dire — sinon tu le feras.
+        effects: { integrity: 5, initiative: 5 }
+        consequence: |
+          Théo a appelé Mara lui-même, sept minutes plus tard. Compte réinitialisé,
+          sessions coupées. Mara a écrit dans le canal : « merci Théo d'avoir
+          signalé vite ». Personne n'a eu honte.
+      - id: couvrir
+        label: Le couvrir
+        description: Il change son mot de passe, on n'en parle à personne.
+        effects: { integrity: -10, initiative: 5 }
+        consequence: |
+          Théo a changé son mot de passe — mais personne n'a vérifié les sessions
+          déjà ouvertes, ni prévenu l'équipe. Ce que l'adversaire a pu lire
+          pendant ce temps, vous ne le saurez jamais.
+
+messages:
+  - id: noor-reference
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: reference }
+    body: |
+      Tu vois la différence ? Le vrai passe SPF, DKIM et DMARC. Le faux échoue
+      partout, et ses réponses partent ailleurs. Un message n'est pas ce qu'il
+      affiche : c'est ce que ses en-têtes prouvent.
+
+  - id: noor-registrar
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: report-registrar }
+    body: |
+      Nordhavn. dns-relais. Comme pour edge-sync. Soit ils sont négligents, soit
+      ils veulent qu'on sache que c'est eux. Je n'aime aucune des deux options.
+
+  - id: mara-convaincre
+    from: Mara Okonkwo-Lind
+    on: choice.made
+    where: { choiceId: theo, optionId: convaincre }
+    body: |
+      Théo vient de m'appeler. Compte réinitialisé. Merci à vous deux — c'est
+      exactement comme ça qu'on doit faire.

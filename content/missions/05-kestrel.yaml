@@ -1,0 +1,278 @@
+# Acte II — Mission 05 « Kestrel »
+# Vérifier une source par des sources ouvertes ; lire les métadonnées de documents
+# dans un sas isolé ; décider quoi faire de documents obtenus illégalement.
+# Question : comment savoir si une source dit vrai ?
+
+id: kestrel
+title: Kestrel
+act: acte-2
+order: 2
+from: Mara Okonkwo-Lind
+summary: Une source anonyme chez Corvane propose des documents. Vérifier avant de croire.
+question: Comment savoir si une source dit vrai — et que faire de ce qu'elle apporte ?
+concepts:
+  - reconnaissance.osint
+  - forensique.metadonnees
+  - ethique.sources
+  - ethique.attribution
+
+briefing: |
+  Quelqu'un qui signe **Kestrel** nous a écrit par la boîte de dépôt sécurisée.
+  Il ou elle dit travailler chez Corvane et a déposé deux documents internes.
+
+  Règle de la cellule : un fichier d'une source inconnue ne s'ouvre **que**
+  dans le sas d'analyse, `echo-sas`, une machine isolée du reste du réseau.
+  Les accès sont dans `~/dossiers/`.
+
+  Avant de regarder ce que disent les documents, vérifie ce que dit Kestrel
+  d'elle ou de lui-même. Tout ce qui est public sur Corvane est dans `~/osint/`.
+  Une source qui ment sur son poste ment peut-être sur le reste.
+
+  — Mara
+
+debrief: |
+  **On vérifie une source comme on vérifie un indice : par recoupement.**
+  Ce que Kestrel disait de son poste collait aux sources publiques — une offre
+  d'emploi de 2028, l'organigramme officiel, le rôle de Corvane Grid Services.
+  Ça ne prouve pas sa bonne foi ; ça rend son récit **cohérent**.
+
+  Les documents, eux, parlaient d'une autre voix. Leurs **métadonnées** — que
+  personne ne lit jamais — disaient que le planning de maintenance de novembre
+  2030 avait été modifié, deux jours avant les Pannes, depuis le compte
+  `i.calder`.
+
+  Iris était chez Corvane en novembre 2030. Pas comme victime : comme
+  quelqu'un qui avait la main sur le planning.
+
+scenario:
+  clock: '2031-04-09T15:20:00Z'
+  start: { host: echo-ws, user: operateur-7 }
+  known: [echo-ws, echo-sas]
+  networks:
+    - { id: echo-lan, cidr: 10.7.0.0/24, label: réseau interne ECHO }
+    - { id: sas, cidr: 10.7.9.0/29, label: sas d'analyse (isolé) }
+  hosts:
+    - id: echo-ws
+      hostname: echo-ws
+      ip: 10.7.0.7
+      os: EchoOS 4.2 (Linux 6.8)
+      networks: [echo-lan, sas]
+      accounts:
+        - { user: operateur-7 }
+      files:
+        /home/operateur-7/dossiers/acces-sas.txt: |
+          echo-sas — sas d'analyse. Aucune connexion vers l'extérieur.
+          compte : analyste   mot de passe : sas-isole-09
+          Dépôt Kestrel : /sas/kestrel/
+        /home/operateur-7/osint/registre-commerce-corvane.txt: |
+          Registre du commerce (extrait public) — Corvane Holdings AG
+          Siège : Francfort. Créée en 2016.
+          Filiales :
+            - Corvane Résilience SAS   conseil en sécurité des opérateurs
+            - Corvane Grid Services    maintenance et planification des
+                                       réseaux électriques (contrats d'opérateurs)
+            - Corvane Santé            infogérance d'établissements de santé
+        /home/operateur-7/osint/offres-emploi-2028.txt: |
+          Archive d'offres d'emploi publiques — Corvane, 2028
+          - Corvane Grid Services : « Chargé·e de conformité — planification
+            des interventions réseau » (Francfort / Lyon), septembre 2028.
+          - Corvane Résilience : « Consultant·e réponse à incident », mars 2028.
+        /home/operateur-7/osint/communiques.txt: |
+          Communiqués de presse Corvane
+          - 2030-10-14 : Corvane Grid Services remporte la maintenance des
+            réseaux de trois opérateurs d'électricité.
+          - 2030-11-12 : « Pannes de Novembre : nos équipes mobilisées aux côtés
+            des opérateurs. » (au lendemain des coupures du 11 novembre)
+          - 2031-01-20 : Corvane Santé signe avec 4 hôpitaux, dont le CH de
+            Vallon-sur-Aire.
+
+    - id: echo-sas
+      hostname: echo-sas
+      ip: 10.7.9.2
+      os: Debian 12 (isolé)
+      networks: [sas]
+      services:
+        - { port: 22, name: ssh, product: OpenSSH, version: 9.2p1 }
+      accounts:
+        - { user: analyste, password: sas-isole-09 }
+      files:
+        /etc/motd: |
+          echo-sas — SAS D'ANALYSE. Aucun réseau sortant. Ne rien copier hors du sas.
+        /sas/kestrel/LISEZ-MOI.txt: |
+          Je m'appelle Kestrel. Je travaille au service conformité de Corvane Grid
+          Services depuis septembre 2028. Je ne peux pas dire plus.
+
+          Ce que je vous envoie, je l'ai pris dans le partage de mon service.
+          Regardez le planning de novembre. Regardez QUI l'a touché.
+
+          Je vous recontacterai. Ne cherchez pas à savoir qui je suis.
+        /sas/kestrel/organigramme-grid.odt: (document bureautique — utilise meta pour ses propriétés)
+        /sas/kestrel/planning-novembre.odt: (document bureautique — utilise meta pour ses propriétés)
+      documents:
+        /sas/kestrel/organigramme-grid.odt:
+          title: Organigramme Corvane Grid Services
+          author: Corvane Grid Services — RH
+          company: Corvane Grid Services
+          created: '2030-09-01'
+          modified: '2030-09-01'
+          software: Bureautique Libre 7.4
+        /sas/kestrel/planning-novembre.odt:
+          title: Planning des interventions — novembre 2030
+          author: Corvane Grid Services — planification
+          lastModifiedBy: i.calder
+          company: Corvane Grid Services
+          created: '2030-10-20'
+          modified: '2030-11-09'
+          software: Bureautique Libre 7.4
+
+objectives:
+  - id: osint-registre
+    label: Lire l'extrait public du registre du commerce
+    on: file.read
+    where: { path: /home/operateur-7/osint/registre-commerce-corvane.txt }
+    hint: Les sources ouvertes sont dans ~/osint/.
+    concepts: [reconnaissance.osint]
+
+  - id: sas
+    label: Rejoindre le sas d'analyse
+    requires: [osint-registre]
+    on: session.opened
+    where: { hostId: echo-sas }
+    hint: Les accès sont dans ~/dossiers/acces-sas.txt. Les fichiers d'une source inconnue ne s'ouvrent que là.
+
+  - id: kestrel-note
+    label: Lire ce que Kestrel dit de lui-même ou d'elle-même
+    requires: [sas]
+    on: file.read
+    where: { hostId: echo-sas, path: /sas/kestrel/LISEZ-MOI.txt }
+
+  - id: report-filiale
+    label: 'Rapport : la filiale de Kestrel'
+    requires: [kestrel-note]
+    on: finding.confirmed
+    where: { questionId: filiale }
+    hint: Kestrel la nomme. Existe-t-elle dans le registre public ?
+
+  - id: report-coherence
+    label: 'Rapport : le récit de Kestrel est-il cohérent ?'
+    requires: [report-filiale]
+    on: finding.confirmed
+    where: { questionId: coherence }
+    hint: Kestrel dit être en conformité depuis septembre 2028. Une source publique en parle ?
+    concepts: [reconnaissance.osint]
+
+  - id: meta-planning
+    label: Examiner les propriétés du planning de novembre
+    requires: [report-coherence]
+    on: document.inspected
+    where: { path: /sas/kestrel/planning-novembre.odt }
+    hint: Le contenu ne s'affiche pas — mais un document a des propriétés cachées. `man meta`.
+    concepts: [forensique.metadonnees]
+
+  - id: report-modificateur
+    label: 'Rapport : qui a modifié le planning'
+    requires: [meta-planning]
+    on: finding.confirmed
+    where: { questionId: modificateur }
+
+  - id: report-date
+    label: 'Rapport : quand, par rapport aux Pannes de Novembre'
+    requires: [report-modificateur]
+    on: finding.confirmed
+    where: { questionId: date }
+    hint: Compare la date de modification aux communiqués de Corvane dans ~/osint/.
+
+  - id: decision
+    label: Décider quoi faire des documents de Kestrel
+    requires: [report-date]
+    on: choice.made
+    where: { choiceId: documents }
+    hint: La décision t'attend dans le panneau.
+    concepts: [ethique.sources]
+
+questions:
+  - id: filiale
+    prompt: Dans quelle filiale de Corvane Kestrel dit-il ou dit-elle travailler ?
+    accept: [Corvane Grid Services, Grid Services, Corvane Grid]
+    explain: Elle existe bien — et c'est celle qui planifie la maintenance des réseaux électriques.
+  - id: coherence
+    prompt: Une source publique confirme-t-elle qu'un tel poste existait en 2028 (oui ou non) ?
+    requires: [filiale]
+    accept: [oui]
+    hint: Regarde les archives d'offres d'emploi.
+    explain: Une offre « chargé·e de conformité » chez Grid Services, septembre 2028. Cohérent — pas une preuve d'identité.
+  - id: modificateur
+    prompt: Quel compte a modifié le planning de novembre en dernier ?
+    accept: [i.calder]
+    explain: Le compte d'Iris Calder.
+  - id: date
+    prompt: Quel jour le planning a-t-il été modifié pour la dernière fois ?
+    requires: [modificateur]
+    accept: ['2030-11-09', 09/11/2030, 9 novembre 2030]
+    explain: Deux jours avant les coupures du 11 novembre.
+
+choices:
+  - id: documents
+    from: Mara Okonkwo-Lind
+    on: objective.completed
+    where: { objectiveId: report-date }
+    prompt: |
+      On a un problème. Ces documents ont été **pris** chez Corvane. Si on s'en
+      sert, ils peuvent faire tomber notre dossier — et Kestrel avec. Si on ne
+      s'en sert pas, on fait comme si on ne savait pas pour Iris.
+
+      Noor veut qu'on s'en tienne au public. Sable veut tout exploiter.
+      Théo veut protéger Kestrel avant tout. Ta recommandation ?
+    options:
+      - id: public
+        label: S'en tenir aux sources publiques
+        description: Ne rien utiliser des documents ; chercher par d'autres voies ce qu'ils suggèrent.
+        effects: { integrity: 10, initiative: -5 }
+        consequence: |
+          Les documents sont restés scellés dans le sas. Plus lent : il faudra
+          retrouver la trace d'Iris par des voies légales. Mais rien de ce que
+          vous trouverez ne pourra être contesté — ni retourné contre Kestrel.
+      - id: orienter
+        label: S'en servir pour orienter l'enquête, sans jamais les citer
+        description: Ils indiquent où chercher ; seules des preuves obtenues autrement seront utilisées.
+        effects: { integrity: 0, initiative: 10 }
+        consequence: |
+          Les documents ont servi de boussole, pas de preuve. Une zone grise
+          assumée et écrite dans le journal de la cellule. Kestrel reste
+          protégé·e — tant que personne ne se demande comment vous saviez où chercher.
+      - id: exploiter
+        label: Tout exploiter
+        description: Analyser, citer, transmettre. Le temps presse.
+        effects: { integrity: -15, initiative: 15 }
+        consequence: |
+          Le dossier a gagné un mois. Il a aussi perdu toute recevabilité sur
+          cette partie, et Corvane a lancé une enquête interne pour trouver la
+          fuite. Kestrel ne répond plus.
+
+messages:
+  - id: noor-sas
+    from: Dr Noor Haddad
+    on: objective.completed
+    where: { objectiveId: sas }
+    body: |
+      Bien. Rien ne sort du sas, rien n'y entre depuis l'extérieur. Un document
+      piégé y reste un document piégé — pas un incident.
+
+  - id: noor-calder
+    from: Dr Noor Haddad
+    subject: i.calder
+    on: objective.completed
+    where: { objectiveId: report-modificateur }
+    body: |
+      Attends. Je relis. `i.calder`.
+
+      Iris avait un contrat de conseil chez Corvane en 2030, elle me l'avait dit.
+      Elle ne m'avait pas dit qu'elle touchait aux plannings de maintenance.
+
+  - id: sable-public
+    from: Ilya « Sable » Varga
+    on: choice.made
+    where: { choiceId: documents, optionId: public }
+    body: |
+      Très propre. Pendant qu'on fait les choses proprement, eux font les choses
+      tout court. Note quand même où Kestrel nous dit de regarder.
