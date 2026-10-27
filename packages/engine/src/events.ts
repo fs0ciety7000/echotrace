@@ -35,6 +35,7 @@ export interface EventMap {
   'choice.made': { missionId: string; choiceId: string; optionId: string };
   'mail.analyzed': { hostId: string; path: string; spf: string; dkim: string; dmarc: string; fromDomain: string };
   'document.inspected': { hostId: string; path: string; author: string; lastModifiedBy: string };
+  'dossier.linked': { linkId: string; already: boolean };
   'firewall.changed': { hostId: string; action: 'block' | 'unblock'; target: string };
 }
 

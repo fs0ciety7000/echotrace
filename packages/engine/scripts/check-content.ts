@@ -6,6 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { ContentError, checkConceptRefs, parseConcept, parseMission } from '../src/content/parse.ts';
 import type { Concept, MissionSpec } from '../src/content/schema.ts';
+import { parseDossier } from '../src/dossier.ts';
 
 const root = resolve(import.meta.dirname, '../../../content');
 const errors: string[] = [];
@@ -38,6 +39,24 @@ for (const m of missions) {
   ids.add(m.id);
 }
 errors.push(...checkConceptRefs(missions, concepts));
+
+// The Dossier: pieces must unlock on existing missions and existing decisions.
+try {
+  const dossier = parseDossier(readFileSync(join(root, 'dossier.yaml'), 'utf8'));
+  for (const item of dossier.items) {
+    const m = missions.find((x) => x.id === item.unlock.mission);
+    if (!m) errors.push(`dossier: pièce ${item.id} — mission « ${item.unlock.mission} » inconnue`);
+    for (const key of Object.keys(item.unlock.decision)) {
+      const [mid, cid] = key.split('/');
+      if (!missions.find((x) => x.id === mid)?.choices.some((c) => c.id === cid)) {
+        errors.push(`dossier: pièce ${item.id} — décision « ${key} » inconnue`);
+      }
+    }
+  }
+  console.log(`✓ dossier — ${dossier.items.length} pièces, ${dossier.links.length} liens`);
+} catch (e) {
+  errors.push(e instanceof ContentError ? e.message : `dossier.yaml: ${String(e)}`);
+}
 
 if (errors.length) {
   console.error(`✗ ${errors.length} erreur(s) de contenu :\n`);

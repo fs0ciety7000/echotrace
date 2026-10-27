@@ -1,6 +1,7 @@
 export * from './campaign.ts';
 export * from './content/parse.ts';
 export * from './content/schema.ts';
+export * from './dossier.ts';
 export * from './engine.ts';
 export * from './events.ts';
 export * from './journal.ts';

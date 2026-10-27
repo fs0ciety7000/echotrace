@@ -1,6 +1,13 @@
 import { type CampaignState, clampGauge, newCampaign } from './campaign.ts';
 import { registerDefaultCommands } from './commands/index.ts';
 import type { Concept, MissionSpec } from './content/schema.ts';
+import {
+  type DossierContext,
+  type DossierSpec,
+  dossierProgressOf,
+  type ProposeResult,
+  proposeLink,
+} from './dossier.ts';
 import { EventBus, type EventMap, type EventName } from './events.ts';
 import { type JournalState, recordEncounter, recordQuiz, recordStudy } from './journal.ts';
 import { type MissionProgress, MissionRunner, newProgress } from './missions/runner.ts';
@@ -55,6 +62,7 @@ export interface EngineOptions {
   missionProgress?: MissionProgress | null;
   journal?: JournalState;
   campaign?: CampaignState;
+  dossier?: DossierSpec;
 }
 
 export class Engine {
@@ -64,6 +72,7 @@ export class Engine {
   readonly state: EngineState;
   readonly journal: JournalState;
   readonly campaign: CampaignState;
+  readonly dossier: DossierSpec | null;
   readonly mission: MissionRunner | null;
   private pending: Pending | null = null;
 
@@ -71,6 +80,7 @@ export class Engine {
     this.state = opts.state;
     this.journal = opts.journal ?? {};
     this.campaign = opts.campaign ?? newCampaign();
+    this.dossier = opts.dossier ?? null;
     this.concepts = new Map((opts.concepts ?? []).map((c) => [c.id, c]));
     this.mission = opts.mission
       ? new MissionRunner(
@@ -124,12 +134,20 @@ export class Engine {
     concepts: Concept[],
     journal: JournalState = {},
     campaign: CampaignState = newCampaign(),
+    dossier?: DossierSpec,
   ): Engine {
-    return new Engine({ state: buildState(mission.scenario), mission, concepts, journal, campaign });
+    return new Engine({
+      state: buildState(mission.scenario),
+      mission,
+      concepts,
+      journal,
+      campaign,
+      ...(dossier ? { dossier } : {}),
+    });
   }
 
   /** Restores a save. Throws when the save is newer than this engine. */
-  static restore(save: SaveData, mission: MissionSpec | undefined, concepts: Concept[]): Engine {
+  static restore(save: SaveData, mission: MissionSpec | undefined, concepts: Concept[], dossier?: DossierSpec): Engine {
     if (save.version > SAVE_VERSION) throw new Error(`sauvegarde v${save.version} plus récente que le moteur`);
     // v1 → v2: no campaign yet; a finished mission counts as completed.
     const campaign = save.campaign ?? newCampaign();
@@ -139,6 +157,7 @@ export class Engine {
       concepts,
       journal: save.journal,
       campaign,
+      ...(dossier ? { dossier } : {}),
       ...(mission ? { mission, missionProgress: save.mission } : {}),
     });
   }
@@ -209,6 +228,22 @@ export class Engine {
   /** Records a passed quiz (the UI grades it; the journal only keeps the result). */
   passQuiz(conceptId: string): void {
     if (this.concepts.get(conceptId)?.quiz.length) this.emit('concept.mastered', { id: conceptId });
+  }
+
+  dossierContext(): DossierContext {
+    return {
+      completed: this.campaign.completed,
+      ...(this.mission ? { currentMission: this.mission.spec.id } : {}),
+      decisions: this.campaign.decisions,
+    };
+  }
+
+  /** Proposes a link between two Dossier pieces; confirmed links are kept in the campaign. */
+  linkDossier(a: string, b: string, relation: string): ProposeResult | null {
+    if (!this.dossier) return null;
+    const result = proposeLink(this.dossier, dossierProgressOf(this.campaign), this.dossierContext(), a, b, relation);
+    if (result.ok) this.emit('dossier.linked', { linkId: result.link.id, already: result.already });
+    return result;
   }
 
   /** Picks an option of the pending choice. Returns false when it isn't pending. */

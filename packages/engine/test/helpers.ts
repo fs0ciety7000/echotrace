@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseConcept, parseMission } from '../src/content/parse.ts';
+import { parseDossier } from '../src/dossier.ts';
 import { Engine, type ExecResult } from '../src/engine.ts';
 import { lineText } from '../src/output.ts';
 
@@ -19,3 +20,5 @@ export const text = (r: ExecResult): string => r.lines.map(lineText).join('\n');
 export function newPrologue(): Engine {
   return Engine.fromMission(loadMission('00-prologue.yaml'), concepts);
 }
+
+export const dossierSpec = parseDossier(readFileSync(join(contentDir, 'dossier.yaml'), 'utf8'));

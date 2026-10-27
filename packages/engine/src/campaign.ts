@@ -1,4 +1,5 @@
 import type { MissionSpec } from './content/schema.ts';
+import type { DossierProgress } from './dossier.ts';
 
 /** What persists across missions: progression, moral gauges and every decision taken. */
 export interface CampaignState {
@@ -9,6 +10,8 @@ export interface CampaignState {
   initiative: number;
   /** `missionId/choiceId` → optionId. Later missions can react to them. */
   decisions: Record<string, string>;
+  /** Evidence graph progress (added with the Dossier; absent in older saves). */
+  dossier?: DossierProgress;
 }
 
 export const GAUGE_START = 50;

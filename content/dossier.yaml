@@ -1,0 +1,130 @@
+# Le Dossier — graphe d'enquête de la campagne.
+# Les pièces se débloquent au fil des missions ; le joueur les relie lui-même.
+# Un lien n'est confirmé que s'il figure ici (paire de pièces + relation) et qu'il est débloqué.
+# Voir docs/CONTENT_GUIDE.md, section « Dossier ».
+
+relations:
+  - communique avec
+  - même certificat
+  - appartient à
+  - enregistré chez
+  - utilise le DNS de
+  - même infrastructure
+  - porte d'entrée de
+  - installé chez
+  - filiale de
+  - a modifié
+  - précède
+  - attribué à
+
+items:
+  - { id: iris, type: personne, label: Iris Calder, detail: Fondatrice d'ECHO (ECHO-0), disparue., unlock: { mission: prologue } }
+  - { id: ch-vallon, type: organisation, label: CH de Vallon-sur-Aire, detail: Hôpital régional chiffré le 15/03/2031., unlock: { mission: vallon } }
+  - { id: vpn-vallon, type: infrastructure, label: Portail VPN du CH, detail: 'vpn.ch-vallon.example · SecuraGate 6.2.1 (CVE-2030-41177)', unlock: { mission: vallon } }
+  - { id: sysupd, type: artefact, label: Le chant de fs-01, detail: '/var/tmp/.cache/sysupd, relancé par /etc/cron.d/sysupd, toutes les 300 s', unlock: { mission: confinement } }
+  - { id: edge-sync, type: infrastructure, label: edge-sync.example, detail: '203.0.113.200:8443 · serveur de commande', unlock: { mission: confinement } }
+  - { id: hollow-choir, type: groupe, label: HOLLOW CHOIR, detail: Nom donné par ECHO à l'opérateur des chants., unlock: { mission: confinement } }
+  - { id: sso-legacy, type: infrastructure, label: sso-legacy.corvane.example, detail: '198.51.100.140 · ancien portail de Corvane', unlock: { mission: resonance } }
+  - { id: corvane, type: organisation, label: Corvane Holdings, detail: Conseil en « résilience » des infrastructures critiques., unlock: { mission: resonance } }
+  - { id: dns-relais, type: infrastructure, label: dns-relais.example, detail: Fournisseur de serveurs de noms (ns1/ns2)., unlock: { mission: resonance } }
+  - { id: nordhavn, type: organisation, label: Nordhavn Domains ApS, detail: Registrar., unlock: { mission: resonance } }
+  - { id: lanterne-presse, type: infrastructure, label: lanterne-presse.example, detail: Domaine sosie de l'hameçonnage du 02/04/2031., unlock: { mission: hamecon } }
+  - { id: relais-envoi, type: infrastructure, label: relais-envoi.example, detail: '203.0.113.66 · serveur d''envoi de l''hameçonnage', unlock: { mission: hamecon } }
+  - { id: grid, type: organisation, label: Corvane Grid Services, detail: Filiale qui planifie la maintenance des réseaux électriques., unlock: { mission: kestrel } }
+  - { id: planning, type: artefact, label: Planning de novembre 2030, detail: Document transmis par Kestrel (sas d'analyse)., unlock: { mission: kestrel, decision: { kestrel/documents: [orienter, exploiter] } } }
+  - { id: pannes, type: evenement, label: Pannes de Novembre, detail: Coupures d'électricité du 11/11/2030., unlock: { mission: kestrel } }
+
+links:
+  - id: vpn-ch
+    from: vpn-vallon
+    to: ch-vallon
+    relation: porte d'entrée de
+    evidence: Portail non corrigé exposé sur Internet, version visée par une vulnérabilité exploitée (mission Vallon).
+    weight: 1
+  - id: chant-ch
+    from: sysupd
+    to: ch-vallon
+    relation: installé chez
+    evidence: Trouvé sur fs-01, le serveur de fichiers du CH épargné par le rançongiciel (mission Confinement).
+    weight: 1
+  - id: chant-c2
+    from: sysupd
+    to: edge-sync
+    relation: communique avec
+    evidence: Connexion établie vers 203.0.113.200:8443, toutes les 300 secondes (netstat sur fs-01).
+    weight: 2
+  - id: cert
+    from: edge-sync
+    to: sso-legacy
+    relation: même certificat
+    evidence: Empreinte SHA-256 5B:A9:BC:…:BC:BC relevée sur les deux serveurs (archives de veille + vérification publique).
+    weight: 3
+  - id: sso-corvane
+    from: sso-legacy
+    to: corvane
+    relation: appartient à
+    evidence: sso-legacy.corvane.example est publié dans la zone DNS de corvane.example, titulaire Corvane Holdings AG.
+    weight: 2
+  - id: edge-dns
+    from: edge-sync
+    to: dns-relais
+    relation: utilise le DNS de
+    evidence: Whois de edge-sync.example — ns1/ns2.dns-relais.example.
+    weight: 1
+  - id: corvane-dns
+    from: corvane
+    to: dns-relais
+    relation: utilise le DNS de
+    evidence: Whois de corvane.example — mêmes serveurs de noms. Indice faible (fournisseur partagé).
+    weight: 1
+  - id: edge-registrar
+    from: edge-sync
+    to: nordhavn
+    relation: enregistré chez
+    evidence: Whois de edge-sync.example.
+    weight: 1
+  - id: sosie-registrar
+    from: lanterne-presse
+    to: nordhavn
+    relation: enregistré chez
+    evidence: Whois de lanterne-presse.example, créé le 30/03/2031.
+    weight: 1
+  - id: sosie-relais
+    from: relais-envoi
+    to: lanterne-presse
+    relation: même infrastructure
+    evidence: Même registrar, mêmes serveurs de noms, envoi du même message (en-têtes du 02/04).
+    weight: 1
+  - id: choir-c2
+    from: edge-sync
+    to: hollow-choir
+    relation: attribué à
+    evidence: Attribution ECHO, niveau de confiance modéré (mission Résonance).
+    weight: 1
+  - id: grid-corvane
+    from: grid
+    to: corvane
+    relation: filiale de
+    evidence: Extrait public du registre du commerce.
+    weight: 1
+  - id: planning-grid
+    from: planning
+    to: grid
+    relation: appartient à
+    evidence: Métadonnées du document (organisation Corvane Grid Services).
+    weight: 1
+    admissible: false
+  - id: iris-planning
+    from: iris
+    to: planning
+    relation: a modifié
+    evidence: Métadonnées — dernière modification par i.calder, le 09/11/2030.
+    weight: 3
+    admissible: false
+  - id: planning-pannes
+    from: planning
+    to: pannes
+    relation: précède
+    evidence: Modifié le 09/11/2030 ; coupures le 11/11/2030 (communiqués publics de Corvane).
+    weight: 2
+    admissible: false

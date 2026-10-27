@@ -247,6 +247,7 @@ export const TriggerSchema = z.object({
     'mail.analyzed',
     'document.inspected',
     'firewall.changed',
+    'dossier.linked',
   ]),
   /** Shallow match on the event payload; array payload fields match by inclusion. */
   where: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
