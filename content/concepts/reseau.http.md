@@ -9,7 +9,7 @@ quiz:
     choices: ["La page n'existe pas", "Le serveur est en panne", "La ressource existe probablement, mais l'accès t'est refusé"]
     answer: 2
     explain: "404 = introuvable, 403 = interdit, 5xx = erreur côté serveur. Un 403 confirme souvent qu'il y a quelque chose derrière."
-  - q: "Un en-tête indique `Server: PortailSecure/4.2.1`. Pourquoi est-ce intéressant pour un·e défenseur·e ?"
+  - q: "Un en-tête indique `Server: SecuraGate/6.2.1`. Pourquoi est-ce intéressant pour un·e défenseur·e ?"
     choices: ["Il révèle le logiciel et sa version : on peut vérifier s'il est à jour", "Il prouve que le serveur est piraté", "Il n'a aucune importance"]
     answer: 0
     explain: "Une version précise se compare aux bulletins de sécurité. C'est aussi ce que ferait un attaquant : d'où l'intérêt de la masquer et surtout de corriger."
@@ -29,9 +29,9 @@ Codes d'état :
 ## Dans le jeu
 `curl -I` ne demande **que les en-têtes** :
 ```
-$ curl -I https://portail.chva.example
+$ curl -I https://vpn.ch-vallon.example
 HTTP/1.1 302 Found
-Server: PortailSecure/4.2.1
+Server: SecuraGate/6.2.1
 Location: /remote/login
 Set-Cookie: session=...; Secure; HttpOnly
 ```

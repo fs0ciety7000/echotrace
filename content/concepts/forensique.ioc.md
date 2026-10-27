@@ -28,10 +28,10 @@ Un **indicateur de compromission** est une donnée observable qui signale une in
 ## Dans le jeu
 Les IoC de l'Acte I :
 ```
-ip       203.0.113.80
-domain   update-svc.lan
-cert     SHA-256 4F:A1:9C:…:7E:22
-file     /tmp/.cache/upd   sha256 9b0e…41c3
+ip       203.0.113.200
+domain   edge-sync.example
+cert     SHA-256 5B:A9:BC:…:BC:BC
+file     /var/tmp/.cache/sysupd   sha256 9b0e…41c3
 ```
 Chaque IoC rejoint le **Dossier**, avec sa source et sa date d'observation.
 

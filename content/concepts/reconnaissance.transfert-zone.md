@@ -9,7 +9,7 @@ quiz:
     choices: ["À publier la zone sur Internet", "À synchroniser un serveur de noms secondaire avec le primaire", "À chiffrer les réponses DNS"]
     answer: 1
     explain: "C'est un mécanisme de réplication légitime entre serveurs de noms d'une même organisation."
-  - q: "`dns audit chva.example` signale que `ns2.chva.example` accepte les transferts de zone depuis n'importe quelle adresse. Pourquoi est-ce un problème ?"
+  - q: "`dns audit ch-vallon.example` signale que `ns1.ch-vallon.example` accepte les transferts de zone depuis n'importe quelle adresse. Pourquoi est-ce un problème ?"
     choices: ["Parce que cela ralentit le DNS", "Parce que n'importe qui peut obtenir d'un coup la liste de tous les noms et adresses du domaine, y compris internes", "Ce n'est pas un problème, ces données sont déjà publiques"]
     answer: 1
     explain: "Sans transfert, il faut deviner les noms un par un. Avec, on reçoit la carte entière — y compris des machines qui n'auraient jamais dû être visibles."
@@ -27,12 +27,15 @@ L'annuaire interne de l'hôpital est photocopié pour l'accueil du bâtiment B. 
 ## Dans le jeu
 L'outil d'audit ECHO teste la configuration sans rien modifier :
 ```
-$ dns audit chva.example
-ns1.chva.example   transfer: refused     OK
-ns2.chva.example   transfer: ALLOWED     ⚠ zone listée (42 enregistrements)
-›  ns2 répond à n'importe qui : mauvaise configuration.
+$ dns audit ch-vallon.example
+⚠ Mauvaise configuration : ns1.ch-vallon.example accepte de lister toute la zone.
+  N'importe qui obtient ainsi l'inventaire des noms publiés, y compris ceux qu'on croyait discrets :
+    ch-vallon.example
+    intranet-old.ch-vallon.example
+    mail.ch-vallon.example
+    …
 ```
-La zone obtenue révèle des noms comme `pacs-legacy.chva.example` ou `vpn-test.chva.example` : de nouvelles pistes.
+La zone obtenue révèle des noms comme `intranet-old.ch-vallon.example` ou `mail.ch-vallon.example` : de nouvelles pistes.
 
 ## Côté défense
 - Autoriser les transferts **uniquement** vers les adresses des secondaires (et idéalement les authentifier par clé partagée).

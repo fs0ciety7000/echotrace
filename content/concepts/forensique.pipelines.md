@@ -37,7 +37,7 @@ Question : *quelles sources ont le plus échoué à se connecter ?*
 $ grep "Failed password" /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -rn | head -3
     912 198.51.100.23
     301 198.51.100.24
-     12 10.20.4.15
+     12 10.40.0.23
 ```
 ›  Deux adresses externes concentrent presque tous les échecs.
 

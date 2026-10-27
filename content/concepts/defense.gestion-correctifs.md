@@ -8,7 +8,7 @@ quiz:
   - q: "Qu'est-ce qu'un identifiant CVE ?"
     choices: ["Une référence publique unique qui désigne une vulnérabilité connue", "Un logiciel antivirus", "Un exploit prêt à l'emploi"]
     answer: 0
-    explain: "Un CVE (ex. CVE-2031-0001, fictif) permet à tout le monde de parler de la même faille : éditeurs, défenseur·es, scanners de vulnérabilités."
+    explain: "Un CVE (ex. CVE-2030-41177, fictif) permet à tout le monde de parler de la même faille : éditeurs, défenseur·es, scanners de vulnérabilités."
   - q: Pourquoi un portail VPN obsolète est-il une porte d'entrée classique ?
     choices: ["Parce que les VPN sont toujours mal conçus", "Parce qu'il est exposé à Internet par nature, donne accès au réseau interne, et que ses failles sont publiques une fois le correctif sorti", "Parce qu'il n'a pas de mot de passe"]
     answer: 1

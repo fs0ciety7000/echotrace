@@ -26,7 +26,7 @@ quiz:
 - **Dates** → domaines enregistrés le même jour, avec les mêmes habitudes.
 
 ## Dans le jeu
-Le chant de l'implant part vers `203.0.113.80`. Son certificat auto-signé a une empreinte précise. La même empreinte apparaît sur `198.51.100.140`… qui sert aussi `extranet.corvane-energie.example`. C'est un **écho** : deux traces reliées par un point commun rare.
+Le chant de l'implant part vers `203.0.113.200`. Son certificat auto-signé a une empreinte précise. La même empreinte apparaît sur `198.51.100.140`… qui sert aussi `sso-legacy.corvane.example`. C'est un **écho** : deux traces reliées par un point commun rare.
 
 ## Prudence
 - Un indicateur **partagé par beaucoup** (hébergeur, CDN, certificat public) ne relie rien.

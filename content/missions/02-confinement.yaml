@@ -71,7 +71,7 @@ scenario:
           =================================================================
           Synthèse (validée par la DSI) :
           - Accès initial : portail VPN non corrigé (cf. analyse ECHO) ;
-            compte d'un agent administratif utilisé depuis une adresse
+            compte d'un agent administratif (j.morel) utilisé depuis une adresse
             étrangère, de nuit. Pas d'authentification multifacteur.
           - 15/03 04:00 : chiffrement de 14 serveurs. Demande de rançon.
           - 15/03 09:40 : compte VPN désactivé, portail coupé.

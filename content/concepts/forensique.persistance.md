@@ -29,10 +29,10 @@ La **persistance** regroupe tout ce qui permet à un programme indésirable de *
 
 ## Dans le jeu
 ```
-$ cat /etc/cron.d/maintenance
-*/10 * * * * root /tmp/.cache/upd
+$ cat /etc/cron.d/sysupd
+@reboot root /var/tmp/.cache/sysupd -i 300
 ```
-›  Un fichier caché dans `/tmp`, relancé par root toutes les dix minutes : ce n'est pas de la maintenance.
+›  Un programme caché dans `/var/tmp`, relancé par root à chaque démarrage, au nom qui imite une mise à jour : ce n'est pas de la maintenance.
 
 ## Côté défense
 - Surveiller la **création** de tâches planifiées, de services et de clés SSH (intégrité de fichiers, journaux d'audit).

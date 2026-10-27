@@ -5,7 +5,7 @@ category: reconnaissance
 summary: Whois interroge les registres publics d'un nom de domaine — bureau d'enregistrement, dates, serveurs de noms. Des indices à recouper, jamais des preuves isolées.
 related: [reseau.dns, reconnaissance.pivot, ethique.attribution]
 quiz:
-  - q: "Le whois de `chva-sante.example` affiche « REDACTED FOR PRIVACY » pour le titulaire. Que peux-tu en conclure ?"
+  - q: "Le whois de `edge-sync.example` affiche « REDACTED FOR PRIVACY » pour le titulaire. Que peux-tu en conclure ?"
     choices: ["Le domaine est forcément malveillant", "Rien de suspect en soi : le masquage des données personnelles est courant et souvent obligatoire", "Le registre est en panne"]
     answer: 1
     explain: "La protection de la vie privée (RGPD notamment) masque souvent le titulaire. Il faut s'appuyer sur d'autres champs : dates, registrar, serveurs de noms."
@@ -23,12 +23,13 @@ Quand on réserve un nom de domaine, le **bureau d'enregistrement** (*registrar*
 
 ## Dans le jeu
 ```
-$ whois chva-sante.example
-Domain Name: CHVA-SANTE.EXAMPLE
-Registrar: Registre Fictif SAS
-Creation Date: 2031-11-02T09:14:00Z
-Name Server: ns1.abri-dns.example
-Registrant Organization: REDACTED FOR PRIVACY
+$ whois edge-sync.example
+EDGE-SYNC.EXAMPLE
+Registrar         Nordhavn Domains ApS
+Titulaire         REDACTED FOR PRIVACY
+Créé le           2030-10-27
+Expire le         2031-10-27
+Serveurs de noms  ns1.dns-relais.example, ns2.dns-relais.example
 ```
 C'est de la reconnaissance **passive** : on consulte un registre public, la cible n'en sait rien.
 

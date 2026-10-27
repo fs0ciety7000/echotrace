@@ -29,10 +29,10 @@ Une **chronologie** (*timeline*) aligne tous les événements d'un incident : co
 
 ## Dans le jeu
 ```
-2031-11-14T01:52Z  vpn       login OK   compte r.marchal   198.51.100.23
-2031-11-14T02:05Z  srv-adm   nouvelle tâche planifiée
-2031-11-14T02:41Z  srv-pacs  première connexion sortante vers 203.0.113.80
-2031-11-16T06:30Z  plusieurs chiffrement des fichiers (rançongiciel)
+2031-03-15T01:52Z  vpn       login OK   compte j.morel   198.51.100.23
+2031-03-15T02:05Z  srv-adm   nouvelle tâche planifiée
+2031-03-15T02:41Z  fs-01  première connexion sortante vers 203.0.113.200
+2031-03-15T04:00Z  plusieurs chiffrement des fichiers (rançongiciel)
 ```
 ›  Le rançongiciel arrive deux jours **après** l'implant : il n'était pas le début de l'histoire.
 

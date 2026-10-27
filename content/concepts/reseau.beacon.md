@@ -9,7 +9,7 @@ quiz:
     choices: ["Parce que les pare-feu laissent généralement sortir le trafic alors qu'ils bloquent les connexions entrantes", "Parce que c'est plus rapide", "Parce que le serveur de commande n'a pas d'adresse IP"]
     answer: 0
     explain: "Les connexions sortantes (vers le web) sont rarement bloquées. L'implant « appelle à la maison »."
-  - q: "`netstat` montre toutes les 300 secondes, à quelques secondes près, une connexion de `srv-pacs` vers `203.0.113.80:443`. Qu'est-ce qui doit t'alerter ?"
+  - q: "`netstat` montre toutes les 300 secondes, à quelques secondes près, une connexion de `fs-01` vers `203.0.113.200:8443`. Qu'est-ce qui doit t'alerter ?"
     choices: ["Le port 443, qui est toujours malveillant", "La régularité quasi parfaite vers une destination inconnue, depuis un serveur qui n'a aucune raison de naviguer", "Rien, c'est du HTTPS donc c'est sûr"]
     answer: 1
     explain: "Le 443 est banal. Ce qui trahit le chant, c'est le rythme mécanique et l'incohérence avec le rôle de la machine."
@@ -28,9 +28,10 @@ Quelqu'un qui passe un coup de fil très bref au même numéro toutes les cinq m
 
 ## Dans le jeu
 ```
-$ netstat -tn
-Proto Local Address        Foreign Address       State
-tcp   10.20.8.14:51022     203.0.113.80:443      ESTABLISHED
+$ netstat -tunap
+Proto  Local Address      Foreign Address     State        PID/Program
+tcp    0.0.0.0:22         0.0.0.0:*           LISTEN       455/sshd
+tcp    10.40.1.10:43918   203.0.113.200:8443  ESTABLISHED  1442/sysupd
 ```
 Répété dans le temps, ça donne : 02:41, 02:46, 02:51, 02:56… Le serveur d'imagerie médicale n'a aucune raison de contacter ce serveur.
 
