@@ -72,19 +72,19 @@ export function JournalView() {
               const known = inCat.filter((c) => mastery(engine.journal[c.id]) > 0).length;
               return (
                 <section key={cat} className="mb-2">
-                  <h3 className="flex items-center px-2 py-1.5">
+                  <h2 className="flex items-center px-2 py-1.5">
                     <span className="eyebrow text-echo!">{CATEGORY_TITLES[cat]}</span>
                     <span className="ml-auto font-mono text-[11px] text-fg-subtle tabular">
                       {known}/{inCat.length}
                     </span>
-                  </h3>
+                  </h2>
                   <ul>
                     {inCat.map((c) => {
                       const m = mastery(engine.journal[c.id]);
                       if (m === 0) {
                         return (
-                          <li key={c.id} className="flex items-center gap-2 px-2 py-1.5 text-sm text-fg-faint">
-                            <Lock size={12} /> Fiche non découverte
+                          <li key={c.id} className="flex items-center gap-2 px-2 py-1.5 text-sm text-fg-subtle">
+                            <Lock size={12} aria-hidden /> Fiche non découverte
                           </li>
                         );
                       }

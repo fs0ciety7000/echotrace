@@ -55,7 +55,7 @@ function HostNode({ data, selected }: NodeProps<HostNodeT>) {
       </div>
       <div className="mt-0.5 flex items-center gap-2 font-mono text-[11px] text-fg-subtle tabular">
         {host.ip}
-        {ports.length > 0 && <span className="truncate text-fg-faint">· {ports.join(' ')}</span>}
+        {ports.length > 0 && <span className="truncate text-fg-subtle">· {ports.join(' ')}</span>}
       </div>
       <Handle type="source" position={Position.Right} className={handle} />
     </div>

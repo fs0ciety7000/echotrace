@@ -147,6 +147,9 @@ export const useGame = create<GameStore>()((set, get) => {
     });
   };
 
+  /** The engine whose debrief has already been opened automatically. */
+  let debriefShown: Engine | null = null;
+
   const scheduleSave = () => {
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => void get().save(), 600);
@@ -164,7 +167,13 @@ export const useGame = create<GameStore>()((set, get) => {
         case 'mission.completed':
           // A decision may still be open on screen; the debrief waits for it.
           setTimeout(() => {
-            if (get().modal !== 'choice') set({ modal: 'debrief' });
+            // Only once per mission, and only if the player is still on this mission's screen
+            // (a quick « Épilogue » or « Opération suivante » must not bring the debrief back).
+            const s = get();
+            if (debriefShown === engine || s.engine !== engine || s.screen !== 'operator' || s.modal === 'choice')
+              return;
+            debriefShown = engine;
+            set({ modal: 'debrief' });
           }, 900);
           break;
         case 'dossier.linked':
@@ -319,6 +328,7 @@ export const useGame = create<GameStore>()((set, get) => {
         if (ending) engine.campaign.ending = ending.id;
       }
       const done = engine.mission?.progress.status === 'completed';
+      if (done) debriefShown = engine;
       set((s) => ({ modal: done ? 'debrief' : null, rev: s.rev + 1 }));
       scheduleSave();
     },

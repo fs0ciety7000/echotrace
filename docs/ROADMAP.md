@@ -52,7 +52,9 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Acte III « Silence radio » : 07 Fréquence · 08 Salle de contrôle · 09 Silence radio (tests solveurs) ; 41 fiches (6 nouvelles : corrélation, segmentation IT/OT, accès des tiers, divulgation coordonnée, rapport, continuité d'activité)
 - ✅ Quatre fins pilotées par les données (`content/fins.yaml` : décision finale, Intégrité, solidité du Dossier) + écran d'épilogue ; Dossier étendu à 20 pièces / 21 liens
 - ✅ Mode sandbox du Banc : exercices générés à partir d'une graine (3 niveaux, 4 à 8 machines) — machine à corriger, chant et sa destination, source de force brute à bloquer ; déterministe, solvable par construction (test sur 10 graines × 3 niveaux)
-- ⬜ i18n (EN), sons, polissage animations, accessibilité auditée (WCAG 2.1 AA)
+- ✅ Accessibilité auditée (WCAG 2.1 AA) : 0 violation axe sur 13 écrans × 2 thèmes, piège clavier du terminal supprimé, focus des panneaux, contrastes, reflow 320 px — voir `ACCESSIBILITY.md`
+- ⬜ i18n (EN), sons, polissage animations
+- ⬜ Tests avec lecteurs d'écran réels (NVDA, VoiceOver) ; audit axe en CI
 
 ## Phase 4 — En ligne ⬜
 - `apps/server` : Hono + SQLite (Drizzle) — comptes (passkeys), sync des sauvegardes

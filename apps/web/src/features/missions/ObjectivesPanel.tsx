@@ -34,7 +34,7 @@ export function ObjectivesList() {
         );
       })}
       {lockedCount > 0 && (
-        <li className="px-2 py-1.5 font-mono text-xs text-fg-faint">
+        <li className="px-2 py-1.5 font-mono text-xs text-fg-subtle">
           + {lockedCount} objectif{lockedCount > 1 ? 's' : ''} verrouillé{lockedCount > 1 ? 's' : ''}
         </li>
       )}

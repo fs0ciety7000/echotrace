@@ -21,7 +21,11 @@ export function Ending() {
   const newGame = useGame((s) => s.newGame);
   const title = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => title.current?.focus(), []);
+  // The closing debrief <dialog> restores focus on close; take it back on the next frame.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => title.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const ending = endings.endings.find((e) => e.id === engine?.campaign.ending);
   if (!engine || !ending) return null;

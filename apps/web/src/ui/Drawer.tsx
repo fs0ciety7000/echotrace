@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { cx } from './cx.ts';
 import { Kbd } from './Kbd.tsx';
 
@@ -23,14 +23,20 @@ export function Drawer({ label, eyebrow, onClose, header, children, accent = 'ec
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // Move the keyboard into the sheet on open, so Escape and Tab act where the reader is.
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => ref.current?.focus(), []);
+
   // Hand the keyboard back to the terminal when the sheet goes away.
   useEffect(() => () => document.querySelector<HTMLElement>('[data-terminal-input]')?.focus(), []);
 
   return (
     <aside
+      ref={ref}
+      tabIndex={-1}
       aria-label={label}
       className={cx(
-        'glass fixed top-3 right-3 bottom-3 z-30 flex w-[min(460px,calc(100%-1.5rem))] animate-rise flex-col overflow-hidden rounded-lg shadow-modal',
+        'glass fixed top-3 right-3 bottom-3 z-30 flex outline-none w-[min(460px,calc(100%-1.5rem))] animate-rise flex-col overflow-hidden rounded-lg shadow-modal',
         'before:absolute before:inset-x-0 before:top-0 before:h-px before:opacity-70',
         ACCENT[accent],
       )}

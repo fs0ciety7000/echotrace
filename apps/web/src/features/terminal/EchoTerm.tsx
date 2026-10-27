@@ -156,6 +156,8 @@ export function EchoTerm({ className }: { className?: string }) {
       run(draft);
       setCursor(0);
     } else if (e.key === 'Tab') {
+      // Shift+Tab, or Tab on an empty line, leaves the terminal: completion must never trap the keyboard.
+      if (e.shiftKey || (!draft && !pending)) return;
       e.preventDefault();
       if (pending) return;
       const c = engine.complete(draft);
@@ -262,12 +264,17 @@ export function EchoTerm({ className }: { className?: string }) {
         onBlur={() => setFocused(false)}
         type={pending?.secret ? 'password' : 'text'}
         aria-label={pending ? pending.label : 'Ligne de commande'}
+        aria-describedby="term-keys"
         autoComplete="off"
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}
         className="absolute bottom-0 left-0 h-px w-px opacity-0"
       />
+      <p id="term-keys" className="sr-only">
+        Entrée exécute. Tab complète ; sur une ligne vide, Tab passe à la zone suivante. Flèches haut et bas :
+        historique.
+      </p>
     </div>
   );
 }

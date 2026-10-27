@@ -38,7 +38,7 @@ Neutres légèrement froids (teinte ~220°), pour que le cyan et l'émeraude res
 |---|---|---|---|
 | `--color-fg` | `#E6EAF0` | ~15:1 | Texte principal. |
 | `--color-fg-muted` | `#A1AAB8` | ~7.6:1 | Texte secondaire, labels. |
-| `--color-fg-subtle` | `#6C7686` | ~3.9:1 | Métadonnées, placeholders (≥ 14 px, jamais pour un contenu essentiel). |
+| `--color-fg-subtle` | `#808A9B` | ~5.3:1 (≥ 4.6:1 sur `overlay`) | Métadonnées, surtitres, placeholders. Relevé de #6C7686 après l'audit WCAG 2.1 AA (3,9:1 insuffisant pour du texte de 11–12 px). |
 | `--color-fg-faint` | `#3F4757` | — | Désactivé, filigranes. |
 
 ### 2.3 Accents — trois signaux
@@ -218,6 +218,11 @@ Niveau 3 (verre), ancré à droite, 460 px max, liseré supérieur de la couleur
 - Terminal : `role="log"`, `aria-live="polite"` sur les nouvelles sorties.
 - Couleur jamais seule porteuse d'information : glyphes + libellés.
 - Cibles cliquables ≥ 28 px (UI dense desktop), ≥ 40 px en mode lisibilité.
+- Terminal : Tab complète, mais **Shift+Tab ou Tab sur une ligne vide quittent toujours le terminal** (jamais de piège clavier).
+- Panneaux latéraux : le focus entre dans le panneau à l'ouverture, revient au terminal à la fermeture.
+- Un seul `h1` par écran (masqué visuellement si le titre visible est ailleurs) ; `aria-current="page"` sur l'outil actif du rail.
+- `fg-faint` est réservé aux éléments désactivés : tout texte informatif est au moins en `fg-subtle`.
+- Audit et méthode : [`ACCESSIBILITY.md`](ACCESSIBILITY.md).
 
 ## 11. Voix & micro-copie (UI)
 - Tutoiement à l'intérieur d'ECHO (collègues), vouvoiement des institutions.

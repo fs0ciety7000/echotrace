@@ -13,7 +13,7 @@ import { JournalView } from '../features/journal/JournalView.tsx';
 import { MasteryMeter } from '../features/journal/MasteryMeter.tsx';
 import { CaseFile, ObjectivesList } from '../features/missions/ObjectivesPanel.tsx';
 import { EchoTerm } from '../features/terminal/EchoTerm.tsx';
-import { useGame } from '../state/game.ts';
+import { useGame, type View } from '../state/game.ts';
 import { StatusDot, type Tone } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { cx } from '../ui/cx.ts';
@@ -42,6 +42,7 @@ function RailButton({
       disabled={disabled}
       title={disabled ? `${label} — bientôt` : label}
       aria-label={badge ? `${label} (${badge} non lu${badge > 1 ? 's' : ''})` : label}
+      aria-current={active ? 'page' : undefined}
       className={cx(
         'relative flex size-10 items-center justify-center rounded-sm transition-colors duration-(--duration-fast)',
         active ? 'bg-raised text-signal' : 'text-fg-subtle hover:bg-raised hover:text-fg',
@@ -286,11 +287,11 @@ function StatusBar() {
   const expLabel = exposure >= 60 ? 'élevée' : exposure >= 30 ? 'modérée' : 'faible';
 
   return (
-    <footer className="col-start-2 flex h-7 items-center gap-5 border-t border-line bg-void px-4 font-mono text-[11px] text-fg-subtle">
-      <span className="flex items-center gap-2">
+    <footer className="col-start-2 flex h-7 min-w-0 items-center gap-3 overflow-hidden border-t sm:gap-5 border-line bg-void px-4 font-mono text-[11px] text-fg-subtle">
+      <span className="flex min-w-0 items-center gap-2">
         <StatusDot tone={session.stack.length ? 'echo' : 'trace'} pulse />
         <span className="hidden text-fg-muted sm:inline">{session.stack.length ? 'SESSION DISTANTE' : 'CONNECTÉ'}</span>{' '}
-        {host.hostname}
+        <span className="truncate">{host.hostname}</span>
       </span>
       <span className="flex items-center gap-2">
         <span className="hidden sm:inline">EXPOSITION</span> <Meter value={exposure} tone={expTone} />{' '}
@@ -307,13 +308,20 @@ function StatusBar() {
       <span className="ml-auto hidden md:inline">
         {lastSavedAt ? `sauvegardé ${new Date(lastSavedAt).toLocaleTimeString('fr-FR')}` : 'non sauvegardé'}
       </span>
-      <span className="ml-auto tabular text-fg-muted md:ml-0">
+      <span className="ml-auto shrink-0 tabular text-fg-muted md:ml-0">
         <span className="hidden sm:inline">{new Date(clock).toISOString().slice(0, 10)} </span>
         {new Date(clock).toISOString().slice(11, 19)} UTC
       </span>
     </footer>
   );
 }
+
+const VIEW_TITLES: Record<View, string> = {
+  terminal: 'Terminal',
+  network: 'Vue réseau',
+  dossier: 'Dossier',
+  journal: "Journal d'apprentissage",
+};
 
 export function Operator() {
   const engine = useGame((s) => s.engine);
@@ -322,12 +330,19 @@ export function Operator() {
   useGame((s) => s.rev);
   if (!engine) return null;
   const { user } = engine.state.session;
+  // One h1 per screen for assistive tech; the visual title lives in the panels.
+  const heading = (
+    <h1 className="sr-only">
+      {VIEW_TITLES[view]} — {engine.mission?.spec.title ?? 'Poste opérateur'}
+    </h1>
+  );
 
   if (view !== 'terminal') {
     return (
       <div className="grid h-full grid-cols-[56px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_28px] bg-void">
         <Rail />
         <main className="min-h-0 p-3">
+          {heading}
           {view === 'journal' ? (
             <JournalView />
           ) : (
@@ -350,6 +365,7 @@ export function Operator() {
     <div className="grid h-full grid-cols-[56px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_28px] bg-void">
       <Rail />
       <main className="flex min-h-0 flex-col gap-3 p-3 lg:grid lg:grid-cols-[260px_minmax(0,1fr)_320px] xl:grid-cols-[280px_minmax(0,1fr)_340px]">
+        {heading}
         <div
           role="tablist"
           aria-label="Zones du poste"
@@ -395,7 +411,7 @@ export function Operator() {
               </span>
             }
             actions={
-              <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">Tab · ↑↓ · Ctrl+C · Ctrl+L</span>
+              <span className="hidden font-mono text-[11px] text-fg-subtle sm:inline">Tab · ↑↓ · Ctrl+C · Ctrl+L</span>
             }
             className="min-h-0 flex-1"
           >
