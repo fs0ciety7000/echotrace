@@ -117,7 +117,7 @@ src/
 
 - **Routing** : machine d'écrans dans le store (un jeu n'a pas besoin d'URL profondes). Si nécessaire plus tard : TanStack Router.
 - **Thèmes** : `data-theme="default" | "legible"` sur `<html>`, plus `prefers-reduced-motion`.
-- **Sauvegardes** : store `game` persisté dans IndexedDB (clé `echotrace:save:<slot>`), versionné (`saveVersion`) avec migrations.
+- **Sauvegardes** : campagne dans IndexedDB (clé `echotrace:save:1`, `SAVE_VERSION` 2, migration v1 → v2) ; journal d'apprentissage + modules du Banc réussis dans une clé séparée `echotrace:journal:1`, source de vérité du journal — le Banc ne touche jamais à la sauvegarde de campagne.
 
 ## 5. Sécurité & éthique (by design)
 - Aucune requête réseau réelle depuis le moteur : `ping`, `nmap`, `curl` lisent le monde simulé.

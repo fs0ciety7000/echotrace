@@ -23,7 +23,8 @@ Le journal **survit aux nouvelles parties** : la connaissance appartient au joue
 - Fiches par niveau de maîtrise et par catégorie (`journal`).
 - Par opération : temps simulé, exposition (bruit généré), indices demandés, objectifs bonus.
 - Quiz par fiche (maîtrise 3) et maîtrise globale en % dans le journal.
-- Prévu : modules d'académie (Le Banc) avec parcours, export du journal.
+- Le Banc : modules d'exercice rejouables (statut « fait »), sans effet sur la campagne.
+- Prévu : parcours d'académie plus longs, export du journal.
 
 ## Échelle de guidage
 1. Briefing (contexte + question), notes dans le monde.

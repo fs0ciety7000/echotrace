@@ -261,6 +261,7 @@ export const useGame = create<GameStore>()((set, get) => {
         modal: null,
         openConcept: null,
         commsOpen: false,
+        toasts: [],
         ...(mode === 'banc' ? { engine: null } : {}),
       });
     },

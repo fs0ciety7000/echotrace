@@ -29,7 +29,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Premier déploiement : https://echo.fs0ciety.org (Coolify, auto-deploy sur push, Cloudflare proxifié, TLS strict)
 - ✅ Responsive : onglets Terminal / Objectifs / Comms sous 1024 px, journal liste ↔ fiche sous 768 px, testé à 390 px
 
-## Phase 2 — Acte I « Résonance » 🟡
+## Phase 2 — Acte I « Résonance » ✅
 - ✅ Campagne : enchaînement des missions, journal et décisions conservés, sauvegarde v2 (migration v1)
 - ✅ Choix moraux (modale, conséquences au débrief) + jauges Intégrité / Initiative (barre d'état)
 - ✅ Conclusions d'enquête : commande `report` + panneau « Rapport »
@@ -42,7 +42,7 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ 27 fiches (16 nouvelles) avec quiz
 - ✅ Vue réseau (xyflow, chargée à la demande) : hôtes révélés par la découverte, inspecteur, actions qui préparent la commande dans le terminal
 - ✅ Exemples « Dans le jeu » des fiches alignés sur les missions réelles (noms, adresses, sorties des outils)
-- ⬜ Le Banc : 3 modules d'académie (Réseau, Recon, Logs)
+- ✅ Le Banc : écran Académie + 3 modules rejouables (Adresses & ports, Reconnaissance passive, Lire un journal web) ; hors campagne, seul le journal en garde trace (stockage séparé)
 
 ## Phase 3 — Profondeur ⬜
 - Acte II (e-mails & en-têtes, OSINT, analyse statique simulée, missions blue team chronométrées)

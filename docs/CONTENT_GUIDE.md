@@ -45,7 +45,7 @@ Fichier : `content/missions/NN-id.yaml` (`NN` = ordre de lecture). Exemple compl
 ### Champs
 | Champ | Rôle |
 |---|---|
-| `id`, `title`, `act`, `order` | Identité. `act` ∈ `prologue, acte-1, acte-2, acte-3, banc, contrat`. |
+| `id`, `title`, `act`, `order` | Identité. `act` ∈ `prologue, acte-1, acte-2, acte-3, banc, contrat`. Les missions `banc` (fichiers `banc-N-*.yaml`) apparaissent dans l'écran Académie, hors campagne. |
 | `from` | Personnage qui envoie le briefing. |
 | `summary` | Une ligne (panneau Opération). |
 | `question` | **La question de l'opération.** Le débrief doit y répondre. |

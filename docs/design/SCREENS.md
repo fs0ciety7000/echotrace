@@ -132,5 +132,5 @@ Implémenté : statistiques (temps simulé, exposition, indices, bonus) + répon
 ## 7. Graphe d'enquête — le Dossier (v2)
 Canvas xyflow : nœuds typés (personne, organisation, hôte, artefact, événement), arêtes « écho » (violet) qualifiées par le joueur (même certificat, même IP, même horaire). Indicateur de solidité du dossier.
 
-## 8. Le Banc — Académie / sandbox (v1–v2)
+## 8. Le Banc — Académie ✅ (v0) / sandbox (v2)
 Grille de modules (Réseau, Reconnaissance, Forensique, Défense, Éthique) avec progression ; mode sandbox : réseau généré par seed, objectifs libres, toutes les commandes disponibles.
