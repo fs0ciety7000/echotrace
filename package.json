@@ -15,7 +15,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "content:check": "pnpm --filter @echotrace/engine content:check",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm content:check && pnpm build"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm content:check && pnpm build && pnpm a11y",
+    "a11y": "pnpm --filter @echotrace/web a11y"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",

@@ -30,6 +30,10 @@ jobs:
         run: pnpm content:check
       - name: Build
         run: pnpm build
+      - name: Install Chromium (accessibility check)
+        run: pnpm --filter @echotrace/web exec playwright install --with-deps chromium
+      - name: Accessibility (axe, WCAG 2.1 AA)
+        run: pnpm a11y
 
   docker:
     runs-on: ubuntu-latest

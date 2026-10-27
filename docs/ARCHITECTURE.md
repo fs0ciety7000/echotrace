@@ -16,7 +16,7 @@ Statut : **v0.1 — Phase 0/1 (fondations)**. Mis à jour à chaque phase.
 | Graphes | **@xyflow/react** | Vue réseau + graphe d'enquête, interactions riches, performant. |
 | Contenu | **YAML** (missions, scénarios) + **Markdown** (fiches, briefings), validés par **Zod** | Lisible et éditable par des non-devs, diff-friendly, validé en CI. |
 | PWA | **vite-plugin-pwa** (Workbox) | Installable sur Windows / macOS / Linux depuis Chrome/Edge, jouable hors-ligne. |
-| Qualité | **Biome** (lint + format), **Vitest**, `tsc --noEmit` | Un seul outil rapide pour lint/format. |
+| Qualité | **Biome** (lint + format), **Vitest**, `tsc --noEmit`, **axe-core + Playwright** (`pnpm a11y`) | Un seul outil rapide pour lint/format ; non-régression d'accessibilité WCAG 2.1 AA en CI. |
 | Serveur statique | **Caddy 2** dans une image Docker multi-stage | Config SPA + headers de sécurité en 20 lignes, image légère, healthcheck. |
 | Déploiement | **Coolify** (Dockerfile) derrière **Cloudflare** → `echo.fs0ciety.org` | Voir `DEPLOYMENT.md`. |
 | (Phase 4) Backend | **Hono** sur Node + **SQLite** (Drizzle) | Comptes, sync des sauvegardes, leaderboards. Même langage, schémas Zod partagés. |

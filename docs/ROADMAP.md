@@ -54,7 +54,8 @@ Objectif : 15–20 minutes de jeu complet, du menu au débrief.
 - ✅ Mode sandbox du Banc : exercices générés à partir d'une graine (3 niveaux, 4 à 8 machines) — machine à corriger, chant et sa destination, source de force brute à bloquer ; déterministe, solvable par construction (test sur 10 graines × 3 niveaux)
 - ✅ Accessibilité auditée (WCAG 2.1 AA) : 0 violation axe sur 13 écrans × 2 thèmes, piège clavier du terminal supprimé, focus des panneaux, contrastes, reflow 320 px — voir `ACCESSIBILITY.md`
 - ⬜ i18n (EN), sons, polissage animations
-- ⬜ Tests avec lecteurs d'écran réels (NVDA, VoiceOver) ; audit axe en CI
+- ✅ Audit axe en CI (`pnpm a11y`, 11 écrans × 2 thèmes)
+- ⬜ Tests avec lecteurs d'écran réels (NVDA, VoiceOver)
 
 ## Phase 4 — En ligne ⬜
 - `apps/server` : Hono + SQLite (Drizzle) — comptes (passkeys), sync des sauvegardes

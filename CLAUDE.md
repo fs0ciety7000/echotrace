@@ -36,6 +36,7 @@ pnpm test            # Vitest (moteur + solveurs de missions)
 pnpm typecheck
 pnpm lint            # Biome ; pnpm format pour corriger
 pnpm content:check   # valide /content (schémas, références croisées, adresses sûres)
+pnpm a11y            # axe-core (WCAG 2.1 AA) sur le build, 11 écrans × 2 thèmes — après pnpm build
 pnpm build
 pnpm run check       # tout ce que fait la CI (⚠ `pnpm ci` est une commande réservée de pnpm)
 ```

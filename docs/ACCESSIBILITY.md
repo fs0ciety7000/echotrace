@@ -8,6 +8,9 @@ Dernier audit : octobre 2026 (Phase 3). À refaire à chaque nouvel écran ou co
 - **Reflow** (1.4.10) : 320 × 640 px, aucun défilement horizontal.
 - **Mouvement** : `prefers-reduced-motion` et réglage « Réduire les animations » (voir `DESIGN_SYSTEM.md` §10).
 
+### Contrôle continu
+`pnpm a11y` (inclus dans `pnpm run check` et dans la CI) sert le build avec `vite preview`, parcourt 11 écrans dans Chromium — menu, Paramètres, Banc, briefing, terminal, Messages, vue réseau, Dossier, journal, fiche, débrief — sur un exercice généré à graine fixe (`A11Y`), dans les deux thèmes, et échoue à la moindre violation axe. Script : `apps/web/scripts/a11y.ts`. Vérifié : remettre l'ancien `fg-subtle` fait échouer le contrôle.
+
 ## 2. Résultat
 **0 violation axe** sur les 13 états, dans les deux thèmes, après corrections.
 
@@ -32,4 +35,4 @@ Dernier audit : octobre 2026 (Phase 3). À refaire à chaque nouvel écran ou co
 ## 4. Limites connues / à faire
 - Pas encore de test avec de vrais lecteurs d'écran (NVDA, VoiceOver) : la sortie du terminal en `aria-live` peut être verbeuse sur les longues commandes (`nmap` sur un réseau).
 - Les nœuds des graphes xyflow eux-mêmes ne sont pas parcourables au clavier (alternatives ci-dessus).
-- L'audit axe n'est pas encore en CI : il tourne avec Playwright en local (script à intégrer à `pnpm run check` quand axe-core sera ajouté aux dépendances de dev).
+- L'épilogue (fin de campagne) n'est pas couvert par le contrôle automatique : il demande de rejouer toute la campagne ; il a été audité à la main (0 violation).
